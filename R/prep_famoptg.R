@@ -1,17 +1,35 @@
-#' Create a partially replicated (p-rep) experimental design layout
+#' Create a repeated-check block design with flexible replication
 #'
-#' Construct a partially replicated field design with repeated checks, optional
-#' p-rep and unreplicated entries, optional treatment grouping from family or
-#' relationship matrices, optional post-layout dispersion optimization, and
-#' optional mixed-model efficiency diagnostics.
+#' Construct an augmented, partially replicated, or RCBD-type repeated-check
+#' field design with optional treatment grouping, optional post-layout
+#' dispersion optimization, and optional mixed-model efficiency diagnostics.
 #'
 #' @description
-#' `prep_famoptg()` builds a **partially replicated (p-rep)** design in which:
+#' `prep_famoptg()` is a general repeated-check block design constructor in
+#' which **check treatments are included in every block**, while non-check
+#' treatments are allocated across blocks according to user-specified
+#' replication levels.
 #'
-#' - **Checks** are repeated in every block.
-#' - **p-rep treatments** are assigned to a subset of blocks and may appear more
-#'   than once overall, but at most once within any single block.
+#' Depending on the supplied treatment structure, the same function can generate:
+#'
+#' - an **augmented design**, when only checks are repeated and all other entries
+#'   are unreplicated;
+#' - a **partially replicated (p-rep) design**, when some non-check entries are
+#'   replicated and others are unreplicated;
+#' - an **RCBD-type repeated-check design**, when all non-check entries are given
+#'   the same replication number greater than 1, especially when that replication
+#'   equals `n_blocks`.
+#'
+#' The basic allocation rules are:
+#'
+#' - **Checks** are included in **every block**.
+#' - **Replicated non-check treatments** are assigned to a subset of blocks and
+#'   may appear more than once overall, but **at most once within any single block**.
 #' - **Unreplicated treatments** appear exactly once in the full design.
+#'
+#' This means, for example, that if a treatment has replication 2 and
+#' `n_blocks >= 2`, its two replicates are placed in **two different blocks**
+#' rather than repeated within the same block.
 #'
 #' The function returns:
 #'
@@ -22,12 +40,58 @@
 #' Optionally, the function can also:
 #'
 #' - derive treatment groups from a genomic relationship matrix (`GRM`) or a
-#'   pedigree relationship matrix (`A`),
-#' - optimize the spatial dispersion of checks,
+#'   pedigree relationship matrix (`A`);
+#' - optimize the spatial dispersion of checks;
 #' - apply a swap-based local search to reduce local relatedness among nearby
-#'   non-check plots, and
+#'   non-check plots;
 #' - compute mixed-model design efficiency metrics for fixed or random treatment
 #'   effects.
+#'
+#' @section Design classes represented by the same function:
+#'
+#' **1. Augmented repeated-check design**
+#'
+#' This is obtained when:
+#'
+#' - `p_rep_treatments = NULL` or `character(0)`,
+#' - `p_rep_reps = NULL` or `integer(0)`,
+#' - `p_rep_families = NULL` or `character(0)`,
+#' - non-check entries are supplied only through `unreplicated_treatments`.
+#'
+#' In this case:
+#'
+#' - checks are repeated in every block;
+#' - all test entries appear once;
+#' - the design behaves as an augmented repeated-check layout.
+#'
+#' This setting is especially useful for early-stage screening when many entries
+#' must be observed but only checks can be repeated systematically.
+#'
+#' **2. Partially replicated repeated-check design**
+#'
+#' This is obtained when:
+#'
+#' - some non-check treatments are supplied in `p_rep_treatments`;
+#' - those treatments have replication counts greater than 1;
+#' - other entries may remain unreplicated.
+#'
+#' This is the classical use case of the function: a mixture of repeated checks,
+#' replicated candidate entries, and single-plot candidate entries.
+#'
+#' **3. RCBD-type repeated-check design**
+#'
+#' This is obtained when:
+#'
+#' - all non-check treatments are supplied through `p_rep_treatments`;
+#' - they all receive the same replication number greater than 1.
+#'
+#' If that common replication equals `n_blocks`, then every non-check treatment
+#' appears once in every block, which is the closest repeated-check analogue of
+#' a classical RCBD under this framework.
+#'
+#' If the common replication is less than `n_blocks`, the design remains balanced
+#' and repeated, but it is not a strict classical RCBD because not every
+#' treatment appears in every block.
 #'
 #' @section Conceptual workflow:
 #' The function proceeds in several stages:
@@ -35,55 +99,70 @@
 #' 1. **Validate inputs** and reconcile field size with the required number of plots.
 #' 2. **Prepare grouping information** from family labels or from clustering on
 #'    `GRM` / `A`.
-#' 3. **Assign p-rep entries to blocks** subject to the rule that no p-rep line
-#'    appears twice in the same block.
+#' 3. **Assign replicated non-check entries to blocks** subject to the rule that
+#'    no treatment appears twice in the same block.
 #' 4. **Distribute unreplicated entries** across blocks.
-#' 5. **Insert checks into each block** using a chosen placement strategy.
-#' 6. **Shuffle block orderings** to reduce adjacency of same-group entries within
-#'    each block list.
+#' 5. **Insert checks into each block** using the chosen placement strategy.
+#' 6. **Shuffle treatment order within blocks** to reduce adjacency of same-group
+#'    entries in the 1D block ordering.
 #' 7. **Map the ordered treatments to the field grid** according to `order` and
 #'    `serpentine`.
 #' 8. Optionally apply **genetic dispersion optimization**.
 #' 9. Optionally compute **design efficiency metrics**.
 #'
 #' @section What this function is most useful for:
-#' This function is intended for situations such as:
+#' This function is especially useful for:
 #'
-#' - early- to intermediate-stage breeding trials where a large number of entries
-#'   must be screened but only a subset can be replicated,
-#' - designs where checks must be present in every block,
-#' - layouts where related lines should not be clustered too closely,
+#' - early- to intermediate-stage breeding trials where many entries must be
+#'   screened and not all can be equally replicated;
+#' - augmented repeated-check designs with a large number of single-plot test entries;
+#' - p-rep layouts mixing replicated and unreplicated entries;
+#' - balanced repeated-check block designs in which all candidate entries are replicated;
+#' - experiments where checks must appear in every block;
+#' - layouts where related lines should not be clustered too closely;
+#' - applications where family, pedigree, or genomic relationships should influence
+#'   physical layout construction;
 #' - cases where the user wants to compare alternative design choices using
-#'   model-based efficiency metrics,
-#' - breeding applications where family, pedigree, or genomic relationships are
-#'   available and should influence layout construction.
+#'   model-based efficiency metrics.
 #'
 #' @section Grouping logic and why it matters:
 #' Several parts of the function rely on the idea of a **group**:
 #'
 #' - During block construction, groups are used to reduce adjacency of similar
-#'   entries in the 1D block ordering.
+#'   entries in the 1D ordering within each block.
 #' - During optional dispersion optimization, relationship matrices are used to
 #'   discourage close spatial placement of related non-check entries.
 #'
 #' Group labels may come from:
 #'
-#' - user-supplied families (`cluster_source = "Family"`),
-#' - clusters derived from a genomic relationship matrix (`cluster_source = "GRM"`),
+#' - user-supplied families (`cluster_source = "Family"`);
+#' - clusters derived from a genomic relationship matrix (`cluster_source = "GRM"`);
 #' - clusters derived from a pedigree relationship matrix (`cluster_source = "A"`).
 #'
 #' Family-based grouping is the simplest option and is usually appropriate when
-#' family labels are meaningful and the user wants easy interpretability.
+#' family labels are meaningful and easy to interpret.
 #'
 #' Matrix-based grouping is more useful when:
 #'
-#' - family labels are too coarse,
-#' - genomic or pedigree structure is known to be more informative than nominal
-#'   family labels,
-#' - the objective is to spatially spread genetically similar materials.
+#' - family labels are too coarse;
+#' - genomic or pedigree structure is more informative than nominal family labels;
+#' - the objective is to spread genetically similar materials more effectively.
 #'
 #' @section Dependency guide:
 #' Many arguments are active only in certain modes.
+#'
+#' **Treatment structure**
+#'
+#' - If `p_rep_treatments` is empty (or `NULL`) and
+#'   `unreplicated_treatments` is non-empty, the function behaves as an
+#'   **augmented repeated-check design** constructor.
+#'
+#' - If both `p_rep_treatments` and `unreplicated_treatments` are present,
+#'   the function behaves as a **p-rep repeated-check design** constructor.
+#'
+#' - If all non-check treatments are supplied in `p_rep_treatments` with a common
+#'   replication number greater than 1, the function behaves as an
+#'   **RCBD-type repeated-check design** constructor.
 #'
 #' **Grouping mode**
 #'
@@ -111,7 +190,7 @@
 #' - If `eval_efficiency = FALSE`, all efficiency-related arguments are ignored.
 #'
 #' - If `eval_efficiency = TRUE` and `treatment_effect = "fixed"`:
-#'   - fixed-effect design efficiency is computed,
+#'   - fixed-effect design efficiency is computed;
 #'   - `prediction_type`, `K`, and `line_id_map` are ignored.
 #'
 #' - If `eval_efficiency = TRUE` and `treatment_effect = "random"`:
@@ -121,26 +200,26 @@
 #'   - no random-effect prediction efficiency is computed.
 #'
 #' - If `prediction_type = "IID"`:
-#'   - non-check treatments are treated as independent random effects,
+#'   - non-check treatments are treated as independent random effects;
 #'   - `K` and `line_id_map` are ignored.
 #'
 #' - If `prediction_type %in% c("GBLUP", "PBLUP")`:
-#'   - `K` is required,
+#'   - `K` is required;
 #'   - `line_id_map` may be needed if treatment IDs do not match `rownames(K)`.
 #'
 #' **Residual structure**
 #'
 #' - If `residual_structure = "IID"`:
-#'   - residuals are assumed independent,
+#'   - residuals are assumed independent;
 #'   - `rho_row` and `rho_col` are ignored.
 #'
 #' - If `residual_structure = "AR1"`:
-#'   - row-wise correlation is used,
-#'   - `rho_row` is active,
+#'   - row-wise correlation is used;
+#'   - `rho_row` is active;
 #'   - `rho_col` is ignored.
 #'
 #' - If `residual_structure = "AR1xAR1"`:
-#'   - row and column correlations are both used,
+#'   - row and column correlations are both used;
 #'   - `rho_row` and `rho_col` are both active.
 #'
 #' **Check placement**
@@ -153,7 +232,7 @@
 #' - If `use_dispersion = FALSE`, all dispersion arguments are ignored.
 #'
 #' - If `use_dispersion = TRUE` and `dispersion_source = "K"`:
-#'   - `K` is required,
+#'   - `K` is required;
 #'   - `line_id_map` may be needed if treatment IDs differ from `rownames(K)`.
 #'
 #' - If `use_dispersion = TRUE` and `dispersion_source = "A"`:
@@ -167,37 +246,37 @@
 #' traversal logic.
 #'
 #' Field dimensions do not have to match the exact number of required plots if
-#' `warn_and_correct = TRUE`. In that case, the function will expand one
-#' dimension to ensure enough cells are available. Extra cells remain `NA` in
-#' the returned `layout_matrix`, but the `field_book` includes only assigned plots.
+#' `warn_and_correct = TRUE`. In that case, the function expands one dimension
+#' so the field can contain all required plots. Extra cells remain `NA` in the
+#' returned `layout_matrix`, but the `field_book` includes only assigned plots.
 #'
 #' The function separates:
 #'
-#' - **construction logic** (how treatments are placed),
-#' - **grouping logic** (how similarity is defined),
-#' - **dispersion logic** (how nearby related entries are discouraged), and
-#' - **efficiency logic** (how the final design is evaluated under a mixed model).
+#' - **construction logic** (how treatments are placed);
+#' - **grouping logic** (how similarity is defined);
+#' - **dispersion logic** (how nearby related entries are discouraged);
+#' - **efficiency logic** (how the final design is evaluated).
 #'
 #' This separation is important because a user may, for example:
 #'
-#' - use family labels for adjacency control,
-#' - use a genomic matrix for dispersion optimization,
-#' - and choose not to compute efficiency at all.
+#' - use family labels for adjacency control;
+#' - use a genomic matrix for dispersion optimization;
+#' - and choose not to compute efficiency;
 #'
-#' Or alternatively:
+#' or alternatively:
 #'
-#' - use GRM-based clustering,
-#' - skip dispersion optimization,
-#' - and compute GBLUP-based efficiency using a different relationship matrix `K`.
+#' - use GRM-based clustering;
+#' - skip dispersion optimization;
+#' - and compute GBLUP-based efficiency using a separate matrix `K`.
 #'
 #' @param check_treatments Character vector of check treatment identifiers.
 #'
-#' These treatments are repeated in **every block**, so they form the reference
-#' structure of the design.
+#' These treatments are included in **every block**, so they define the repeated
+#' reference structure of the design.
 #'
-#' Use this argument when you have standard checks, control varieties, or
-#' benchmark entries that must be present everywhere to improve comparability
-#' among blocks.
+#' Use this argument when you have standard checks, control varieties, benchmark
+#' cultivars, or fixed reference entries that must be present everywhere to
+#' improve block comparability.
 #'
 #' This argument is always required.
 #'
@@ -209,24 +288,33 @@
 #' Provides the family or group label for each check treatment.
 #'
 #' Even when `cluster_source != "Family"`, checks still need family labels
-#' because checks are always assigned a group label in the output and in some
-#' internal adjacency logic.
+#' because checks are always assigned a group label in the output and remain part
+#' of the grouping metadata used internally.
 #'
 #' This argument always depends on `check_treatments` and must align exactly in
 #' order and length.
 #'
 #' Example:
-#' if the three checks all belong to the control group, `check_families` might be
-#' `c("CHECK", "CHECK", "CHECK")`.
+#' if the three checks all belong to the same control class,
+#' `check_families` might be `c("CHECK", "CHECK", "CHECK")`.
 #'
-#' @param p_rep_treatments Character vector of partially replicated treatment IDs.
+#' @param p_rep_treatments Character vector of replicated non-check treatment IDs.
 #'
-#' These are the entries that appear more than once overall, but not in every block.
+#' These are the entries that appear more than once overall, but at most once in
+#' any given block.
 #'
-#' Use this when some materials deserve replication but full replication for all
-#' entries is not feasible.
+#' Use this argument when some or all non-check treatments should be replicated.
 #'
-#' Can be `NULL` or `character(0)` if the design contains no p-rep entries.
+#' Depending on how it is used:
+#'
+#' - if it is empty and only `unreplicated_treatments` are supplied, the function
+#'   behaves as an augmented repeated-check constructor;
+#' - if it contains only some non-check entries, the function behaves as a p-rep
+#'   repeated-check constructor;
+#' - if it contains all non-check entries with common replication greater than 1,
+#'   the function behaves as an RCBD-type repeated-check constructor.
+#'
+#' Can be `NULL` or `character(0)` if no replicated non-check treatments are present.
 #'
 #' Depends on:
 #' - `p_rep_reps`
@@ -238,34 +326,38 @@
 #' @param p_rep_reps Integer vector giving the total number of replicates for each
 #' entry in `p_rep_treatments`.
 #'
-#' This controls how many times each p-rep line appears in the full design.
-#'
-#' Use this when different entries need equal or unequal replication levels.
+#' This controls how many times each replicated non-check treatment appears in
+#' the full design.
 #'
 #' Must:
-#' - have the same length as `p_rep_treatments`,
-#' - align element-wise with `p_rep_treatments`,
-#' - satisfy `p_rep_reps[i] <= n_blocks`, because a line cannot occur twice in the
-#'   same block.
+#' - have the same length as `p_rep_treatments`;
+#' - align element-wise with `p_rep_treatments`;
+#' - satisfy `p_rep_reps[i] <= n_blocks`, because a treatment cannot occur twice
+#'   in the same block.
 #'
-#' Example:
-#' if all p-rep lines should appear twice, use `rep(2, length(p_rep_treatments))`.
+#' A treatment with replication 2 and `n_blocks >= 2` will be placed in two
+#' different blocks.
+#'
+#' Use a common vector such as `rep(2, length(p_rep_treatments))` when all
+#' replicated treatments should appear twice.
+#'
+#' Use unequal values when some entries deserve more replication than others.
 #'
 #' @param p_rep_families Character vector of the same length as `p_rep_treatments`.
 #'
-#' Family/group labels for p-rep entries.
+#' Family or group labels for replicated non-check treatments.
 #'
-#' These labels are required whenever p-rep entries exist. Even if
-#' `cluster_source != "Family"`, they are still useful because the function uses
-#' non-check family structure to determine the number of target clusters in
-#' matrix-based grouping modes.
+#' These labels are required whenever replicated non-check treatments exist.
+#' Even when `cluster_source != "Family"`, they remain useful because the
+#' function uses non-check family structure to determine the target number of
+#' clusters in matrix-based grouping modes.
 #'
 #' Depends on:
 #' - `p_rep_treatments`
 #'
 #' Example use case:
-#' p-rep entries come from multiple families and the user wants block adjacency
-#' control to reflect that structure.
+#' replicated candidate lines belong to multiple families and the user wants
+#' adjacency control to reflect that structure.
 #'
 #' @param unreplicated_treatments Character vector of treatments that appear exactly once.
 #'
@@ -273,6 +365,9 @@
 #' replication is not possible.
 #'
 #' Use `NULL` or `character(0)` if no unreplicated treatments are present.
+#'
+#' In combination with repeated checks and no replicated non-checks, these
+#' entries define an augmented repeated-check design.
 #'
 #' Depends on:
 #' - `unreplicated_families`
@@ -283,44 +378,47 @@
 #' @param unreplicated_families Character vector of the same length as
 #' `unreplicated_treatments`.
 #'
-#' Family/group labels for unreplicated treatments.
+#' Family or group labels for unreplicated treatments.
 #'
 #' Required whenever `unreplicated_treatments` is provided.
 #'
 #' These labels are especially useful when:
-#' - `cluster_source = "Family"`, or
-#' - matrix-based grouping is used and the number of target clusters should reflect
-#'   the observed family structure among non-checks.
+#' - `cluster_source = "Family"`;
+#' - matrix-based grouping is used and the target number of clusters should
+#'   reflect the family structure among non-checks.
 #'
 #' @param n_blocks Integer giving the number of experimental blocks.
 #'
 #' This determines how many times checks are repeated, and it also constrains the
-#' maximum allowable replication count for any p-rep treatment.
+#' maximum allowable replication count for any replicated non-check treatment.
 #'
 #' Use more blocks when:
-#' - the design must accommodate many checks,
-#' - the user wants finer local control,
-#' - or field heterogeneity suggests stronger blocking.
+#' - many checks must be accommodated;
+#' - finer local control is desired;
+#' - field heterogeneity suggests stronger blocking.
 #'
 #' This argument affects:
-#' - total plot count,
-#' - p-rep feasibility,
+#' - total plot count;
+#' - feasibility of replicated-treatment assignment;
 #' - distribution of unreplicated treatments.
+#'
+#' When the same replicated treatment should appear in every block, its
+#' replication must equal `n_blocks`.
 #'
 #' @param n_rows Integer giving the number of rows in the final field grid.
 #'
-#' Controls the physical field layout returned in `layout_matrix`.
+#' Controls the physical field geometry returned in `layout_matrix`.
 #'
-#' Use this to match the intended field geometry.
+#' Use this to match the intended number of field rows.
 #'
 #' If `warn_and_correct = TRUE`, this value may be retained while `n_cols` is
 #' adjusted when `fix_rows = TRUE`.
 #'
 #' @param n_cols Integer giving the number of columns in the final field grid.
 #'
-#' Controls the physical field layout returned in `layout_matrix`.
+#' Controls the physical field geometry returned in `layout_matrix`.
 #'
-#' Use this together with `n_rows` to represent the actual field dimensions.
+#' Use this together with `n_rows` to represent the intended field dimensions.
 #'
 #' If `warn_and_correct = TRUE`, this value may be retained while `n_rows` is
 #' adjusted when `fix_rows = FALSE`.
@@ -328,7 +426,7 @@
 #' @param order Character specifying how the field grid is filled.
 #'
 #' Allowed values:
-#' - `"row"`: fill row by row,
+#' - `"row"`: fill row by row;
 #' - `"column"`: fill column by column.
 #'
 #' Use `"row"` when field-book order or planting order follows rows.
@@ -340,10 +438,10 @@
 #' reverse direction during grid filling.
 #'
 #' If `TRUE`:
-#' - with `order = "row"`, alternate rows are reversed,
+#' - with `order = "row"`, alternate rows are reversed;
 #' - with `order = "column"`, alternate columns are reversed.
 #'
-#' Use this when planting or harvesting follows a serpentine movement pattern.
+#' Use this when planting, labeling, or harvesting follows a serpentine movement pattern.
 #'
 #' This affects only how the final ordered treatments are mapped into space; it
 #' does not change block composition.
@@ -358,20 +456,20 @@
 #' If `NULL`, a seed is generated internally and returned as `seed_used`.
 #'
 #' This seed affects:
-#' - p-rep block assignment,
-#' - shuffling within blocks,
-#' - candidate generation for optimal check placement,
+#' - replicated-treatment block assignment;
+#' - shuffling within blocks;
+#' - candidate generation for optimal check placement;
 #' - optional dispersion optimization when `dispersion_seed` is `NULL`.
 #'
 #' @param attempts Integer giving the maximum number of shuffle attempts per block.
 #'
-#' Used to reduce adjacency of same-group entries in the 1D block list.
+#' Used to reduce adjacency of same-group entries in the 1D block ordering.
 #'
 #' Larger values may improve adjacency avoidance but increase runtime.
 #'
 #' Use larger values when:
-#' - family structure is highly imbalanced,
-#' - many similar entries occur in the same block,
+#' - family structure is highly imbalanced;
+#' - many similar entries occur in the same block;
 #' - stricter adjacency avoidance is desired.
 #'
 #' @param warn_and_correct Logical controlling what happens when the supplied field
@@ -382,7 +480,7 @@
 #' If `TRUE`, the function adjusts one dimension upward so the field can contain
 #' all required plots.
 #'
-#' Use `FALSE` when the field dimensions are fixed and should never be changed.
+#' Use `FALSE` when the field dimensions are fixed and must not be changed.
 #' Use `TRUE` when a near-feasible layout should be repaired automatically.
 #'
 #' Depends on:
@@ -396,7 +494,8 @@
 #' Use this according to which field dimension is physically fixed in practice.
 #'
 #' Example:
-#' if a field has a fixed number of rows but flexible row length, use `fix_rows = TRUE`.
+#' if the field has a fixed number of rows but flexible row length,
+#' use `fix_rows = TRUE`.
 #'
 #' @param cluster_source Character specifying the source of grouping used for
 #' non-check adjacency control.
@@ -445,11 +544,11 @@
 #'
 #' @param id_map Optional data frame with columns `Treatment` and `LineID`.
 #'
-#' Used only when `cluster_source %in% c("GRM", "A")` and treatment labels in the
-#' design do not exactly match the rownames of the selected relationship matrix.
+#' Used only when `cluster_source %in% c("GRM", "A")` and treatment labels in
+#' the design do not exactly match the rownames of the selected relationship matrix.
 #'
 #' Use this when:
-#' - treatment names in the design are breeder-friendly labels,
+#' - treatment names in the design are breeder-friendly labels;
 #' - but the matrix uses internal IDs, numeric codes, or standardized line names.
 #'
 #' Ignored when `cluster_source = "Family"`.
@@ -460,7 +559,7 @@
 #' - `"kmeans"`
 #' - `"hclust"`
 #'
-#' Use `"kmeans"` when compact spherical clusters are acceptable and reproducible
+#' Use `"kmeans"` when compact clusters are acceptable and reproducible
 #' initialization is desired.
 #'
 #' Use `"hclust"` when hierarchical grouping is preferred.
@@ -485,10 +584,10 @@
 #' for PCA-based clustering in matrix-based grouping.
 #'
 #' Use a smaller value when:
-#' - only the leading structure should define grouping,
-#' - noise in smaller eigencomponents should be ignored.
+#' - only the leading structure should define grouping;
+#' - smaller PCs are considered mostly noise.
 #'
-#' Use `Inf` to allow the function to use as many available informative PCs as possible.
+#' Use `Inf` to let the function use as many informative PCs as available.
 #'
 #' Ignored when `cluster_source = "Family"`.
 #'
@@ -542,16 +641,11 @@
 #'
 #' @param K Optional square relationship matrix.
 #'
-#' Used in two distinct contexts:
+#' Used in two contexts:
 #'
-#' 1. for efficiency evaluation when:
-#'    - `eval_efficiency = TRUE`,
-#'    - `treatment_effect = "random"`,
-#'    - `prediction_type %in% c("GBLUP", "PBLUP")`;
-#'
-#' 2. for dispersion optimization when:
-#'    - `use_dispersion = TRUE`,
-#'    - `dispersion_source = "K"`.
+#' 1. for efficiency evaluation when random effects are predicted using
+#'    `"GBLUP"` or `"PBLUP"`;
+#' 2. for dispersion optimization when `dispersion_source = "K"`.
 #'
 #' Ignored otherwise.
 #'
@@ -643,8 +737,8 @@
 #'
 #' @param dense_max_n Integer threshold used when `spatial_engine = "auto"`.
 #'
-#' If the number of observed plots is at most this threshold, dense computation is used;
-#' otherwise sparse computation is used.
+#' If the number of observed plots is at most this threshold, dense computation
+#' is used; otherwise sparse computation is used.
 #'
 #' @param eff_trace_samples Integer giving the number of Hutchinson trace samples
 #' used when approximate efficiency evaluation is needed.
@@ -653,7 +747,7 @@
 #' - `eval_efficiency = TRUE`, and
 #' - the target dimension exceeds `eff_full_max`.
 #'
-#' Larger values improve stability of approximation but increase runtime.
+#' Larger values improve stability of the approximation but increase runtime.
 #'
 #' @param eff_full_max Integer giving the maximum target dimension for exact inverse
 #' sub-block extraction in efficiency evaluation.
@@ -661,7 +755,7 @@
 #' Active only when `eval_efficiency = TRUE`.
 #'
 #' Use larger values when exact evaluation is desired and computation is affordable.
-#' Use smaller values to force approximation earlier and reduce runtime.
+#' Use smaller values to switch to approximation earlier and reduce runtime.
 #'
 #' @param check_placement Character specifying how checks are placed within blocks.
 #'
@@ -688,8 +782,8 @@
 #' @param use_dispersion Logical; if `TRUE`, apply post-layout swap optimization to
 #' reduce local relatedness among nearby non-check treatments.
 #'
-#' Use this when the user wants genetically or pedigree-similar entries to be less
-#' clustered in the final field.
+#' Use this when genetically or pedigree-similar entries should be less clustered
+#' in the final field.
 #'
 #' If `FALSE`, all dispersion-related arguments are ignored.
 #'
@@ -748,7 +842,13 @@
 #' data("OptiDesign_example_data", package = "OptiDesign")
 #' x <- OptiDesign_example_data
 #'
-#' ## Family-based design
+#' ## ---------------------------------------------------------
+#' ## Example 1: Family-based repeated-check design
+#' ## This example uses the shipped family-based arguments.
+#' ## Depending on the supplied treatment lists, the same function
+#' ## can represent augmented, p-rep, or RCBD-type repeated-check
+#' ## layouts.
+#' ## ---------------------------------------------------------
 #' out_family <- do.call(
 #'   prep_famoptg,
 #'   c(
@@ -762,7 +862,9 @@
 #' out_family$seed_used
 #'
 #' \dontrun{
-#' ## GRM-based design with dispersion
+#' ## ---------------------------------------------------------
+#' ## Example 2: GRM-based grouping with dispersion optimization
+#' ## ---------------------------------------------------------
 #' out_grm <- do.call(
 #'   prep_famoptg,
 #'   c(
@@ -774,6 +876,48 @@
 #' dim(out_grm$layout_matrix)
 #' head(out_grm$field_book)
 #' out_grm$efficiency
+#'
+#' ## ---------------------------------------------------------
+#' ## Example 3: Augmented repeated-check use pattern
+#' ## In practice, this is obtained by leaving p-rep arguments empty
+#' ## and supplying candidate entries only as unreplicated entries.
+#' ## ---------------------------------------------------------
+#' aug_args <- x$OptiDesign_famoptg_example
+#' aug_args$p_rep_treatments <- character(0)
+#' aug_args$p_rep_reps <- integer(0)
+#' aug_args$p_rep_families <- character(0)
+#'
+#' out_aug <- do.call(
+#'   prep_famoptg,
+#'   c(aug_args, x$OptiDesign_famoptg_args_family)
+#' )
+#'
+#' dim(out_aug$layout_matrix)
+#' head(out_aug$field_book)
+#'
+#' ## ---------------------------------------------------------
+#' ## Example 4: RCBD-type repeated-check use pattern
+#' ## Here all non-check entries are treated as replicated entries.
+#' ## If their common replication equals n_blocks, each entry appears
+#' ## once in every block.
+#' ## ---------------------------------------------------------
+#' rcbd_args <- x$OptiDesign_famoptg_example
+#' all_noncheck <- c(rcbd_args$p_rep_treatments, rcbd_args$unreplicated_treatments)
+#' all_noncheck_fam <- c(rcbd_args$p_rep_families, rcbd_args$unreplicated_families)
+#'
+#' rcbd_args$p_rep_treatments <- all_noncheck
+#' rcbd_args$p_rep_reps <- rep(2L, length(all_noncheck))
+#' rcbd_args$p_rep_families <- all_noncheck_fam
+#' rcbd_args$unreplicated_treatments <- character(0)
+#' rcbd_args$unreplicated_families <- character(0)
+#'
+#' out_rcbd_type <- do.call(
+#'   prep_famoptg,
+#'   c(rcbd_args, x$OptiDesign_famoptg_args_family)
+#' )
+#'
+#' dim(out_rcbd_type$layout_matrix)
+#' head(out_rcbd_type$field_book)
 #' }
 #'
 #' @importFrom stats runif setNames

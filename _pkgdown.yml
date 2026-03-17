@@ -1,10 +1,28 @@
-url: ~
 template:
   bootstrap: 5
+
 home:
-  title: OptiDesign
+  title: "OptiDesign"
+  description: "Optimized experimental field design for breeding and agronomy"
+
+navbar:
+  structure:
+    left:  [home, reference, articles]
+    right: [github]
+
 reference:
-  - title: Field design functions
+  - title: "Design functions"
     contents:
       - prep_famoptg
       - prep_alpha_checks_rc_stream
+
+  - title: "Datasets"
+    contents:
+      - OptiDesign_example_data
+
+articles:
+  - title: "Getting started"
+    contents:
+      - OptiDesign-introduction
+
+url: https://FAkohoue.github.io/OptiDesign/

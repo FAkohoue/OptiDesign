@@ -9,20 +9,21 @@
 \code{OptiDesign} provides tools for constructing optimized experimental field
 designs for plant breeding and related applications. The package focuses on
 layouts where field structure, treatment grouping, and optional mixed-model
-evaluation should be integrated into the design stage rather than treated as
+evaluation are integrated into the design stage rather than treated as
 separate downstream tasks.
 }
 \details{
 The package currently includes two main design constructors:
 \itemize{
-\item \code{prep_famoptg()} for partially replicated (p-rep) designs with repeated
-checks, optional p-rep and unreplicated entries, optional grouping from
-family or relationship matrices, optional dispersion optimization, and
-optional efficiency evaluation.
+\item \code{prep_famoptg()} for repeated-check block designs with flexible replication,
+supporting augmented designs, partially replicated (p-rep) designs, and
+RCBD-type repeated-check designs. This function allows optional grouping
+from family labels or relationship matrices, optional dispersion
+optimization, and optional mixed-model efficiency evaluation.
 \item \code{prep_alpha_checks_rc_stream()} for fixed-grid alpha row-column stream
 designs where the field is treated as a global traversal stream, replicates
 are contiguous stream segments, incomplete blocks may be unequal, checks are
-repeated in every block, and unused cells appear only at the end of the
+included in every block, and unused cells appear only at the end of the
 stream.
 }
 
@@ -31,7 +32,7 @@ in the field, but also informed by:
 \itemize{
 \item family structure,
 \item pedigree or genomic relationship matrices,
-\item spacing of related materials,
+\item spatial distribution of related materials,
 \item and mixed-model design efficiency considerations.
 }
 }
@@ -40,9 +41,10 @@ in the field, but also informed by:
 \code{OptiDesign} is particularly useful when the user wants to:
 \itemize{
 \item construct designs with repeated checks and heterogeneous entry replication,
+\item generate augmented, p-rep, or balanced repeated-check layouts,
 \item avoid local clustering of related entries,
 \item use family, pedigree, or genomic structure to guide placement,
-\item preserve realistic field-book order,
+\item preserve realistic field-book order and layout constraints,
 \item evaluate a design under fixed- or random-effect mixed models,
 \item compare alternative layout strategies before field implementation.
 }

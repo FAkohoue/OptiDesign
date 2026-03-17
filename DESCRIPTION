@@ -11,7 +11,7 @@ Authors@R: c(
     )
   )
 Description: Tools for constructing optimized experimental field layouts,
-    including partially replicated designs and fixed-grid alpha row-column
+    including augmented, RCBD-type repeated-check designs, p-rep designs, and fixed-grid alpha row-column
     designs with repeated checks, optional grouping from family or relationship
     matrices, optional post-layout dispersion, and optional mixed-model
     efficiency diagnostics.
@@ -35,3 +35,4 @@ Config/testthat/edition: 3
 URL: https://github.com/FAkohoue/OptiDesign
 BugReports: https://github.com/FAkohoue/OptiDesign/issues
 VignetteBuilder: knitr
+
