@@ -129,7 +129,7 @@ The same function can represent different design classes depending on the inputs
 
 - **Augmented design**: when `p_rep_treatments` is `NULL` or empty and test entries are unreplicated while checks appear in all blocks.
 - **Partially replicated design**: when some non-check entries are replicated and others are unreplicated.
-- **RCBD-type design**: when all non-check treatments have the same replication number greater than 1 and are spread across blocks.
+- **RCBD-type design**: when all non-check treatments have the same replication number greater than 1 and are spread across blocks. In addition, `n_blocks` is equal to the replication number of non-check treatments.
 
 ### Advantages
 
