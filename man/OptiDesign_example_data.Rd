@@ -32,7 +32,7 @@ vectors and field dimensions needed to run \code{prep_famoptg()}. This includes
 checks, p-rep treatments, unreplicated treatments, and basic field dimensions.}
 
 \item{\code{OptiDesign_alpha_example}}{A named list containing the core treatment
-vectors and field dimensions needed to run \code{prep_alpha_checks_rc_stream()}.
+vectors and field dimensions needed to run \code{alpha_rc_stream()}.
 This includes checks, entries, number of replicates, and fixed field dimensions.}
 
 \item{\code{OptiDesign_famoptg_args_family}}{A named list of additional arguments
@@ -44,11 +44,11 @@ a GRM-based call to \code{prep_famoptg()}. It illustrates matrix-based grouping 
 optional dispersion settings.}
 
 \item{\code{OptiDesign_alpha_args_family}}{A named list of additional arguments
-for a family-based call to \code{prep_alpha_checks_rc_stream()}. It illustrates
+for a family-based call to \code{alpha_rc_stream()}. It illustrates
 a stream-based row-column design without efficiency evaluation.}
 
 \item{\code{OptiDesign_alpha_args_grm}}{A named list of additional arguments for
-a GRM-based call to \code{prep_alpha_checks_rc_stream()}. It illustrates
+a GRM-based call to \code{alpha_rc_stream()}. It illustrates
 matrix-based grouping and optional dispersion settings.}
 }
 }

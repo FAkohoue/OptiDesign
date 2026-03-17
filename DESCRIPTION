@@ -11,10 +11,10 @@ Authors@R: c(
     )
   )
 Description: Tools for constructing optimized experimental field layouts,
-    including augmented, RCBD-type repeated-check designs, p-rep designs, and fixed-grid alpha row-column
-    designs with repeated checks, optional grouping from family or relationship
-    matrices, optional post-layout dispersion, and optional mixed-model
-    efficiency diagnostics.
+    including augmented, RCBD-type repeated-check designs, p-rep designs,
+    and fixed-grid alpha row-column designs with repeated checks, optional
+    grouping from family or relationship matrices, optional post-layout
+    dispersion, and optional mixed-model efficiency diagnostics.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -32,7 +32,9 @@ Suggests:
     rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-URL: https://github.com/FAkohoue/OptiDesign
+URL: https://github.com/FAkohoue/OptiDesign,
+    https://FAkohoue.github.io/OptiDesign/
 BugReports: https://github.com/FAkohoue/OptiDesign/issues
 VignetteBuilder: knitr
+
 

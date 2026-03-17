@@ -2,5 +2,5 @@
 
 - Initial package structure.
 - Added `prep_famoptg()`.
-- Added `prep_alpha_checks_rc_stream()`.
+- Added `alpha_rc_stream()`.
 - Added package documentation, tests, pkgdown configuration, and GitHub Actions workflow.

@@ -20,7 +20,7 @@ supporting augmented designs, partially replicated (p-rep) designs, and
 RCBD-type repeated-check designs. This function allows optional grouping
 from family labels or relationship matrices, optional dispersion
 optimization, and optional mixed-model efficiency evaluation.
-\item \code{prep_alpha_checks_rc_stream()} for fixed-grid alpha row-column stream
+\item \code{alpha_rc_stream()} for fixed-grid alpha row-column stream
 designs where the field is treated as a global traversal stream, replicates
 are contiguous stream segments, incomplete blocks may be unequal, checks are
 included in every block, and unused cells appear only at the end of the
@@ -97,6 +97,7 @@ rely on the \strong{Matrix} package.
 Useful links:
 \itemize{
   \item \url{https://github.com/FAkohoue/OptiDesign}
+  \item \url{https://FAkohoue.github.io/OptiDesign/}
   \item Report bugs at \url{https://github.com/FAkohoue/OptiDesign/issues}
 }
 

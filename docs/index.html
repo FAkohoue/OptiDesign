@@ -140,13 +140,23 @@
 <div class="section level4">
 <h4 id="purpose">Purpose<a class="anchor" aria-label="anchor" href="#purpose"></a>
 </h4>
-<p>Construct <strong>partially replicated (p-rep) designs</strong>, where:</p>
+<p>Construct <strong>repeated-check block designs with flexible replication</strong>, including:</p>
 <ul>
-<li>checks are replicated in every block<br>
+<li>
+<strong>augmented designs</strong><br>
 </li>
-<li>some entries are replicated (p-rep)<br>
+<li>
+<strong>partially replicated (p-rep) designs</strong><br>
 </li>
-<li>others are unreplicated</li>
+<li><strong>RCBD-type repeated-check designs</strong></li>
+</ul>
+<p>where:</p>
+<ul>
+<li>checks are included in every block<br>
+</li>
+<li>some entries may be replicated<br>
+</li>
+<li>others may be unreplicated</li>
 </ul>
 <hr>
 </div>
@@ -161,7 +171,9 @@
 </li>
 <li>you want to <strong>balance replication and coverage</strong><br>
 </li>
-<li>you are working in <strong>early-stage breeding trials</strong>
+<li>you are working in <strong>early- or intermediate-stage breeding trials</strong><br>
+</li>
+<li>you want a <strong>flexible design framework covering augmented, p-rep, or balanced layouts</strong>
 </li>
 </ul>
 <hr>
@@ -172,7 +184,17 @@
 <ul>
 <li>Flexible replication per entry<br>
 </li>
-<li>Block-wise allocation of treatments<br>
+<li>Block-wise allocation of treatments (no treatment repeats within a block)<br>
+</li>
+<li>Supports:
+<ul>
+<li>augmented designs<br>
+</li>
+<li>p-rep designs<br>
+</li>
+<li>balanced repeated-check (RCBD-type) designs<br>
+</li>
+</ul>
 </li>
 <li>Optional grouping using:
 <ul>
@@ -191,6 +213,16 @@
 <hr>
 </div>
 <div class="section level4">
+<h4 id="key-design-rule">Key design rule<a class="anchor" aria-label="anchor" href="#key-design-rule"></a>
+</h4>
+<p>For replicated entries:</p>
+<blockquote>
+<p>A treatment can appear multiple times overall, but <strong>at most once per block</strong>.</p>
+</blockquote>
+<p>This ensures proper distribution of replicates across blocks.</p>
+<hr>
+</div>
+<div class="section level4">
 <h4 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
 </h4>
 <ol style="list-style-type: decimal">
@@ -198,9 +230,9 @@
 <ul>
 <li>checks<br>
 </li>
-<li>p-rep entries<br>
+<li>replicated entries (optional)<br>
 </li>
-<li>unreplicated entries<br>
+<li>unreplicated entries (optional)<br>
 </li>
 </ul>
 </li>
@@ -227,8 +259,8 @@
 </div>
 </div>
 <div class="section level3">
-<h3 id="prep_alpha_checks_rc_stream">
-<code>prep_alpha_checks_rc_stream()</code><a class="anchor" aria-label="anchor" href="#prep_alpha_checks_rc_stream"></a>
+<h3 id="alpha_rc_stream">
+<code>alpha_rc_stream()</code><a class="anchor" aria-label="anchor" href="#alpha_rc_stream"></a>
 </h3>
 <div class="section level4">
 <h4 id="purpose-1">Purpose<a class="anchor" aria-label="anchor" href="#purpose-1"></a>

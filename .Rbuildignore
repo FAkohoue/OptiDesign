@@ -8,3 +8,5 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^\.gitignore$
+^doc$
+^Meta$

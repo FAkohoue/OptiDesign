@@ -146,7 +146,7 @@ This ensures proper distribution of replicates across blocks.
 
 ---
 
-### `prep_alpha_checks_rc_stream()`
+### `alpha_rc_stream()`
 
 #### Purpose
 

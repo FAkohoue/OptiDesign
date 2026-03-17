@@ -44,12 +44,12 @@ test_that("prep_famoptg works with shipped GRM example", {
   )
 })
 
-test_that("prep_alpha_checks_rc_stream works with shipped family-based example", {
+test_that("alpha_rc_stream works with shipped family-based example", {
   data("OptiDesign_example_data", package = "OptiDesign")
   x <- OptiDesign_example_data
   
   out <- do.call(
-    prep_alpha_checks_rc_stream,
+    alpha_rc_stream,
     c(
       x$OptiDesign_alpha_example,
       x$OptiDesign_alpha_args_family
@@ -68,12 +68,12 @@ test_that("prep_alpha_checks_rc_stream works with shipped family-based example",
   )
 })
 
-test_that("prep_alpha_checks_rc_stream works with shipped GRM example", {
+test_that("alpha_rc_stream works with shipped GRM example", {
   data("OptiDesign_example_data", package = "OptiDesign")
   x <- OptiDesign_example_data
   
   out <- do.call(
-    prep_alpha_checks_rc_stream,
+    alpha_rc_stream,
     c(
       x$OptiDesign_alpha_example,
       x$OptiDesign_alpha_args_grm

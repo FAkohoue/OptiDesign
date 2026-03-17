@@ -7,3 +7,5 @@
 *.Rcheck
 *.tar.gz
 *.zip
+/doc/
+/Meta/

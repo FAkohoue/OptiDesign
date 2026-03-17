@@ -2,7 +2,7 @@
 title: "OptiDesign: Advanced Experimental Design for Breeding Trials"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{OptiDesign: Advanced Experimental Design}
+  %\VignetteIndexEntry{OptiDesign: Advanced Experimental Design for Breeding Trials}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -138,7 +138,7 @@ The same function can represent different design classes depending on the inputs
 - improved estimation via checks
 - one framework for augmented, p-rep, and RCBD-type layouts
 
-## 3.2 Stream-Based Alpha Designs (`prep_alpha_checks_rc_stream()`)
+## 3.2 Stream-Based Alpha Designs (`alpha_rc_stream()`)
 
 ### Principle
 
@@ -191,7 +191,7 @@ This example highlights the general repeated-check block framework:
 
 ```{r}
 out_alpha <- do.call(
-  OptiDesign::prep_alpha_checks_rc_stream,
+  OptiDesign::alpha_rc_stream,
   c(
     x$OptiDesign_alpha_example,
     x$OptiDesign_alpha_args_family
@@ -215,7 +215,7 @@ This example shows a fixed-grid alpha row-column stream design where:
 
 ```{r}
 out_grm <- do.call(
-  OptiDesign::prep_alpha_checks_rc_stream,
+  OptiDesign::alpha_rc_stream,
   c(
     x$OptiDesign_alpha_example,
     x$OptiDesign_alpha_args_grm
@@ -275,7 +275,7 @@ Lower values indicate better precision or better prediction, depending on the mo
 - the design may be augmented, partially replicated, or RCBD-type depending on the treatment replication structure
 - early-stage breeding evaluation is a main objective
 
-## Use `prep_alpha_checks_rc_stream()` when:
+## Use `alpha_rc_stream()` when:
 
 - field dimensions are fixed
 - operational field-book order matters
@@ -300,7 +300,7 @@ Lower values indicate better precision or better prediction, depending on the mo
 
 The function `prep_famoptg()` should be understood as a general block-based repeated-check design constructor that can generate augmented, partially replicated, or RCBD-type layouts depending on the supplied replication pattern.
 
-The function `prep_alpha_checks_rc_stream()` provides a distinct stream-based strategy for fixed-grid alpha row-column layouts under operational field constraints.
+The function `alpha_rc_stream()` provides a distinct stream-based strategy for fixed-grid alpha row-column layouts under operational field constraints.
 
 Together, these tools are especially useful in breeding programs where field implementation constraints and genetic structure should be considered jointly during design construction.
 

@@ -8,7 +8,7 @@
 #' as trailing `NA` positions at the end of the global stream.
 #'
 #' @description
-#' `prep_alpha_checks_rc_stream()` is intended for practical field situations where:
+#' `alpha_rc_stream()` is intended for practical field situations where:
 #'
 #' - the overall field size is fixed in advance,
 #' - replicate boundaries are determined by field-book order rather than by rigid
@@ -652,7 +652,7 @@
 #'
 #' ## Family-based row-column stream design
 #' out_alpha_family <- do.call(
-#'   prep_alpha_checks_rc_stream,
+#'   alpha_rc_stream,
 #'   c(
 #'     x$OptiDesign_alpha_example,
 #'     x$OptiDesign_alpha_args_family
@@ -666,7 +666,7 @@
 #' \dontrun{
 #' ## GRM-based row-column stream design with dispersion
 #' out_alpha_grm <- do.call(
-#'   prep_alpha_checks_rc_stream,
+#'   alpha_rc_stream,
 #'   c(
 #'     x$OptiDesign_alpha_example,
 #'     x$OptiDesign_alpha_args_grm
@@ -682,7 +682,7 @@
 #' @importFrom utils head
 #' @export
 #' 
-prep_alpha_checks_rc_stream <- function(
+alpha_rc_stream <- function(
     check_treatments,
     check_families,
     entry_treatments,

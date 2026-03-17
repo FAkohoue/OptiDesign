@@ -15,7 +15,7 @@
 #'   from family labels or relationship matrices, optional dispersion
 #'   optimization, and optional mixed-model efficiency evaluation.
 #'
-#' - `prep_alpha_checks_rc_stream()` for fixed-grid alpha row-column stream
+#' - `alpha_rc_stream()` for fixed-grid alpha row-column stream
 #'   designs where the field is treated as a global traversal stream, replicates
 #'   are contiguous stream segments, incomplete blocks may be unequal, checks are
 #'   included in every block, and unused cells appear only at the end of the

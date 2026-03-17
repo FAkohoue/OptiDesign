@@ -7,12 +7,12 @@ Files for prep_famoptg()
 - prep_famoptg_A.csv
 - prep_famoptg_K.csv
 
-Files for prep_alpha_checks_rc_stream()
-- prep_alpha_input.csv
-- prep_alpha_id_map.csv
-- prep_alpha_GRM.csv
-- prep_alpha_A.csv
-- prep_alpha_K.csv
+Files for alpha_rc_stream()
+- alpha_input.csv
+- alpha_id_map.csv
+- alpha_GRM.csv
+- alpha_A.csv
+- alpha_K.csv
 
 Matrix files use the first column as row names (LineID).
 In R, read them with for example:

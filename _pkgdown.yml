@@ -14,7 +14,7 @@ reference:
   - title: "Design functions"
     contents:
       - prep_famoptg
-      - prep_alpha_checks_rc_stream
+      - alpha_rc_stream
 
   - title: "Datasets"
     contents:
