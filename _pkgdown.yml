@@ -1,0 +1,10 @@
+url: ~
+template:
+  bootstrap: 5
+home:
+  title: OptiDesign
+reference:
+  - title: Field design functions
+    contents:
+      - prep_famoptg
+      - prep_alpha_checks_rc_stream

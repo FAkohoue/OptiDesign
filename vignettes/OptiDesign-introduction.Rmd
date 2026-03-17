@@ -1,0 +1,19 @@
+---
+title: "Getting started with OptiDesign"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with OptiDesign}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+This vignette introduces the main design functions in **OptiDesign**.
+
+## Functions
+
+- `prep_famoptg()`
+- `prep_alpha_checks_rc_stream()`
