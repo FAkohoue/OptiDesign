@@ -1,7 +1,11 @@
 url: https://FAkohoue.github.io/OptiDesign/
 
+favicon: pkgdown/assets/favicon.ico
+
 template:
   bootstrap: 5
+  includes:
+    in_header: pkgdown/assets/favicon.html
   bslib:
     primary: "#0C4C80"
     secondary: "#3AA0FF"
