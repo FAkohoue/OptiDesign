@@ -8,7 +8,9 @@
 <title>OptiDesign • OptiDesign</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet">
+<link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="OptiDesign">
 <meta name="description" content="Optimized experimental field design for breeding and agronomy">
@@ -18,7 +20,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="index.html">OptiDesign</a>
 
@@ -33,9 +35,10 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="articles/index.html">Articles</a></li>
+<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/FAkohoue/OptiDesign/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/FAkohoue/OptiDesign" aria-label="GitHub repository"><span class="fa fa-github"></span></a></li>
       </ul>
 </div>
 
@@ -46,84 +49,70 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="optidesign">OptiDesign<a class="anchor" aria-label="anchor" href="#optidesign"></a>
 </h1></div>
-<p>OptiDesign provides advanced tools for constructing optimized experimental field designs for plant breeding and agronomic experiments.</p>
-<p>The package integrates:</p>
+<p align="center">
+<img src="reference/figures/optidesign_logo.svg" alt="OptiDesign logo" width="100%"></p>
+<!-- badges: start -->
+
+<hr>
+<div class="section level2">
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
+<p><code>OptiDesign</code> provides advanced tools for constructing optimized experimental field designs for plant breeding and agronomic experiments. It integrates:</p>
 <ul>
-<li>field layout construction<br>
-</li>
-<li>genetic structure (family, pedigree, genomic relationships)<br>
-</li>
-<li>optional spatial dispersion optimization<br>
-</li>
+<li>field layout construction</li>
+<li>genetic structure (family, pedigree, genomic relationships)</li>
+<li>optional spatial dispersion optimization</li>
 <li>optional mixed-model efficiency evaluation</li>
 </ul>
 <p>into a single, flexible workflow.</p>
 <hr>
+</div>
 <div class="section level2">
 <h2 id="why-optidesign">Why OptiDesign?<a class="anchor" aria-label="anchor" href="#why-optidesign"></a>
 </h2>
 <p>In many breeding programs, experimental design is treated as a purely logistical step. However, design choices strongly affect:</p>
 <ul>
-<li>precision of estimates<br>
-</li>
-<li>prediction accuracy<br>
-</li>
-<li>ability to separate genetic effects<br>
-</li>
-<li>robustness to field heterogeneity</li>
+<li>precision of treatment estimates</li>
+<li>genomic prediction accuracy</li>
+<li>ability to separate genetic from environmental effects</li>
+<li>robustness to field spatial heterogeneity</li>
 </ul>
-<p>OptiDesign allows users to <strong>explicitly control these aspects at the design stage</strong>, rather than correcting them later during analysis.</p>
+<p><code>OptiDesign</code> allows users to <strong>explicitly control these aspects at the design stage</strong>, rather than correcting them post hoc during analysis.</p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="core-design-concepts">Core Design Concepts<a class="anchor" aria-label="anchor" href="#core-design-concepts"></a>
 </h2>
-<p>OptiDesign is built around three key ideas:</p>
+<p><code>OptiDesign</code> is built around three key ideas.</p>
 <div class="section level3">
 <h3 id="id_1-field-realism">1. Field realism<a class="anchor" aria-label="anchor" href="#id_1-field-realism"></a>
 </h3>
-<p>Designs reflect how trials are actually implemented:</p>
+<p>Designs reflect how trials are actually implemented in the field:</p>
 <ul>
-<li>fixed grid layouts<br>
-</li>
-<li>field-book ordering<br>
-</li>
-<li>serpentine movement<br>
-</li>
+<li>fixed grid layouts (<code>n_rows × n_cols</code>)</li>
+<li>field-book ordering and serpentine movement</li>
 <li>contiguous replicate structure</li>
+<li>unused cells placed at the end of the field stream</li>
 </ul>
-<hr>
 </div>
 <div class="section level3">
 <h3 id="id_2-genetic-awareness">2. Genetic awareness<a class="anchor" aria-label="anchor" href="#id_2-genetic-awareness"></a>
 </h3>
-<p>Entries can be arranged based on:</p>
+<p>Entries can be arranged based on known genetic structure:</p>
 <ul>
-<li>family labels<br>
-</li>
-<li>pedigree relationships (A matrix)<br>
-</li>
+<li>family labels</li>
+<li>pedigree relationships (A matrix)</li>
 <li>genomic relationships (GRM)</li>
 </ul>
-<p>This allows:</p>
-<ul>
-<li>reduction of local relatedness<br>
-</li>
-<li>improved sampling of genetic diversity<br>
-</li>
-<li>better estimation of genetic effects</li>
-</ul>
-<hr>
+<p>This enables reduction of local genetic relatedness, improved sampling of genetic diversity across spatial blocks, and better estimation of genetic effects.</p>
 </div>
 <div class="section level3">
 <h3 id="id_3-integrated-evaluation">3. Integrated evaluation<a class="anchor" aria-label="anchor" href="#id_3-integrated-evaluation"></a>
 </h3>
-<p>Designs can be evaluated directly using mixed-model principles:</p>
+<p>Designs can be evaluated using mixed-model principles before field implementation:</p>
 <ul>
-<li>fixed-effect precision (BLUEs)<br>
-</li>
-<li>random-effect prediction (BLUP / GBLUP / PBLUP)<br>
-</li>
+<li>fixed-effect precision (BLUEs)</li>
+<li>random-effect prediction (BLUP / GBLUP / PBLUP)</li>
 <li>spatial residual structures (IID, AR1, AR1×AR1)</li>
 </ul>
 <hr>
@@ -132,341 +121,225 @@
 <div class="section level2">
 <h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
 </h2>
-<hr>
 <div class="section level3">
 <h3 id="prep_famoptg">
 <code>prep_famoptg()</code><a class="anchor" aria-label="anchor" href="#prep_famoptg"></a>
 </h3>
-<div class="section level4">
-<h4 id="purpose">Purpose<a class="anchor" aria-label="anchor" href="#purpose"></a>
-</h4>
-<p>Construct <strong>repeated-check block designs with flexible replication</strong>, including:</p>
+<p>Constructs <strong>repeated-check block designs with flexible replication</strong>, covering augmented designs, partially replicated (p-rep) designs, and RCBD-type repeated-check designs. Checks appear in every block; entries may be replicated, partially replicated, or unreplicated.</p>
+<p><strong>Use this function when:</strong></p>
 <ul>
-<li>
-<strong>augmented designs</strong><br>
-</li>
-<li>
-<strong>partially replicated (p-rep) designs</strong><br>
-</li>
-<li><strong>RCBD-type repeated-check designs</strong></li>
+<li>you have many entries but limited field resources</li>
+<li>checks must appear in every block</li>
+<li>you need a flexible framework covering augmented, p-rep, or balanced layouts</li>
+<li>you are working in early- or intermediate-stage breeding trials</li>
 </ul>
-<p>where:</p>
-<ul>
-<li>checks are included in every block<br>
-</li>
-<li>some entries may be replicated<br>
-</li>
-<li>others may be unreplicated</li>
-</ul>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="when-to-use">When to use<a class="anchor" aria-label="anchor" href="#when-to-use"></a>
-</h4>
-<p>Use this function when:</p>
-<ul>
-<li>you have <strong>many entries</strong> but limited resources<br>
-</li>
-<li>you want <strong>checks in every block</strong><br>
-</li>
-<li>you want to <strong>balance replication and coverage</strong><br>
-</li>
-<li>you are working in <strong>early- or intermediate-stage breeding trials</strong><br>
-</li>
-<li>you want a <strong>flexible design framework covering augmented, p-rep, or balanced layouts</strong>
-</li>
-</ul>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="key-capabilities">Key capabilities<a class="anchor" aria-label="anchor" href="#key-capabilities"></a>
-</h4>
-<ul>
-<li>Flexible replication per entry<br>
-</li>
-<li>Block-wise allocation of treatments (no treatment repeats within a block)<br>
-</li>
-<li>Supports:
-<ul>
-<li>augmented designs<br>
-</li>
-<li>p-rep designs<br>
-</li>
-<li>balanced repeated-check (RCBD-type) designs<br>
-</li>
-</ul>
-</li>
-<li>Optional grouping using:
-<ul>
-<li>family labels<br>
-</li>
-<li>genomic relationship matrix (GRM)<br>
-</li>
-<li>pedigree matrix (A)<br>
-</li>
-</ul>
-</li>
-<li>Optional <strong>dispersion optimization</strong> to reduce clustering of related entries<br>
-</li>
-<li>Optional <strong>efficiency diagnostics</strong> under mixed models</li>
-</ul>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="key-design-rule">Key design rule<a class="anchor" aria-label="anchor" href="#key-design-rule"></a>
-</h4>
-<p>For replicated entries:</p>
+<p><strong>Key capabilities:</strong></p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Feature</th>
+<th>Details</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Replication</td>
+<td>Flexible per-entry replication</td>
+</tr>
+<tr>
+<td>Block allocation</td>
+<td>No treatment repeats within a block</td>
+</tr>
+<tr>
+<td>Design types</td>
+<td>Augmented, p-rep, balanced repeated-check</td>
+</tr>
+<tr>
+<td>Grouping</td>
+<td>Family labels, GRM, or pedigree (A) matrix</td>
+</tr>
+<tr>
+<td>Dispersion optimization</td>
+<td>Optional; reduces clustering of related entries</td>
+</tr>
+<tr>
+<td>Efficiency diagnostics</td>
+<td>Optional; mixed-model based evaluation</td>
+</tr>
+</tbody>
+</table>
 <blockquote>
-<p>A treatment can appear multiple times overall, but <strong>at most once per block</strong>.</p>
+<p><strong>Key design rule:</strong> a treatment can appear multiple times overall, but at most once per block.</p>
 </blockquote>
-<p>This ensures proper distribution of replicates across blocks.</p>
 <hr>
-</div>
-<div class="section level4">
-<h4 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
-</h4>
-<ol style="list-style-type: decimal">
-<li>Define:
-<ul>
-<li>checks<br>
-</li>
-<li>replicated entries (optional)<br>
-</li>
-<li>unreplicated entries (optional)<br>
-</li>
-</ul>
-</li>
-<li>Specify:
-<ul>
-<li>number of blocks<br>
-</li>
-<li>field dimensions<br>
-</li>
-</ul>
-</li>
-<li>Choose grouping source (family, GRM, or A)<br>
-</li>
-<li>Optionally:
-<ul>
-<li>optimize dispersion<br>
-</li>
-<li>compute efficiency</li>
-</ul>
-</li>
-</ol>
-<hr>
-<hr>
-</div>
 </div>
 <div class="section level3">
 <h3 id="alpha_rc_stream">
 <code>alpha_rc_stream()</code><a class="anchor" aria-label="anchor" href="#alpha_rc_stream"></a>
 </h3>
-<div class="section level4">
-<h4 id="purpose-1">Purpose<a class="anchor" aria-label="anchor" href="#purpose-1"></a>
-</h4>
-<p>Construct <strong>alpha row–column designs on a fixed grid</strong>, using a <strong>stream-based layout</strong>.</p>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="key-idea-stream-based-design">Key idea: Stream-based design<a class="anchor" aria-label="anchor" href="#key-idea-stream-based-design"></a>
-</h4>
-<p>Instead of dividing the field into rectangles, the field is:</p>
-<ol style="list-style-type: decimal">
-<li>Converted into a <strong>single ordered stream of positions</strong>
-</li>
-<li>Split into <strong>replicates as contiguous segments</strong>
-</li>
-<li>Split further into <strong>incomplete blocks</strong>
-</li>
-</ol>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="when-to-use-1">When to use<a class="anchor" aria-label="anchor" href="#when-to-use-1"></a>
-</h4>
-<p>Use this function when:</p>
+<p>Constructs <strong>alpha row–column designs on a fixed grid</strong> using a stream-based layout. The field is converted into a single ordered stream of positions, split into contiguous replicate segments, then further divided into incomplete blocks.</p>
+<p><strong>Use this function when:</strong></p>
 <ul>
-<li>field dimensions are <strong>fixed and cannot change</strong><br>
-</li>
-<li>planting follows <strong>field-book order</strong><br>
-</li>
-<li>replicates are defined operationally (not geometrically)<br>
-</li>
-<li>you need <strong>checks in every incomplete block</strong><br>
-</li>
+<li>field dimensions are fixed and cannot change</li>
+<li>planting follows field-book order</li>
+<li>replicates are defined operationally rather than geometrically</li>
+<li>checks must appear in every incomplete block</li>
 <li>classical rectangular alpha designs are not practical</li>
 </ul>
+<p><strong>Key capabilities:</strong></p>
+<table class="table">
+<thead><tr>
+<th>Feature</th>
+<th>Details</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Grid</td>
+<td>Fixed <code>n_rows × n_cols</code>
+</td>
+</tr>
+<tr>
+<td>Replicates</td>
+<td>Contiguous field segments</td>
+</tr>
+<tr>
+<td>Block sizes</td>
+<td>Unequal incomplete blocks supported</td>
+</tr>
+<tr>
+<td>Checks</td>
+<td>Present in every block</td>
+</tr>
+<tr>
+<td>Grouping</td>
+<td>Family labels, GRM, or pedigree (A) matrix</td>
+</tr>
+<tr>
+<td>Dispersion optimization</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>Efficiency diagnostics</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Important:</strong> unused cells are placed only at the end of the field stream, not scattered, which is critical for practical field implementation.</p>
+</blockquote>
 <hr>
-</div>
-<div class="section level4">
-<h4 id="key-capabilities-1">Key capabilities<a class="anchor" aria-label="anchor" href="#key-capabilities-1"></a>
-</h4>
-<ul>
-<li>Fixed grid (<code>n_rows × n_cols</code>)<br>
-</li>
-<li>Replicates as contiguous field segments<br>
-</li>
-<li>Unequal incomplete block sizes<br>
-</li>
-<li>Checks in every block<br>
-</li>
-<li>One observation per entry per replicate<br>
-</li>
-<li>Optional:
-<ul>
-<li>grouping (family, GRM, A)<br>
-</li>
-<li>dispersion optimization<br>
-</li>
-<li>efficiency diagnostics</li>
-</ul>
-</li>
-</ul>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="important-consequence">Important consequence<a class="anchor" aria-label="anchor" href="#important-consequence"></a>
-</h4>
-<p>Unused cells:</p>
-<ul>
-<li>are not scattered<br>
-</li>
-<li>are placed <strong>only at the end of the field stream</strong>
-</li>
-</ul>
-<p>This is critical for practical field implementation.</p>
-<hr>
-</div>
 </div>
 </div>
 <div class="section level2">
 <h2 id="grouping-options">Grouping Options<a class="anchor" aria-label="anchor" href="#grouping-options"></a>
 </h2>
-<p>Both main functions support three grouping strategies:</p>
-<div class="section level3">
-<h3 id="family-based">Family-based<a class="anchor" aria-label="anchor" href="#family-based"></a>
-</h3>
-<ul>
-<li>simplest and most interpretable<br>
-</li>
-<li>uses user-defined family labels</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="grm-based-genomic">GRM-based (genomic)<a class="anchor" aria-label="anchor" href="#grm-based-genomic"></a>
-</h3>
-<ul>
-<li>uses genomic similarity<br>
-</li>
-<li>better captures real genetic relationships</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="pedigree-based-a-matrix">Pedigree-based (A matrix)<a class="anchor" aria-label="anchor" href="#pedigree-based-a-matrix"></a>
-</h3>
-<ul>
-<li>uses pedigree structure<br>
-</li>
-<li>useful when genomic data is unavailable</li>
-</ul>
+<p>Both functions support three grouping strategies:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>Strategy</th>
+<th>Source</th>
+<th>Best for</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Family-based</td>
+<td>User-defined labels</td>
+<td>Simple, interpretable grouping</td>
+</tr>
+<tr>
+<td>GRM-based</td>
+<td>Genomic similarity matrix</td>
+<td>Captures real genomic relationships</td>
+</tr>
+<tr>
+<td>Pedigree-based</td>
+<td>A matrix</td>
+<td>When genomic data is unavailable</td>
+</tr>
+</tbody>
+</table>
 <hr>
-</div>
 </div>
 <div class="section level2">
 <h2 id="dispersion-optimization">Dispersion Optimization<a class="anchor" aria-label="anchor" href="#dispersion-optimization"></a>
 </h2>
-<p>Optional step to improve spatial distribution of entries.</p>
-<div class="section level3">
-<h3 id="purpose-2">Purpose<a class="anchor" aria-label="anchor" href="#purpose-2"></a>
-</h3>
-<p>Reduce the probability that:</p>
+<p>An optional step that improves the spatial distribution of genetically related entries across the field. Use it when:</p>
 <ul>
-<li>closely related genotypes<br>
-</li>
-<li>or highly similar entries</li>
-</ul>
-<p>are placed near each other in the field.</p>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="when-to-use-2">When to use<a class="anchor" aria-label="anchor" href="#when-to-use-2"></a>
-</h3>
-<ul>
-<li>genomic or pedigree structure is important<br>
-</li>
-<li>strong local correlation is expected<br>
-</li>
+<li>genomic or pedigree structure matters</li>
+<li>strong local spatial correlation is expected</li>
 <li>you want to avoid confounding spatial and genetic effects</li>
 </ul>
 <hr>
 </div>
-</div>
 <div class="section level2">
 <h2 id="efficiency-evaluation">Efficiency Evaluation<a class="anchor" aria-label="anchor" href="#efficiency-evaluation"></a>
 </h2>
-<p>Optional but powerful feature.</p>
-<div class="section level3">
-<h3 id="what-it-does">What it does<a class="anchor" aria-label="anchor" href="#what-it-does"></a>
-</h3>
-<p>Evaluates the design using a mixed-model framework:</p>
+<p>An optional diagnostic step that evaluates a candidate design under a mixed-model framework before it is implemented. Useful for:</p>
 <ul>
-<li>fixed-effect precision (BLUEs)<br>
-</li>
-<li>random-effect prediction (BLUP / GBLUP / PBLUP)<br>
-</li>
-<li>spatial models (AR1, AR1×AR1)</li>
+<li>comparing alternative designs</li>
+<li>studying the impact of block structure and replication level</li>
+<li>optimizing design parameters for a specific trial objective</li>
 </ul>
+<p>Supported models include fixed-effect precision (BLUEs), random-effect prediction (BLUP / GBLUP / PBLUP), and spatial structures (AR1, AR1×AR1).</p>
 <hr>
-</div>
-<div class="section level3">
-<h3 id="when-to-use-3">When to use<a class="anchor" aria-label="anchor" href="#when-to-use-3"></a>
-</h3>
-<ul>
-<li>comparing alternative designs<br>
-</li>
-<li>optimizing design before field implementation<br>
-</li>
-<li>studying impact of block structure and replication</li>
-</ul>
-<hr>
-</div>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p><strong>Build Vignettes</strong></p>
+<p>Install from GitHub with vignettes (recommended):</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"FAkohoue/OptiDesign"</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  dependencies <span class="op">=</span> <span class="cn">TRUE</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"FAkohoue/OptiDesign"</span>,</span>
+<span>  build_vignettes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  dependencies    <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><strong>Without Vignettes</strong></p>
+<p>Install without vignettes for a faster install:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"FAkohoue/OptiDesign"</span>, build_vignettes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  dependencies <span class="op">=</span> <span class="cn">TRUE</span></span>
+<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"FAkohoue/OptiDesign"</span>,</span>
+<span>  build_vignettes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  dependencies    <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
-<p>Full documentation and tutorials are available at: <a href="https://FAkohoue.github.io/OptiDesign/" class="uri">https://FAkohoue.github.io/OptiDesign/</a></p>
+<p>Full documentation, function reference, and tutorials are available at:</p>
+<p><a href="https://FAkohoue.github.io/OptiDesign/" class="uri">https://FAkohoue.github.io/OptiDesign/</a></p>
+<p>To read the vignette after installation:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"OptiDesign-introduction"</span>, package <span class="op">=</span> <span class="st">"OptiDesign"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
+<div class="section level2">
+<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
+</h2>
+<p>If you use <code>OptiDesign</code> in published research, please cite:</p>
+<pre><code>Akohoue, F. (2026).
+OptiDesign: Experimental Field Design Utilities for Optimized Layout
+Construction. R package version 0.1.0.
+https://github.com/FAkohoue/OptiDesign</code></pre>
+<hr>
 </div>
-<div class="section level1">
-<h1 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
-</h1>
-<p>Akohoue, F. (2026). OptiDesign: Experimental Field Design Utilities for Optimized Layout Construction. <a href="https://github.com/FAkohoue/OptiDesign" class="external-link uri">https://github.com/FAkohoue/OptiDesign</a></p>
+<div class="section level2">
+<h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
+</h2>
+<p>Issues, bug reports, and feature suggestions are welcome: <a href="https://github.com/FAkohoue/OptiDesign/issues" class="external-link uri">https://github.com/FAkohoue/OptiDesign/issues</a></p>
+<hr>
 </div>
-<div class="section level1">
-<h1 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
-</h1>
-<p>Issues and suggestions are welcome: <a href="https://github.com/FAkohoue/OptiDesign/issues" class="external-link uri">https://github.com/FAkohoue/OptiDesign/issues</a></p>
+<div class="section level2">
+<h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
+</h2>
+<p>MIT License © Félicien Akohoue</p>
 </div>
-
+</div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
@@ -494,18 +367,25 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Félicien Akohoue <br><small class="roles"> Author, maintainer </small>   </li>
+<li>
+<a href="https://github.com/FAkohoue" class="external-link">Félicien Akohoue</a> <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0002-2160-0182" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/FAkohoue/OptiDesign/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/FAkohoue/OptiDesign/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://github.com/FAkohoue/OptiDesign/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/FAkohoue/OptiDesign/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Félicien Akohoue.</p>
+  <p>Developed by <a href="https://github.com/FAkohoue" class="external-link">Félicien Akohoue</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">

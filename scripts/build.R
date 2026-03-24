@@ -16,3 +16,5 @@ pkgdown::build_site()
 
 devtools::build_vignettes()
 pkgdown::build_site()
+
+file.exists(".github/workflows/pkgdown.yaml")

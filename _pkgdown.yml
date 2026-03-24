@@ -1,28 +1,47 @@
+url: https://FAkohoue.github.io/OptiDesign/
+
 template:
   bootstrap: 5
+  bslib:
+    primary: "#0C4C80"
+    secondary: "#3AA0FF"
+    success: "#7ED957"
+    base_font: {google: "Inter"}
+    heading_font: {google: "Inter"}
+    code_font: {google: "Fira Code"}
+
+authors:
+  Félicien Akohoue:
+    href: https://github.com/FAkohoue
 
 home:
-  title: "OptiDesign"
-  description: "Optimized experimental field design for breeding and agronomy"
+  title: OptiDesign
+  description: Optimized experimental field design for breeding and agronomy
 
 navbar:
+  bg: primary
   structure:
-    left:  [home, reference, articles]
+    left: [home, reference, articles, news]
     right: [github]
+  components:
+    github:
+      icon: fa-github
+      href: https://github.com/FAkohoue/OptiDesign
+      aria-label: GitHub repository
 
 reference:
-  - title: "Design functions"
+  - title: Design functions
     contents:
       - prep_famoptg
       - alpha_rc_stream
-
-  - title: "Datasets"
+  - title: Datasets
     contents:
       - OptiDesign_example_data
+  - title: Package
+    contents:
+      - OptiDesign-package
 
 articles:
-  - title: "Getting started"
+  - title: Getting started
     contents:
       - OptiDesign-introduction
-
-url: https://FAkohoue.github.io/OptiDesign/

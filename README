@@ -1,13 +1,25 @@
 # OptiDesign
 
-OptiDesign provides advanced tools for constructing optimized experimental field designs for plant breeding and agronomic experiments.
+<p align="center">
+  <img src="man/figures/optidesign_logo.svg" alt="OptiDesign logo" width="100%">
+</p>
 
-The package integrates:
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/FAkohoue/OptiDesign/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/FAkohoue/OptiDesign/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/FAkohoue/OptiDesign/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/FAkohoue/OptiDesign/actions/workflows/pkgdown.yaml)
+<!-- badges: end -->
 
-- field layout construction  
-- genetic structure (family, pedigree, genomic relationships)  
-- optional spatial dispersion optimization  
-- optional mixed-model efficiency evaluation  
+---
+
+## Overview
+
+`OptiDesign` provides advanced tools for constructing optimized experimental
+field designs for plant breeding and agronomic experiments. It integrates:
+
+- field layout construction
+- genetic structure (family, pedigree, genomic relationships)
+- optional spatial dispersion optimization
+- optional mixed-model efficiency evaluation
 
 into a single, flexible workflow.
 
@@ -15,291 +27,213 @@ into a single, flexible workflow.
 
 ## Why OptiDesign?
 
-In many breeding programs, experimental design is treated as a purely logistical step. However, design choices strongly affect:
+In many breeding programs, experimental design is treated as a purely
+logistical step. However, design choices strongly affect:
 
-- precision of estimates  
-- prediction accuracy  
-- ability to separate genetic effects  
-- robustness to field heterogeneity  
+- precision of treatment estimates
+- genomic prediction accuracy
+- ability to separate genetic from environmental effects
+- robustness to field spatial heterogeneity
 
-OptiDesign allows users to **explicitly control these aspects at the design stage**, rather than correcting them later during analysis.
+`OptiDesign` allows users to **explicitly control these aspects at the design
+stage**, rather than correcting them post hoc during analysis.
 
 ---
 
 ## Core Design Concepts
 
-OptiDesign is built around three key ideas:
+`OptiDesign` is built around three key ideas.
 
 ### 1. Field realism
 
-Designs reflect how trials are actually implemented:
+Designs reflect how trials are actually implemented in the field:
 
-- fixed grid layouts  
-- field-book ordering  
-- serpentine movement  
-- contiguous replicate structure  
-
----
+- fixed grid layouts (`n_rows × n_cols`)
+- field-book ordering and serpentine movement
+- contiguous replicate structure
+- unused cells placed at the end of the field stream
 
 ### 2. Genetic awareness
 
-Entries can be arranged based on:
+Entries can be arranged based on known genetic structure:
 
-- family labels  
-- pedigree relationships (A matrix)  
-- genomic relationships (GRM)  
+- family labels
+- pedigree relationships (A matrix)
+- genomic relationships (GRM)
 
-This allows:
-
-- reduction of local relatedness  
-- improved sampling of genetic diversity  
-- better estimation of genetic effects  
-
----
+This enables reduction of local genetic relatedness, improved sampling of
+genetic diversity across spatial blocks, and better estimation of genetic
+effects.
 
 ### 3. Integrated evaluation
 
-Designs can be evaluated directly using mixed-model principles:
+Designs can be evaluated using mixed-model principles before field
+implementation:
 
-- fixed-effect precision (BLUEs)  
-- random-effect prediction (BLUP / GBLUP / PBLUP)  
-- spatial residual structures (IID, AR1, AR1×AR1)  
+- fixed-effect precision (BLUEs)
+- random-effect prediction (BLUP / GBLUP / PBLUP)
+- spatial residual structures (IID, AR1, AR1×AR1)
 
 ---
 
 ## Main Functions
 
----
-
 ### `prep_famoptg()`
 
-#### Purpose
+Constructs **repeated-check block designs with flexible replication**,
+covering augmented designs, partially replicated (p-rep) designs, and
+RCBD-type repeated-check designs. Checks appear in every block; entries may
+be replicated, partially replicated, or unreplicated.
 
-Construct **repeated-check block designs with flexible replication**, including:
+**Use this function when:**
 
-- **augmented designs**  
-- **partially replicated (p-rep) designs**  
-- **RCBD-type repeated-check designs**  
+- you have many entries but limited field resources
+- checks must appear in every block
+- you need a flexible framework covering augmented, p-rep, or balanced layouts
+- you are working in early- or intermediate-stage breeding trials
 
-where:
+**Key capabilities:**
 
-- checks are included in every block  
-- some entries may be replicated  
-- others may be unreplicated  
+| Feature | Details |
+|---|---|
+| Replication | Flexible per-entry replication |
+| Block allocation | No treatment repeats within a block |
+| Design types | Augmented, p-rep, balanced repeated-check |
+| Grouping | Family labels, GRM, or pedigree (A) matrix |
+| Dispersion optimization | Optional; reduces clustering of related entries |
+| Efficiency diagnostics | Optional; mixed-model based evaluation |
 
----
-
-#### When to use
-
-Use this function when:
-
-- you have **many entries** but limited resources  
-- you want **checks in every block**  
-- you want to **balance replication and coverage**  
-- you are working in **early- or intermediate-stage breeding trials**  
-- you want a **flexible design framework covering augmented, p-rep, or balanced layouts**  
-
----
-
-#### Key capabilities
-
-- Flexible replication per entry  
-- Block-wise allocation of treatments (no treatment repeats within a block)  
-- Supports:
-  - augmented designs  
-  - p-rep designs  
-  - balanced repeated-check (RCBD-type) designs  
-- Optional grouping using:
-  - family labels  
-  - genomic relationship matrix (GRM)  
-  - pedigree matrix (A)  
-- Optional **dispersion optimization** to reduce clustering of related entries  
-- Optional **efficiency diagnostics** under mixed models  
-
----
-
-#### Key design rule
-
-For replicated entries:
-
-> A treatment can appear multiple times overall, but **at most once per block**.
-
-This ensures proper distribution of replicates across blocks.
-
----
-
-#### Typical workflow
-
-1. Define:
-   - checks  
-   - replicated entries (optional)  
-   - unreplicated entries (optional)  
-2. Specify:
-   - number of blocks  
-   - field dimensions  
-3. Choose grouping source (family, GRM, or A)  
-4. Optionally:
-   - optimize dispersion  
-   - compute efficiency  
-
----
+> **Key design rule:** a treatment can appear multiple times overall, but
+> at most once per block.
 
 ---
 
 ### `alpha_rc_stream()`
 
-#### Purpose
+Constructs **alpha row–column designs on a fixed grid** using a stream-based
+layout. The field is converted into a single ordered stream of positions,
+split into contiguous replicate segments, then further divided into incomplete
+blocks.
 
-Construct **alpha row–column designs on a fixed grid**, using a **stream-based layout**.
+**Use this function when:**
 
----
+- field dimensions are fixed and cannot change
+- planting follows field-book order
+- replicates are defined operationally rather than geometrically
+- checks must appear in every incomplete block
+- classical rectangular alpha designs are not practical
 
-#### Key idea: Stream-based design
+**Key capabilities:**
 
-Instead of dividing the field into rectangles, the field is:
+| Feature | Details |
+|---|---|
+| Grid | Fixed `n_rows × n_cols` |
+| Replicates | Contiguous field segments |
+| Block sizes | Unequal incomplete blocks supported |
+| Checks | Present in every block |
+| Grouping | Family labels, GRM, or pedigree (A) matrix |
+| Dispersion optimization | Optional |
+| Efficiency diagnostics | Optional |
 
-1. Converted into a **single ordered stream of positions**
-2. Split into **replicates as contiguous segments**
-3. Split further into **incomplete blocks**
-
----
-
-#### When to use
-
-Use this function when:
-
-- field dimensions are **fixed and cannot change**  
-- planting follows **field-book order**  
-- replicates are defined operationally (not geometrically)  
-- you need **checks in every incomplete block**  
-- classical rectangular alpha designs are not practical  
-
----
-
-#### Key capabilities
-
-- Fixed grid (`n_rows × n_cols`)  
-- Replicates as contiguous field segments  
-- Unequal incomplete block sizes  
-- Checks in every block  
-- One observation per entry per replicate  
-- Optional:
-  - grouping (family, GRM, A)  
-  - dispersion optimization  
-  - efficiency diagnostics  
-
----
-
-#### Important consequence
-
-Unused cells:
-
-- are not scattered  
-- are placed **only at the end of the field stream**  
-
-This is critical for practical field implementation.
+> **Important:** unused cells are placed only at the end of the field stream,
+> not scattered, which is critical for practical field implementation.
 
 ---
 
 ## Grouping Options
 
-Both main functions support three grouping strategies:
+Both functions support three grouping strategies:
 
-### Family-based
-
-- simplest and most interpretable  
-- uses user-defined family labels  
-
-### GRM-based (genomic)
-
-- uses genomic similarity  
-- better captures real genetic relationships  
-
-### Pedigree-based (A matrix)
-
-- uses pedigree structure  
-- useful when genomic data is unavailable  
+| Strategy | Source | Best for |
+|---|---|---|
+| Family-based | User-defined labels | Simple, interpretable grouping |
+| GRM-based | Genomic similarity matrix | Captures real genomic relationships |
+| Pedigree-based | A matrix | When genomic data is unavailable |
 
 ---
 
 ## Dispersion Optimization
 
-Optional step to improve spatial distribution of entries.
+An optional step that improves the spatial distribution of genetically related
+entries across the field. Use it when:
 
-### Purpose
-
-Reduce the probability that:
-
-- closely related genotypes  
-- or highly similar entries  
-
-are placed near each other in the field.
-
----
-
-### When to use
-
-- genomic or pedigree structure is important  
-- strong local correlation is expected  
-- you want to avoid confounding spatial and genetic effects  
+- genomic or pedigree structure matters
+- strong local spatial correlation is expected
+- you want to avoid confounding spatial and genetic effects
 
 ---
 
 ## Efficiency Evaluation
 
-Optional but powerful feature.
+An optional diagnostic step that evaluates a candidate design under a
+mixed-model framework before it is implemented. Useful for:
 
-### What it does
+- comparing alternative designs
+- studying the impact of block structure and replication level
+- optimizing design parameters for a specific trial objective
 
-Evaluates the design using a mixed-model framework:
-
-- fixed-effect precision (BLUEs)  
-- random-effect prediction (BLUP / GBLUP / PBLUP)  
-- spatial models (AR1, AR1×AR1)  
-
----
-
-### When to use
-
-- comparing alternative designs  
-- optimizing design before field implementation  
-- studying impact of block structure and replication  
+Supported models include fixed-effect precision (BLUEs), random-effect
+prediction (BLUP / GBLUP / PBLUP), and spatial structures (AR1, AR1×AR1).
 
 ---
 
 ## Installation
 
-**Build Vignettes**
+Install from GitHub with vignettes (recommended):
 
 ```r
-# install.packages("remotes")
-remotes::install_github("FAkohoue/OptiDesign", build_vignettes = TRUE,
-  dependencies = TRUE
+install.packages("remotes")
+remotes::install_github("FAkohoue/OptiDesign",
+  build_vignettes = TRUE,
+  dependencies    = TRUE
 )
 ```
 
-**Without Vignettes** 
+Install without vignettes for a faster install:
 
 ```r
-# install.packages("remotes")
-remotes::install_github("FAkohoue/OptiDesign", build_vignettes = FALSE,
-  dependencies = TRUE
+remotes::install_github("FAkohoue/OptiDesign",
+  build_vignettes = FALSE,
+  dependencies    = TRUE
 )
 ```
+
 ---
 
 ## Documentation
 
-Full documentation and tutorials are available at: https://FAkohoue.github.io/OptiDesign/
+Full documentation, function reference, and tutorials are available at:
+
+<https://FAkohoue.github.io/OptiDesign/>
+
+To read the vignette after installation:
+
+```r
+vignette("OptiDesign-introduction", package = "OptiDesign")
+```
 
 ---
 
-# Citation
+## Citation
 
-Akohoue, F. (2026). OptiDesign: Experimental Field Design Utilities for Optimized Layout Construction.
+If you use `OptiDesign` in published research, please cite:
+
+```
+Akohoue, F. (2026).
+OptiDesign: Experimental Field Design Utilities for Optimized Layout
+Construction. R package version 0.1.0.
 https://github.com/FAkohoue/OptiDesign
+```
 
+---
 
-# Contributing
+## Contributing
 
-Issues and suggestions are welcome: https://github.com/FAkohoue/OptiDesign/issues
+Issues, bug reports, and feature suggestions are welcome:
+<https://github.com/FAkohoue/OptiDesign/issues>
+
+---
+
+## License
+
+MIT License © Félicien Akohoue

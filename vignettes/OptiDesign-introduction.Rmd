@@ -7,153 +7,130 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, echo=FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-# 1. Introduction
+## Introduction
 
-Experimental design is a fundamental component of plant breeding and agronomic research. The ability to accurately estimate genetic effects, compare treatments, and predict performance depends critically on how field trials are constructed.
+Experimental design is a fundamental component of plant breeding and agronomic
+research. The ability to accurately estimate genetic effects, compare
+treatments, and predict field performance depends critically on how trials are
+constructed.
 
-Traditional designs such as randomized complete block designs (RCBD) and alpha-lattice designs often assume:
+Traditional designs such as randomized complete block designs (RCBD) and
+alpha-lattice designs typically assume regular block structures, balanced
+replication, and independence between spatial and genetic effects. Modern
+breeding programs face increasingly complex constraints that these classical
+frameworks do not address well: large numbers of genotypes, limited field
+capacity, heterogeneous environments, and the availability of genomic and
+pedigree information.
 
-- regular block structures
-- balanced replication
-- independence between spatial and genetic effects
+`OptiDesign` addresses these challenges by integrating flexible field layout
+construction, genetic structure (family, pedigree, genomic), spatial-aware
+arrangement, and optional mixed-model efficiency evaluation into a unified
+design framework.
 
-However, modern breeding programs face increasingly complex constraints:
+---
 
-- large numbers of genotypes
-- limited field capacity
-- heterogeneous environments
-- availability of genomic and pedigree information
+## Conceptual Framework
 
-`OptiDesign` addresses these challenges by integrating:
+### The mixed model
 
-- flexible field layout construction
-- genetic structure (family, pedigree, genomic)
-- spatial-aware arrangement
-- optional mixed-model efficiency evaluation
+Let $y$ be the vector of observed phenotypes, $g$ the genetic effects, and
+$e$ the residuals. The general mixed model underlying design evaluation is:
 
-into a unified design framework.
-
-# 2. Conceptual Framework
-
-## 2.1 Design Objective
-
-Let:
-
-- $y$ be the vector of observed phenotypes
-- $g$ be the genetic effects
-- $e$ be the residual errors
-
-We consider the mixed model:
-
-$$
-y = X\beta + Zg + e
-$$
+$$y = X\beta + Zg + e$$
 
 where:
 
-- $X$ is the design matrix for fixed effects
-- $Z$ is the incidence matrix for genotypes
-- $g \sim N(0, \sigma_g^2 K)$
-- $e \sim N(0, R)$
+| Symbol | Description |
+|--------|-------------|
+| $X$ | Design matrix for fixed effects |
+| $\beta$ | Vector of fixed effects (e.g., block, check) |
+| $Z$ | Incidence matrix linking genotypes to plots |
+| $g$ | Genetic effects, $g \sim N(0,\, \sigma_g^2 K)$ |
+| $K$ | Genetic relationship matrix (GRM or A) |
+| $e$ | Residuals, $e \sim N(0,\, R)$ |
 
-The design problem consists of choosing $X$ and $Z$ through field layout construction to optimize:
+The design problem is to choose $X$ and $Z$ — through field layout
+construction — to optimise the precision of $\hat{\beta}$ (BLUEs) and the
+prediction accuracy of $\hat{g}$ (BLUPs).
 
-- precision of $\hat{\beta}$
-- prediction accuracy of $\hat{g}$
+### Field as a spatial process
 
-## 2.2 Field as a Spatial Process
+Field plots are spatially structured. Residuals are rarely independent owing
+to row and column effects, soil gradients, and management variation. Three
+residual structures are supported:
 
-Field plots are spatially structured. Residuals are rarely independent because of:
+- **IID** — independent and identically distributed residuals (classical
+  assumption)
+- **AR1** — first-order autoregressive structure along one direction
+- **AR1×AR1** — separable two-dimensional autoregressive structure (rows and
+  columns)
 
-- row effects
-- column effects
-- spatial autocorrelation
-- soil gradients
-- management effects
+### Genetic structure in design
 
-Supported residual structures include:
+Entries can be grouped based on family labels, the pedigree relationship
+matrix $A$, or the genomic relationship matrix (GRM). Incorporating genetic
+structure at the design stage allows the layout to reduce clustering of
+related genotypes, improve diversity spread across blocks, and reduce
+confounding between spatial and genetic signals.
 
-- "IID"
-- "AR1"
-- "AR1xAR1"
+---
 
-## 2.3 Genetic Structure in Design
+## Design Strategies
 
-Entries can be grouped based on:
+### Block-based designs with repeated checks — `prep_famoptg()`
 
-- family labels
-- pedigree relationship matrix ($A$)
-- genomic relationship matrix ($G$ or GRM)
+`prep_famoptg()` constructs a block-based design in which checks are repeated
+in every block, while non-check entries are allocated across blocks according
+to their specified replication levels. Depending on the replication pattern
+supplied, the same function generates:
 
-This allows the design to:
+- an **augmented design** — unreplicated test entries with checks in every
+  block
+- a **partially replicated (p-rep) design** — some entries replicated, others
+  unreplicated
+- an **RCBD-type design** — all non-check entries replicated equally, with
+  `n_blocks` equal to the replication number
 
-- reduce clustering of related genotypes
-- improve diversity spread
-- reduce confounding between spatial and genetic signals
+The key design rule is that **a treatment may appear at most once per block**,
+regardless of its total replication. This ensures replicates are distributed
+across blocks rather than clustered.
 
-# 3. Design Strategies
+**Use `prep_famoptg()` when:**
 
-## 3.1 Block-Based Designs with Repeated Checks (`prep_famoptg()`)
+- checks must appear in every block
+- many entries must be screened with limited resources
+- the design may be augmented, p-rep, or RCBD-type depending on replication
+- early- to intermediate-stage breeding evaluation is the objective
 
-### Principle
+### Stream-based alpha designs — `alpha_rc_stream()`
 
-`prep_famoptg()` constructs a block-based design in which checks are repeated in every block, while non-check treatments are allocated according to their specified replication levels.
+`alpha_rc_stream()` constructs alpha row–column designs on a fixed grid using
+a stream-based layout. The field is converted into a single ordered stream of
+positions, split into contiguous replicate segments, and further divided into
+incomplete blocks.
 
-Depending on the input structure, the same function can generate:
+A key property of this approach is that **unused cells are placed only at the
+end of the field stream** — not scattered across the grid — which is critical
+for practical field implementation.
 
-- an augmented design
-- a partially replicated (p-rep) design
-- an RCBD-type design
+**Use `alpha_rc_stream()` when:**
 
-Let:
+- field dimensions are fixed and cannot change
+- planting follows field-book (serpentine) order
+- replicates are defined operationally as contiguous segments
+- incomplete blocks may be unequal in size
+- classical rectangular alpha designs are not feasible
 
-- $C$ = number of checks
-- $B$ = number of blocks
-- $r_i$ = replication number of non-check treatment $i$
+---
 
-The basic structure is:
+## Example Dataset
 
-- checks are replicated in all blocks
-- non-check treatments are distributed across blocks according to their replication levels
-- each non-check treatment appears at most once per block
-
-This last rule is important. For example, if a treatment has replication 2 and the number of blocks is at least 2, its two replicates are placed in two different blocks rather than repeated within the same block.
-
-### Special cases
-
-The same function can represent different design classes depending on the inputs:
-
-- **Augmented design**: when `p_rep_treatments` is `NULL` or empty and test entries are unreplicated while checks appear in all blocks.
-- **Partially replicated design**: when some non-check entries are replicated and others are unreplicated.
-- **RCBD-type design**: when all non-check treatments have the same replication number greater than 1 and are spread across blocks. In addition, `n_blocks` is equal to the replication number of non-check treatments.
-
-### Advantages
-
-- efficient use of field space
-- broader genetic coverage
-- improved estimation via checks
-- one framework for augmented, p-rep, and RCBD-type layouts
-
-## 3.2 Stream-Based Alpha Designs (`alpha_rc_stream()`)
-
-### Principle
-
-The field is treated as a linear stream:
-
-1. define traversal order
-2. build a global stream
-3. split the stream into replicates
-4. split each replicate into blocks
-
-### Key property
-
-Unused plots are placed only at the end of the stream.
-
-# 4. Example Dataset
+The package ships with a built-in example dataset containing inputs for both
+main functions:
 
 ```{r}
 data("OptiDesign_example_data", package = "OptiDesign")
@@ -161,9 +138,13 @@ x <- OptiDesign_example_data
 names(x)
 ```
 
-# 5. Example 1 — Family-based block design with repeated checks
+---
 
-This example illustrates a family-based call to `prep_famoptg()`. Depending on the replication pattern supplied in the example inputs, the same function may behave as an augmented design constructor, a p-rep constructor, or an RCBD-type constructor.
+## Example 1 — Family-based block design with repeated checks
+
+This example calls `prep_famoptg()` with family-based grouping. Depending on
+the replication pattern in the example inputs, the function acts as an
+augmented, p-rep, or RCBD-type constructor:
 
 ```{r}
 out_fam <- do.call(
@@ -178,16 +159,19 @@ dim(out_fam$layout_matrix)
 head(out_fam$field_book)
 ```
 
-## 5.1 Interpretation
+The result contains:
 
-This example highlights the general repeated-check block framework:
+- `layout_matrix` — a spatial grid of plot assignments (`n_rows × n_cols`)
+- `field_book` — a row-by-row record of plot, block, treatment, and grouping
+  information suitable for field implementation
 
-- checks are present in every block
-- non-check treatments are allocated across blocks according to their replication levels
-- no non-check treatment can occur twice in the same block
-- grouping is based on family labels in this example
+In this design: checks are present in every block; non-check entries are
+allocated across blocks according to their replication levels; no non-check
+entry appears twice in the same block; and grouping is based on family labels.
 
-# 6. Example 2 — Stream-based alpha design
+---
+
+## Example 2 — Stream-based alpha row–column design
 
 ```{r}
 out_alpha <- do.call(
@@ -202,16 +186,17 @@ dim(out_alpha$layout_matrix)
 head(out_alpha$field_book)
 ```
 
-## 6.1 Interpretation
+In this design: the field is traversed as a single ordered stream; replicate
+segments are contiguous within that stream; checks are placed in every
+incomplete block; and any unused cells appear only at the end of the stream.
 
-This example shows a fixed-grid alpha row-column stream design where:
+---
 
-- the field is traversed as a single ordered stream
-- replicate segments are contiguous in that stream
-- checks are placed in every incomplete block
-- unused cells, if any, occur only at the end of the stream
+## Example 3 — GRM-based stream design
 
-# 7. Advanced Example — GRM-based design
+When a genomic relationship matrix is available it can replace family labels
+as the grouping source, allowing the layout to reflect genomic similarity more
+precisely:
 
 ```{r}
 out_grm <- do.call(
@@ -225,86 +210,91 @@ out_grm <- do.call(
 head(out_grm$field_book)
 ```
 
-This example illustrates how a genomic relationship matrix can be used to derive grouping information that influences layout construction.
+---
 
-# 8. Dispersion Optimization
+## Grouping Options
 
-A useful design objective is to reduce local relatedness among nearby plots.
+Both functions support three grouping strategies:
 
-Informally, if $d(i,j)$ denotes the similarity between plots $i$ and $j$, one may seek to reduce:
+| Strategy | Source | Best for |
+|---|---|---|
+| Family-based | User-defined labels | Simple, interpretable grouping |
+| GRM-based | Genomic similarity matrix | Captures real genomic relationships |
+| Pedigree-based | $A$ matrix | When genomic data is unavailable |
 
-$$
-\sum_{(i,j)\in \mathcal{N}} d(i,j)
-$$
+---
 
-where $\mathcal{N}$ is the set of neighboring plot pairs.
+## Dispersion Optimization
 
-Potential effects include:
+An optional step that improves the spatial distribution of genetically related
+entries. If $d(i,j)$ denotes the similarity between plots $i$ and $j$, the
+optimizer seeks to reduce:
 
-- reduced local clustering
-- improved robustness to spatial confounding
-- better distribution of related materials across the field
+$$\sum_{(i,j)\in \mathcal{N}} d(i,j)$$
 
-# 9. Efficiency Evaluation
+where $\mathcal{N}$ is the set of neighbouring plot pairs. This reduces local
+clustering of related materials, improves robustness to spatial confounding,
+and promotes better distribution of genetic diversity across the field.
 
-## Fixed effects
+Use dispersion optimization when genomic or pedigree structure is important
+and strong local spatial correlation is expected.
 
-Under a fixed-effect perspective, precision depends on quantities such as:
+---
 
-$$
-Var(\hat{\beta}) = (X^T V^{-1} X)^{-1}
-$$
+## Efficiency Evaluation
 
-## Random effects
+An optional diagnostic step that evaluates a candidate design under a
+mixed-model framework before field implementation.
 
-Under a random-effect perspective, a key quantity is the prediction error variance:
+**Fixed-effect precision** — the variance of BLUE estimates:
 
-$$
-PEV = Var(\hat{g} - g)
-$$
+$$\mathrm{Var}(\hat{\beta}) = (X^\top V^{-1} X)^{-1}$$
 
-Lower values indicate better precision or better prediction, depending on the model objective.
+Lower diagonal values indicate higher precision for the corresponding fixed
+effects.
 
-# 10. Practical Guidelines
+**Random-effect prediction** — the prediction error variance (PEV):
 
-## Use `prep_famoptg()` when:
+$$\mathrm{PEV} = \mathrm{Var}(\hat{g} - g)$$
 
-- checks should appear in every block
-- many entries must be screened
-- replication resources are limited
-- the design may be augmented, partially replicated, or RCBD-type depending on the treatment replication structure
-- early-stage breeding evaluation is a main objective
+Lower PEV values indicate higher prediction accuracy for genetic effects.
 
-## Use `alpha_rc_stream()` when:
+Supported models include IID, AR1, and AR1×AR1 spatial structures, and
+prediction modes include BLUP, GBLUP, and PBLUP. Use efficiency evaluation
+when comparing alternative designs or studying the impact of block structure
+and replication on estimability.
 
-- field dimensions are fixed
-- operational field-book order matters
-- contiguous replicate segments are desired
-- incomplete blocks may be unequal
-- unused cells should be pushed to the end of the stream
+---
 
-## Grouping choice
+## Practical Guidelines
 
-- Family → simple and interpretable structure
-- GRM → genomic precision
-- A matrix → pedigree-based structure
+| Criterion | `prep_famoptg()` | `alpha_rc_stream()` |
+|---|---|---|
+| Checks in every block | Yes — by design | Yes — by design |
+| Field dimensions | Flexible | Fixed grid required |
+| Replicate structure | Block-based | Contiguous stream segments |
+| Unequal block sizes | Not applicable | Supported |
+| Unused cell placement | Depends on layout | End of stream only |
+| Typical use | Early/mid breeding stage | Operational field-book trials |
 
-# 11. Summary
+**Grouping choice:** use family labels for simple interpretability, GRM when
+genomic data is available and relatedness precision matters, and the $A$
+matrix when only pedigree information is available.
 
-`OptiDesign` enables:
+---
 
-- realistic field design
-- genetic-aware layout
-- spatial optimization
-- efficiency evaluation
+## Summary
 
-The function `prep_famoptg()` should be understood as a general block-based repeated-check design constructor that can generate augmented, partially replicated, or RCBD-type layouts depending on the supplied replication pattern.
+`OptiDesign` provides two complementary design strategies — block-based
+repeated-check layouts via `prep_famoptg()` and stream-based alpha row–column
+layouts via `alpha_rc_stream()` — together with optional dispersion
+optimization and mixed-model efficiency evaluation. Both functions support
+family, genomic, and pedigree-based grouping and are designed to be
+practically implementable in field trials with real-world constraints.
 
-The function `alpha_rc_stream()` provides a distinct stream-based strategy for fixed-grid alpha row-column layouts under operational field constraints.
+---
 
-Together, these tools are especially useful in breeding programs where field implementation constraints and genetic structure should be considered jointly during design construction.
-
-# 12. Session Information
+## Session Information
 
 ```{r}
 sessionInfo()

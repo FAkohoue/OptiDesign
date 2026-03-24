@@ -2,14 +2,14 @@ Package: OptiDesign
 Type: Package
 Title: Experimental Field Design Utilities for Optimized Layout Construction
 Version: 0.1.0
-Authors@R: c(
+Authors@R:
     person(
-      given = "Félicien",
-      family = "Akohoue",
-      email = "akohoue.f@gmail.com",
-      role = c("aut", "cre")
+      given   = "Félicien",
+      family  = "Akohoue",
+      email   = "akohoue.f@gmail.com",
+      role    = c("aut", "cre"),
+      comment = c(ORCID = "0000-0002-2160-0182")
     )
-  )
 Description: Tools for constructing optimized experimental field layouts,
     including augmented, RCBD-type repeated-check designs, p-rep designs,
     and fixed-grid alpha row-column designs with repeated checks, optional
@@ -36,5 +36,3 @@ URL: https://github.com/FAkohoue/OptiDesign,
     https://FAkohoue.github.io/OptiDesign/
 BugReports: https://github.com/FAkohoue/OptiDesign/issues
 VignetteBuilder: knitr
-
-
