@@ -269,12 +269,30 @@ Evaluates the design using a mixed-model framework:
 
 ## Installation
 
-Install from GitHub:
+**Build Vignettes**
 
 ```r
 # install.packages("remotes")
-remotes::install_github("FAkohoue/OptiDesign")
+remotes::install_github("FAkohoue/OptiDesign", build_vignettes = TRUE,
+  dependencies = TRUE
+)
 ```
+
+**Without Vignettes** 
+
+```r
+# install.packages("remotes")
+remotes::install_github("FAkohoue/OptiDesign", build_vignettes = FALSE,
+  dependencies = TRUE
+)
+```
+---
+
+## Documentation
+
+Full documentation and tutorials are available at: https://FAkohoue.github.io/OptiDesign/
+
+---
 
 # Citation
 
