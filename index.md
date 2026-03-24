@@ -1,6 +1,6 @@
 # OptiDesign
 
-![OptiDesign logo](reference/figures/optidesign_logo.svg)
+![OptiDesign logo](reference/figures/optidesign_logo.png)
 
 ------------------------------------------------------------------------
 
