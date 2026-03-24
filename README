@@ -1,7 +1,7 @@
 # OptiDesign
 
 <p align="center">
-  <img src="man/figures/optidesign_logo.png" alt="OptiDesign logo" width="100%">
+  <img src="man/figures/logo.svg" alt="OptiDesign logo" width="100%">
 </p>
 
 <!-- badges: start -->
