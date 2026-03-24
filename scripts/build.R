@@ -10,6 +10,8 @@ devtools::build()
 devtools::document()
 devtools::install()
 devtools::check()
+
+unloadNamespace("OptiDesign")
 pkgdown::build_site()
 
 devtools::build_vignettes()
