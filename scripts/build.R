@@ -1,5 +1,6 @@
 # Build helper script for OptiDesign
 # Example usage in R:
+#unlink("pkgdown", recursive = TRUE)
 
 source("data-raw/generate_example_data.R")
 devtools::document()
@@ -33,7 +34,7 @@ pkgdown::build_favicons(overwrite = TRUE)
 # Regenerate favicons from the correct logo
 pkgdown::build_favicons(overwrite = TRUE)
 pkgdown::build_site()
-
+pkgdown::build_site(override = list(template = list(favicon = FALSE)))
 
 library(magick)
 
@@ -62,3 +63,16 @@ writeLines(
   ),
   "pkgdown/assets/favicon.html"
 )
+
+
+# Create the correct folder
+dir.create("pkgdown/favicon", showWarnings = FALSE)
+
+# Copy all favicon files from assets/ to favicon/
+file.copy(
+  from      = list.files("pkgdown/assets", full.names = TRUE),
+  to        = "pkgdown/favicon/",
+  overwrite = TRUE
+)
+
+list.files("pkgdown/favicon")

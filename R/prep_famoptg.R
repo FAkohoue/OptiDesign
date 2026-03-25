@@ -1021,6 +1021,16 @@ prep_famoptg <- function(
   check_placement <- match.arg(check_placement)
   dispersion_source <- match.arg(dispersion_source)
   
+  
+  # ============================================================
+  # Normalize optional vectors (allow NULL safely)
+  # ============================================================
+  if (is.null(p_rep_treatments))        p_rep_treatments <- character(0)
+  if (is.null(p_rep_reps))              p_rep_reps <- integer(0)
+  if (is.null(p_rep_families))          p_rep_families <- character(0)
+  if (is.null(unreplicated_treatments)) unreplicated_treatments <- character(0)
+  if (is.null(unreplicated_families))   unreplicated_families <- character(0)
+  
   if (length(check_treatments) != length(check_families)) {
     stop("Length of check_families must match length of check_treatments.")
   }
@@ -1222,11 +1232,15 @@ prep_famoptg <- function(
     p_rep_assignments[[trt_i]] <- assigned
   }
   
-  unrep_treatments_shuffled <- sample(unreplicated_treatments)
-  block_unrep_list <- split(
-    unrep_treatments_shuffled,
-    rep(seq_len(n_blocks), length.out = length(unrep_treatments_shuffled))
-  )
+  if (length(unreplicated_treatments) > 0) {
+    unrep_treatments_shuffled <- sample(unreplicated_treatments)
+    block_unrep_list <- split(
+      unrep_treatments_shuffled,
+      rep(seq_len(n_blocks), length.out = length(unrep_treatments_shuffled))
+    )
+  } else {
+    block_unrep_list <- vector("list", n_blocks)
+  }
   
   build_blocks_once <- function(seed_offset = 0) {
     if (!is.null(seed_used)) {
