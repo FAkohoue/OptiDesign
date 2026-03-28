@@ -2,18 +2,27 @@
 % Please edit documentation in R/utils_internal.R
 \name{.validate_square_matrix}
 \alias{.validate_square_matrix}
-\title{Validate a square matrix}
+\title{Internal square matrix validator}
 \usage{
 .validate_square_matrix(M, p, nm = "matrix")
 }
 \arguments{
-\item{M}{Matrix.}
+\item{M}{Object to validate. Must be a base R \code{matrix}.}
 
-\item{p}{Expected dimension.}
+\item{p}{Expected dimension. The matrix must have \code{nrow(M) == p} and
+\code{ncol(M) == p}.}
 
-\item{nm}{Object name for messages.}
+\item{nm}{Character scalar. Object name used in error messages to identify
+which argument failed validation. Default \code{"matrix"}.}
+}
+\value{
+Invisibly returns \code{TRUE} if validation passes.
 }
 \description{
-Validate a square matrix
+Checks that an object is a base R matrix with the expected square
+dimensions. Stops with an informative error if either condition is not met.
+Used internally to validate relationship matrices (\code{GRM}, \code{A}, \code{K}) before
+they are used for clustering, dispersion optimisation, or efficiency
+evaluation.
 }
 \keyword{internal}

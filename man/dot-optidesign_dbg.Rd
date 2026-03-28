@@ -2,16 +2,24 @@
 % Please edit documentation in R/utils_internal.R
 \name{.optidesign_dbg}
 \alias{.optidesign_dbg}
-\title{Internal debug message helper}
+\title{Internal conditional debug message helper}
 \usage{
 .optidesign_dbg(debug, ...)
 }
 \arguments{
-\item{debug}{Logical.}
+\item{debug}{Logical. If \code{TRUE}, the message is emitted. If \code{FALSE} or
+\code{NULL}, the function returns invisibly with no output.}
 
-\item{...}{Arguments passed to \code{sprintf()}.}
+\item{...}{Arguments passed to \code{\link[base:sprintf]{base::sprintf()}}. The first argument
+should be a format string; subsequent arguments are substituted into
+the format string in order.}
+}
+\value{
+Invisibly returns \code{NULL}.
 }
 \description{
-Internal debug message helper
+Emits a formatted message via \code{\link[base:message]{base::message()}} when \code{debug = TRUE}.
+Used internally to provide optional verbose output during design
+construction and optimisation without cluttering normal output.
 }
 \keyword{internal}

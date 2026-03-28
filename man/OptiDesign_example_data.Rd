@@ -7,90 +7,175 @@
 \format{
 A named list with the following components:
 \describe{
-\item{\code{OptiDesign_lines}}{A data frame with columns \code{Treatment} and \code{Family}
-representing a synthetic pool of line identifiers and their family labels.}
 
-\item{\code{OptiDesign_id_map}}{A data frame with columns \code{Treatment} and \code{LineID}
-used to map treatment labels to row and column names of relationship matrices
-when those names differ.}
+\item{\code{OptiDesign_lines}}{A data frame with columns \code{Treatment} and
+\code{Family} representing a synthetic pool of line identifiers and their
+family labels. Used as a starting point for constructing both
+\code{prep_famoptg()} and \code{alpha_rc_stream()} treatment vectors.}
 
-\item{\code{OptiDesign_GRM}}{A synthetic genomic relationship matrix with rownames
-and colnames corresponding to line IDs. It can be used for matrix-based
-grouping or genomic dispersion examples.}
+\item{\code{OptiDesign_id_map}}{A data frame with columns \code{Treatment} and
+\code{LineID} used to map treatment labels to the rownames and colnames of
+relationship matrices when those names differ from the treatment
+identifiers. Relevant for \code{cluster_source \%in\% c("GRM", "A")} and for
+\code{prediction_type \%in\% c("GBLUP", "PBLUP")}.}
+
+\item{\code{OptiDesign_GRM}}{A synthetic genomic relationship matrix with
+rownames and colnames corresponding to line IDs. Can be used for
+matrix-based grouping (\code{cluster_source = "GRM"}), dispersion optimisation
+(\code{dispersion_source = "GRM"}), or as a \code{K} matrix for GBLUP efficiency
+evaluation.}
 
 \item{\code{OptiDesign_A}}{A synthetic pedigree-style relationship matrix with
-rownames and colnames corresponding to line IDs. It can be used for
-pedigree-based grouping or dispersion examples.}
+rownames and colnames corresponding to line IDs. Can be used for
+pedigree-based grouping (\code{cluster_source = "A"}), dispersion optimisation
+(\code{dispersion_source = "A"}), or as a \code{K} matrix for PBLUP efficiency
+evaluation.}
 
-\item{\code{OptiDesign_K}}{A synthetic relationship or kernel matrix with rownames
-and colnames corresponding to line IDs. It is intended for workflows that
-require a \code{K} matrix, such as BLUP-style prediction settings or dispersion
-optimization using \code{dispersion_source = "K"}.}
+\item{\code{OptiDesign_K}}{A synthetic genomic kernel matrix with rownames and
+colnames corresponding to line IDs. Intended for workflows that supply a
+\code{K} matrix directly, such as \code{prediction_type = "GBLUP"} in
+\code{evaluate_famoptg_efficiency()} or \code{evaluate_alpha_efficiency()}, CDmean
+computation in \code{optimize_famoptg()} or \code{optimize_alpha_rc()}, and
+dispersion optimisation with \code{dispersion_source = "K"}.}
 
-\item{\code{OptiDesign_famoptg_example}}{A named list containing the core treatment
-vectors and field dimensions needed to run \code{prep_famoptg()}. This includes
-checks, p-rep treatments, unreplicated treatments, and basic field dimensions.}
+\item{\code{OptiDesign_famoptg_example}}{A named list containing the core
+treatment vectors and field dimensions needed to call \code{prep_famoptg()}.
+Includes check treatments, p-rep treatments with replication counts,
+unreplicated treatments, family labels for all treatment classes, number
+of blocks, and field dimensions (\code{n_rows}, \code{n_cols}). Combine with one of
+\code{OptiDesign_famoptg_args_family} or \code{OptiDesign_famoptg_args_grm} to form
+a complete argument list.}
 
-\item{\code{OptiDesign_alpha_example}}{A named list containing the core treatment
-vectors and field dimensions needed to run \code{alpha_rc_stream()}.
-This includes checks, entries, number of replicates, and fixed field dimensions.}
+\item{\code{OptiDesign_alpha_example}}{A named list containing the core
+treatment vectors and field dimensions needed to call
+\code{alpha_rc_stream()}. Includes check treatments, entry treatments,
+family labels, number of replicates, and field dimensions (\code{n_rows},
+\code{n_cols}). Combine with one of \code{OptiDesign_alpha_args_family} or
+\code{OptiDesign_alpha_args_grm} to form a complete argument list.}
 
-\item{\code{OptiDesign_famoptg_args_family}}{A named list of additional arguments
-for a family-based call to \code{prep_famoptg()}. It illustrates a simple design
-setup without efficiency evaluation.}
+\item{\code{OptiDesign_famoptg_args_family}}{A named list of supplementary
+arguments for a family-based call to \code{prep_famoptg()}. Specifies
+\code{cluster_source = "Family"}, field traversal settings, block placement
+options, and does not include efficiency evaluation arguments (those are
+now passed to \code{evaluate_famoptg_efficiency()} separately).}
 
-\item{\code{OptiDesign_famoptg_args_grm}}{A named list of additional arguments for
-a GRM-based call to \code{prep_famoptg()}. It illustrates matrix-based grouping and
-optional dispersion settings.}
+\item{\code{OptiDesign_famoptg_args_grm}}{A named list of supplementary
+arguments for a GRM-based call to \code{prep_famoptg()}. Specifies
+\code{cluster_source = "GRM"}, includes \code{GRM} and \code{id_map} references,
+and illustrates matrix-based grouping and optional dispersion settings.
+Efficiency evaluation arguments are passed to
+\code{evaluate_famoptg_efficiency()} separately.}
 
-\item{\code{OptiDesign_alpha_args_family}}{A named list of additional arguments
-for a family-based call to \code{alpha_rc_stream()}. It illustrates
-a stream-based row-column design without efficiency evaluation.}
+\item{\code{OptiDesign_alpha_args_family}}{A named list of supplementary
+arguments for a family-based call to \code{alpha_rc_stream()}. Specifies
+\code{cluster_source = "Family"}, field traversal settings, and block size
+constraints. Efficiency evaluation arguments are passed to
+\code{evaluate_alpha_efficiency()} separately.}
 
-\item{\code{OptiDesign_alpha_args_grm}}{A named list of additional arguments for
-a GRM-based call to \code{alpha_rc_stream()}. It illustrates
-matrix-based grouping and optional dispersion settings.}
+\item{\code{OptiDesign_alpha_args_grm}}{A named list of supplementary
+arguments for a GRM-based call to \code{alpha_rc_stream()}. Specifies
+\code{cluster_source = "GRM"}, includes \code{GRM} and \code{id_map} references,
+and illustrates matrix-based grouping and optional dispersion settings.
+Efficiency evaluation arguments are passed to
+\code{evaluate_alpha_efficiency()} separately.}
+
 }
 }
 \source{
 Generated internally by \code{data-raw/generate_example_data.R}.
 }
 \description{
-Synthetic example data shipped with \code{OptiDesign} for illustrating and testing
-the main design constructors, relationship-matrix workflows, optional
-dispersion optimization, and optional efficiency settings.
+Synthetic example data shipped with \code{OptiDesign} for illustrating and
+testing the main design constructors, relationship-matrix workflows,
+optional dispersion optimisation, and efficiency evaluation across both
+design families.
 }
 \details{
-The objects in this dataset are synthetic and are intended for:
+The objects in this dataset are fully synthetic and are intended for:
 \itemize{
-\item package examples,
-\item tests,
+\item package examples and vignettes,
+\item unit tests,
 \item workflow demonstrations,
 \item and user exploration of argument combinations.
 }
 
-The dataset is especially useful for understanding how the package handles:
-\itemize{
-\item repeated checks,
-\item p-rep and unreplicated materials,
-\item fixed-grid stream designs,
-\item family-based grouping,
-\item GRM- or pedigree-based grouping,
-\item and matrix-based dispersion settings.
+The dataset covers both design families in the package and is structured
+so that \code{OptiDesign_famoptg_example} and \code{OptiDesign_alpha_example}
+provide the treatment and field inputs, while the \verb{*_args_*} lists provide
+the algorithmic and model settings. This separation mirrors the
+construct-then-evaluate architecture of the package.
+\subsection{Illustrative workflows}{
+
+\strong{Repeated-check block design (family-based):}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{x <- OptiDesign_example_data
+
+design <- do.call(prep_famoptg,
+  c(x$OptiDesign_famoptg_example, x$OptiDesign_famoptg_args_family)
+)
+
+eff <- evaluate_famoptg_efficiency(
+  field_book       = design$field_book,
+  n_rows           = x$OptiDesign_famoptg_example$n_rows,
+  n_cols           = x$OptiDesign_famoptg_example$n_cols,
+  check_treatments = x$OptiDesign_famoptg_example$check_treatments,
+  treatment_effect = "fixed"
+)
+}\if{html}{\out{</div>}}
+
+\strong{Alpha row-column stream design (GRM-based):}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{x <- OptiDesign_example_data
+
+design <- do.call(alpha_rc_stream,
+  c(x$OptiDesign_alpha_example, x$OptiDesign_alpha_args_grm)
+)
+
+eff <- evaluate_alpha_efficiency(
+  field_book       = design$field_book,
+  n_rows           = x$OptiDesign_alpha_example$n_rows,
+  n_cols           = x$OptiDesign_alpha_example$n_cols,
+  check_treatments = x$OptiDesign_alpha_example$check_treatments,
+  treatment_effect = "fixed"
+)
+}\if{html}{\out{</div>}}
+
+\strong{Optimised repeated-check block design:}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{x <- OptiDesign_example_data
+
+opt <- do.call(optimize_famoptg,
+  c(
+    x$OptiDesign_famoptg_example,
+    x$OptiDesign_famoptg_args_family,
+    list(
+      treatment_effect = "fixed",
+      criterion        = "A",
+      n_restarts       = 20
+    )
+  )
+)
+opt$optimization$best_score
+}\if{html}{\out{</div>}}
+
+\strong{Optimised alpha row-column stream design:}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{x <- OptiDesign_example_data
+
+opt <- do.call(optimize_alpha_rc,
+  c(
+    x$OptiDesign_alpha_example,
+    x$OptiDesign_alpha_args_family,
+    list(
+      treatment_effect = "fixed",
+      method           = "RS",
+      criterion        = "A",
+      n_restarts       = 20
+    )
+  )
+)
+opt$optimization$best_score
+}\if{html}{\out{</div>}}
 }
-
-Load the dataset with:
-
-\code{data("OptiDesign_example_data", package = "OptiDesign")}
-
-Then extract individual components as needed, for example:
-
-\code{x <- OptiDesign_example_data}
-
-\code{x$OptiDesign_famoptg_example}
-
-\code{x$OptiDesign_GRM}
-
-\code{x$OptiDesign_alpha_args_family}
 }
 \keyword{datasets}

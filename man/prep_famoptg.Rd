@@ -2,7 +2,7 @@
 % Please edit documentation in R/prep_famoptg.R
 \name{prep_famoptg}
 \alias{prep_famoptg}
-\title{Create a repeated-check block design with flexible replication}
+\title{Construct a repeated-check block design with flexible replication}
 \usage{
 prep_famoptg(
   check_treatments,
@@ -29,1063 +29,318 @@ prep_famoptg(
   cluster_seed = 1,
   cluster_attempts = 25,
   n_pcs_use = Inf,
-  eval_efficiency = FALSE,
-  treatment_effect = c("random", "fixed"),
-  prediction_type = c("none", "IID", "GBLUP", "PBLUP"),
-  K = NULL,
-  line_id_map = NULL,
-  varcomp = list(sigma_e2 = 1, sigma_g2 = 1, sigma_b2 = 1, sigma_r2 = 1, sigma_c2 = 1),
-  check_as_fixed = TRUE,
-  residual_structure = c("IID", "AR1", "AR1xAR1"),
-  rho_row = 0,
-  rho_col = 0,
-  spatial_engine = c("auto", "sparse", "dense"),
-  dense_max_n = 5000,
-  eff_trace_samples = 80,
-  eff_full_max = 400,
   check_placement = c("random", "systematic", "optimal"),
   check_opt_attempts = 200,
   use_dispersion = FALSE,
   dispersion_source = c("K", "A", "GRM"),
   dispersion_radius = 1,
   dispersion_iters = 2000,
-  dispersion_seed = 1
+  dispersion_seed = 1,
+  K = NULL,
+  line_id_map = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
 \item{check_treatments}{Character vector of check treatment identifiers.
+Checks appear in every block. Must not overlap with \code{p_rep_treatments}
+or \code{unreplicated_treatments} and must not contain duplicates.}
 
-These treatments are included in \strong{every block}, so they define the repeated
-reference structure of the design.
+\item{check_families}{Character vector of the same length as
+\code{check_treatments}. Family labels for checks, used for adjacency
+scoring. Always stored in the \code{Family} column; \code{Gcluster} is always
+\code{NA} for check plots.}
 
-Use this argument when you have standard checks, control varieties, benchmark
-cultivars, or fixed reference entries that must be present everywhere to
-improve block comparability.
+\item{p_rep_treatments}{Character vector of replicated non-check treatment
+identifiers. Each entry appears in exactly \code{p_rep_reps[i]} distinct
+blocks. May be \code{NULL} or \code{character(0)} for augmented designs.}
 
-This argument is always required.
+\item{p_rep_reps}{Integer vector of the same length as \code{p_rep_treatments}.
+Number of blocks each p-rep treatment appears in. Must satisfy
+\verb{1 <= p_rep_reps[i] <= n_blocks} for all \eqn{i}.}
 
-Example use case:
-a breeding trial with 3 control cultivars included in all blocks.}
+\item{p_rep_families}{Character vector of the same length as
+\code{p_rep_treatments}. Family labels for p-rep entries.}
 
-\item{check_families}{Character vector of the same length as \code{check_treatments}.
-
-Provides the family or group label for each check treatment.
-
-Even when \code{cluster_source != "Family"}, checks still need family labels
-because checks are always assigned a group label in the output and remain part
-of the grouping metadata used internally.
-
-This argument always depends on \code{check_treatments} and must align exactly in
-order and length.
-
-Example:
-if the three checks all belong to the same control class,
-\code{check_families} might be \code{c("CHECK", "CHECK", "CHECK")}.}
-
-\item{p_rep_treatments}{Character vector of replicated non-check treatment IDs.
-
-These are the entries that appear more than once overall, but at most once in
-any given block.
-
-Use this argument when some or all non-check treatments should be replicated.
-
-Depending on how it is used:
-\itemize{
-\item if it is empty and only \code{unreplicated_treatments} are supplied, the function
-behaves as an augmented repeated-check constructor;
-\item if it contains only some non-check entries, the function behaves as a p-rep
-repeated-check constructor;
-\item if it contains all non-check entries with common replication greater than 1,
-the function behaves as an RCBD-type repeated-check constructor.
-}
-
-Can be \code{NULL} or \code{character(0)} if no replicated non-check treatments are present.
-
-Depends on:
-\itemize{
-\item \code{p_rep_reps}
-\item \code{p_rep_families}
-}
-
-Example use case:
-elite lines replicated twice while many other lines remain unreplicated.}
-
-\item{p_rep_reps}{Integer vector giving the total number of replicates for each
-entry in \code{p_rep_treatments}.
-
-This controls how many times each replicated non-check treatment appears in
-the full design.
-
-Must:
-\itemize{
-\item have the same length as \code{p_rep_treatments};
-\item align element-wise with \code{p_rep_treatments};
-\item satisfy \code{p_rep_reps[i] <= n_blocks}, because a treatment cannot occur twice
-in the same block.
-}
-
-A treatment with replication 2 and \code{n_blocks >= 2} will be placed in two
-different blocks.
-
-Use a common vector such as \code{rep(2, length(p_rep_treatments))} when all
-replicated treatments should appear twice.
-
-Use unequal values when some entries deserve more replication than others.}
-
-\item{p_rep_families}{Character vector of the same length as \code{p_rep_treatments}.
-
-Family or group labels for replicated non-check treatments.
-
-These labels are required whenever replicated non-check treatments exist.
-Even when \code{cluster_source != "Family"}, they remain useful because the
-function uses non-check family structure to determine the target number of
-clusters in matrix-based grouping modes.
-
-Depends on:
-\itemize{
-\item \code{p_rep_treatments}
-}
-
-Example use case:
-replicated candidate lines belong to multiple families and the user wants
-adjacency control to reflect that structure.}
-
-\item{unreplicated_treatments}{Character vector of treatments that appear exactly once.
-
-These are single-plot entries used when broad screening is needed and full
-replication is not possible.
-
-Use \code{NULL} or \code{character(0)} if no unreplicated treatments are present.
-
-In combination with repeated checks and no replicated non-checks, these
-entries define an augmented repeated-check design.
-
-Depends on:
-\itemize{
-\item \code{unreplicated_families}
-}
-
-Example use case:
-a large early-generation nursery where each new line is observed once.}
+\item{unreplicated_treatments}{Character vector of treatment identifiers
+that appear exactly once in the full design. May be \code{NULL} or
+\code{character(0)}.}
 
 \item{unreplicated_families}{Character vector of the same length as
-\code{unreplicated_treatments}.
+\code{unreplicated_treatments}. Family labels for unreplicated entries.}
 
-Family or group labels for unreplicated treatments.
+\item{n_blocks}{Positive integer. Number of experimental blocks.}
 
-Required whenever \code{unreplicated_treatments} is provided.
+\item{n_rows}{Positive integer. Number of field rows.}
 
-These labels are especially useful when:
-\itemize{
-\item \code{cluster_source = "Family"};
-\item matrix-based grouping is used and the target number of clusters should
-reflect the family structure among non-checks.
-}}
+\item{n_cols}{Positive integer. Number of field columns.}
 
-\item{n_blocks}{Integer giving the number of experimental blocks.
+\item{order}{Character. Field traversal direction: \code{"column"} fills
+column by column; \code{"row"} fills row by row.}
 
-This determines how many times checks are repeated, and it also constrains the
-maximum allowable replication count for any replicated non-check treatment.
+\item{serpentine}{Logical. If \code{TRUE}, alternate columns (when
+\code{order = "column"}) or alternate rows (when \code{order = "row"}) traverse
+in reverse direction, producing a boustrophedon planting path.}
 
-Use more blocks when:
-\itemize{
-\item many checks must be accommodated;
-\item finer local control is desired;
-\item field heterogeneity suggests stronger blocking.
-}
+\item{seed}{Optional integer. If \code{NULL}, a seed is drawn from
+\code{1:.Machine$integer.max} and returned as \code{seed_used}. Controls all
+randomised steps: p-rep block assignment, unreplicated entry
+distribution, within-block shuffling, check placement, and dispersion
+optimisation.}
 
-This argument affects:
-\itemize{
-\item total plot count;
-\item feasibility of replicated-treatment assignment;
-\item distribution of unreplicated treatments.
-}
+\item{attempts}{Positive integer. Number of within-block shuffle attempts
+to minimise adjacent same-group pairs. Default 1000.}
 
-When the same replicated treatment should appear in every block, its
-replication must equal \code{n_blocks}.}
+\item{warn_and_correct}{Logical. If \code{TRUE}, silently adjust field
+dimensions when \code{n_rows * n_cols} does not match the required total
+plots. If \code{FALSE}, stop with an error.}
 
-\item{n_rows}{Integer giving the number of rows in the final field grid.
+\item{fix_rows}{Logical. Used only when \code{warn_and_correct = TRUE}. If
+\code{TRUE}, hold \code{n_rows} fixed and expand \code{n_cols}; otherwise hold
+\code{n_cols} fixed and expand \code{n_rows}.}
 
-Controls the physical field geometry returned in \code{layout_matrix}.
+\item{cluster_source}{Character. Grouping source for adjacency scoring:
+\code{"Family"}, \code{"GRM"}, or \code{"A"}.}
 
-Use this to match the intended number of field rows.
+\item{GRM}{Optional square numeric matrix with rownames and colnames equal
+to line IDs. Required when \code{cluster_source = "GRM"} or
+\code{dispersion_source = "GRM"}.}
 
-If \code{warn_and_correct = TRUE}, this value may be retained while \code{n_cols} is
-adjusted when \code{fix_rows = TRUE}.}
-
-\item{n_cols}{Integer giving the number of columns in the final field grid.
-
-Controls the physical field geometry returned in \code{layout_matrix}.
-
-Use this together with \code{n_rows} to represent the intended field dimensions.
-
-If \code{warn_and_correct = TRUE}, this value may be retained while \code{n_rows} is
-adjusted when \code{fix_rows = FALSE}.}
-
-\item{order}{Character specifying how the field grid is filled.
-
-Allowed values:
-\itemize{
-\item \code{"row"}: fill row by row;
-\item \code{"column"}: fill column by column.
-}
-
-Use \code{"row"} when field-book order or planting order follows rows.
-Use \code{"column"} when field-book order follows columns.
-
-This argument interacts directly with \code{serpentine}.}
-
-\item{serpentine}{Logical indicating whether alternate rows or columns should
-reverse direction during grid filling.
-
-If \code{TRUE}:
-\itemize{
-\item with \code{order = "row"}, alternate rows are reversed;
-\item with \code{order = "column"}, alternate columns are reversed.
-}
-
-Use this when planting, labeling, or harvesting follows a serpentine movement pattern.
-
-This affects only how the final ordered treatments are mapped into space; it
-does not change block composition.
-
-Depends on:
-\itemize{
-\item \code{order}
-}}
-
-\item{seed}{Optional integer seed controlling stochastic components of the design.
-
-Use this when reproducibility is important.
-
-If \code{NULL}, a seed is generated internally and returned as \code{seed_used}.
-
-This seed affects:
-\itemize{
-\item replicated-treatment block assignment;
-\item shuffling within blocks;
-\item candidate generation for optimal check placement;
-\item optional dispersion optimization when \code{dispersion_seed} is \code{NULL}.
-}}
-
-\item{attempts}{Integer giving the maximum number of shuffle attempts per block.
-
-Used to reduce adjacency of same-group entries in the 1D block ordering.
-
-Larger values may improve adjacency avoidance but increase runtime.
-
-Use larger values when:
-\itemize{
-\item family structure is highly imbalanced;
-\item many similar entries occur in the same block;
-\item stricter adjacency avoidance is desired.
-}}
-
-\item{warn_and_correct}{Logical controlling what happens when the supplied field
-size does not match the required number of plots.
-
-If \code{FALSE}, the function stops with an error.
-
-If \code{TRUE}, the function adjusts one dimension upward so the field can contain
-all required plots.
-
-Use \code{FALSE} when the field dimensions are fixed and must not be changed.
-Use \code{TRUE} when a near-feasible layout should be repaired automatically.
-
-Depends on:
-\itemize{
-\item \code{fix_rows}
-}}
-
-\item{fix_rows}{Logical used only when \code{warn_and_correct = TRUE}.
-
-If \code{TRUE}, \code{n_rows} is kept fixed and \code{n_cols} is adjusted.
-If \code{FALSE}, \code{n_cols} is kept fixed and \code{n_rows} is adjusted.
-
-Use this according to which field dimension is physically fixed in practice.
-
-Example:
-if the field has a fixed number of rows but flexible row length,
-use \code{fix_rows = TRUE}.}
-
-\item{cluster_source}{Character specifying the source of grouping used for
-non-check adjacency control.
-
-Allowed values:
-\itemize{
-\item \code{"Family"}
-\item \code{"GRM"}
-\item \code{"A"}
-}
-
-Use \code{"Family"} when family labels are trusted and easy to interpret.
-
-Use \code{"GRM"} when genomic relatedness should define grouping more accurately.
-
-Use \code{"A"} when pedigree structure is available and pedigree-based grouping is desired.
-
-This argument determines which of the following become active:
-\itemize{
-\item \code{GRM}
-\item \code{A}
-\item \code{id_map}
-\item \code{cluster_method}
-\item \code{cluster_seed}
-\item \code{cluster_attempts}
-\item \code{n_pcs_use}
-}}
-
-\item{GRM}{Optional square genomic relationship matrix with rownames and colnames.
-
-Required when:
-\itemize{
-\item \code{cluster_source = "GRM"}, or
-\item \code{use_dispersion = TRUE} and \code{dispersion_source = "GRM"}.
-}
-
-Ignored otherwise.
-
-Use this when genomic similarity should drive grouping or dispersion scoring.
-
-Row and column names must correspond to treatment IDs or to IDs reachable via \code{id_map}.}
-
-\item{A}{Optional square pedigree relationship matrix with rownames and colnames.
-
-Required when:
-\itemize{
-\item \code{cluster_source = "A"}, or
-\item \code{use_dispersion = TRUE} and \code{dispersion_source = "A"}.
-}
-
-Ignored otherwise.
-
-Use this when pedigree structure should drive grouping or dispersion scoring.}
+\item{A}{Optional square numeric matrix. Required when
+\code{cluster_source = "A"} or \code{dispersion_source = "A"}.}
 
 \item{id_map}{Optional data frame with columns \code{Treatment} and \code{LineID}.
+Required when treatment labels do not match relationship matrix rownames.}
 
-Used only when \code{cluster_source \%in\% c("GRM", "A")} and treatment labels in
-the design do not exactly match the rownames of the selected relationship matrix.
+\item{cluster_method}{Character. Clustering algorithm: \code{"kmeans"} or
+\code{"hclust"} (Ward's D2 linkage).}
 
-Use this when:
-\itemize{
-\item treatment names in the design are breeder-friendly labels;
-\item but the matrix uses internal IDs, numeric codes, or standardized line names.
-}
+\item{cluster_seed}{Integer. Seed for k-means initialisation, run in an
+isolated RNG scope.}
 
-Ignored when \code{cluster_source = "Family"}.}
+\item{cluster_attempts}{Positive integer. Number of k-means random
+restarts (\code{nstart}).}
 
-\item{cluster_method}{Clustering method used after PCA in matrix-based grouping.
+\item{n_pcs_use}{Positive number or \code{Inf}. Leading PCs retained for
+matrix-based clustering. Actual number used is
+\code{min(n_pcs_use, n_positive_eigenvalues - 1)}.}
 
-Allowed values:
-\itemize{
-\item \code{"kmeans"}
-\item \code{"hclust"}
-}
-
-Use \code{"kmeans"} when compact clusters are acceptable and reproducible
-initialization is desired.
-
-Use \code{"hclust"} when hierarchical grouping is preferred.
-
-Active only when \code{cluster_source \%in\% c("GRM", "A")}.}
-
-\item{cluster_seed}{Integer seed used when \code{cluster_method = "kmeans"}.
-
-Ignored otherwise.
-
-Use this when k-means clustering must be reproducible.}
-
-\item{cluster_attempts}{Integer number of random starts passed to \code{kmeans()}.
-
-Active only when:
-\itemize{
-\item \code{cluster_source \%in\% c("GRM", "A")}, and
-\item \code{cluster_method = "kmeans"}.
-}
-
-Larger values may improve clustering stability at higher runtime cost.}
-
-\item{n_pcs_use}{Integer or \code{Inf} giving the number of principal components used
-for PCA-based clustering in matrix-based grouping.
-
-Use a smaller value when:
-\itemize{
-\item only the leading structure should define grouping;
-\item smaller PCs are considered mostly noise.
-}
-
-Use \code{Inf} to let the function use as many informative PCs as available.
-
-Ignored when \code{cluster_source = "Family"}.}
-
-\item{eval_efficiency}{Logical; if \code{TRUE}, compute design efficiency metrics.
-
-Use \code{TRUE} when the design should be evaluated under a mixed-model framework.
-
-Use \code{FALSE} when only the layout itself is needed.
-
-This argument activates:
-\itemize{
-\item \code{treatment_effect}
-\item \code{prediction_type}
-\item \code{K}
-\item \code{line_id_map}
-\item \code{varcomp}
-\item \code{check_as_fixed}
-\item \code{residual_structure}
-\item \code{rho_row}
-\item \code{rho_col}
-\item \code{spatial_engine}
-\item \code{dense_max_n}
-\item \code{eff_trace_samples}
-\item \code{eff_full_max}
+\item{check_placement}{Character. Check position rule within blocks:
+\describe{
+\item{\code{"random"}}{Check positions drawn uniformly.}
+\item{\code{"systematic"}}{Check positions spaced evenly through the block.}
+\item{\code{"optimal"}}{Keeps the layout that maximises mean nearest-neighbour
+distance between check plots in the field across \code{check_opt_attempts}
+candidates.}
 }}
 
-\item{treatment_effect}{Character indicating whether non-check treatments are
-treated as \code{"fixed"} or \code{"random"} for efficiency evaluation.
+\item{check_opt_attempts}{Positive integer. Number of candidate layouts
+evaluated when \code{check_placement = "optimal"}. Default 200.}
 
-Active only when \code{eval_efficiency = TRUE}.
+\item{use_dispersion}{Logical. If \code{TRUE}, apply a post-layout swap-based
+dispersion optimisation to reduce pairwise relatedness among neighbouring
+non-check plots.}
 
-Use \code{"fixed"} when interest is in the precision of estimated treatment contrasts.
+\item{dispersion_source}{Character. Matrix used for dispersion scoring:
+\code{"K"}, \code{"A"}, or \code{"GRM"}. The corresponding argument must be non-\code{NULL}.}
 
-Use \code{"random"} when interest is in prediction quality of treatment effects.}
+\item{dispersion_radius}{Positive integer. Chebyshev distance radius
+defining the neighbourhood for dispersion scoring. Default 1.}
 
-\item{prediction_type}{Character controlling the random-effect prediction model.
+\item{dispersion_iters}{Non-negative integer. Number of swap proposals for
+dispersion optimisation. Default 2000.}
 
-Allowed values:
-\itemize{
-\item \code{"none"}
-\item \code{"IID"}
-\item \code{"GBLUP"}
-\item \code{"PBLUP"}
-}
+\item{dispersion_seed}{Integer. Seed for the dispersion step, run in an
+isolated RNG scope.}
 
-Active only when:
-\itemize{
-\item \code{eval_efficiency = TRUE}, and
-\item \code{treatment_effect = "random"}.
-}
+\item{K}{Optional square numeric matrix. Used for dispersion scoring when
+\code{dispersion_source = "K"}.}
 
-Use \code{"none"} to skip random-effect efficiency.
+\item{line_id_map}{Optional data frame with columns \code{Treatment} and
+\code{LineID}. Required when treatment labels do not match \code{rownames(K)} or
+the dispersion matrix.}
 
-Use \code{"IID"} when all non-check effects are assumed independent.
-
-Use \code{"GBLUP"} or \code{"PBLUP"} when prediction should use a relationship matrix \code{K}.}
-
-\item{K}{Optional square relationship matrix.
-
-Used in two contexts:
-\enumerate{
-\item for efficiency evaluation when random effects are predicted using
-\code{"GBLUP"} or \code{"PBLUP"};
-\item for dispersion optimization when \code{dispersion_source = "K"}.
-}
-
-Ignored otherwise.
-
-Use this when prediction or dispersion should be based on an explicit
-relationship matrix.}
-
-\item{line_id_map}{Optional data frame with columns \code{Treatment} and \code{LineID}.
-
-Used only when \code{K} is active and treatment names differ from \code{rownames(K)}.
-
-This is analogous to \code{id_map}, but specifically for the matrix \code{K}.
-
-Use this when the design uses one set of treatment labels while \code{K} uses another.}
-
-\item{varcomp}{Named list of variance components used for efficiency evaluation.
-
-Must contain:
-\itemize{
-\item \code{sigma_e2}
-\item \code{sigma_g2}
-\item \code{sigma_b2}
-\item \code{sigma_r2}
-\item \code{sigma_c2}
-}
-
-Active only when \code{eval_efficiency = TRUE}.
-
-Use realistic values when the efficiency metric should reflect a plausible
-data-generating model.
-
-Example use case:
-a user may set larger \code{sigma_e2} when expecting noisy phenotypes, or larger
-\code{sigma_b2} when block-to-block heterogeneity is substantial.}
-
-\item{check_as_fixed}{Logical indicating whether checks are included as fixed
-indicator columns during efficiency evaluation.
-
-Active only when \code{eval_efficiency = TRUE}.
-
-Use \code{TRUE} when checks should be explicitly modeled as fixed benchmark effects.}
-
-\item{residual_structure}{Character specifying the residual correlation model.
-
-Allowed values:
-\itemize{
-\item \code{"IID"}
-\item \code{"AR1"}
-\item \code{"AR1xAR1"}
-}
-
-Use \code{"IID"} when no spatial residual correlation is assumed.
-
-Use \code{"AR1"} when correlation is expected mainly along rows.
-
-Use \code{"AR1xAR1"} when correlation is expected along both rows and columns.
-
-Active only when \code{eval_efficiency = TRUE}.}
-
-\item{rho_row}{Numeric AR1 row correlation parameter.
-
-Active only when:
-\itemize{
-\item \code{eval_efficiency = TRUE}, and
-\item \code{residual_structure \%in\% c("AR1", "AR1xAR1")}.
-}
-
-Use values near 0 for weak row correlation and values closer to 1 in magnitude
-for stronger row correlation.}
-
-\item{rho_col}{Numeric AR1 column correlation parameter.
-
-Active only when:
-\itemize{
-\item \code{eval_efficiency = TRUE}, and
-\item \code{residual_structure = "AR1xAR1"}.
-}
-
-Use this when column-wise spatial correlation is part of the assumed residual model.}
-
-\item{spatial_engine}{Character controlling the computational implementation of
-spatial residual calculations.
-
-Allowed values:
-\itemize{
-\item \code{"auto"}
-\item \code{"dense"}
-\item \code{"sparse"}
-}
-
-Active only when:
-\itemize{
-\item \code{eval_efficiency = TRUE}, and
-\item \code{residual_structure != "IID"}.
-}
-
-Use \code{"auto"} in most cases.
-
-Use \code{"dense"} for smaller problems when dense linear algebra is acceptable.
-
-Use \code{"sparse"} for larger problems where sparse precision matrices are preferred.}
-
-\item{dense_max_n}{Integer threshold used when \code{spatial_engine = "auto"}.
-
-If the number of observed plots is at most this threshold, dense computation
-is used; otherwise sparse computation is used.}
-
-\item{eff_trace_samples}{Integer giving the number of Hutchinson trace samples
-used when approximate efficiency evaluation is needed.
-
-Active only when:
-\itemize{
-\item \code{eval_efficiency = TRUE}, and
-\item the target dimension exceeds \code{eff_full_max}.
-}
-
-Larger values improve stability of the approximation but increase runtime.}
-
-\item{eff_full_max}{Integer giving the maximum target dimension for exact inverse
-sub-block extraction in efficiency evaluation.
-
-Active only when \code{eval_efficiency = TRUE}.
-
-Use larger values when exact evaluation is desired and computation is affordable.
-Use smaller values to switch to approximation earlier and reduce runtime.}
-
-\item{check_placement}{Character specifying how checks are placed within blocks.
-
-Allowed values:
-\itemize{
-\item \code{"random"}
-\item \code{"systematic"}
-\item \code{"optimal"}
-}
-
-Use \code{"random"} when no explicit spacing pattern is required.
-
-Use \code{"systematic"} when checks should be spread approximately evenly within each block.
-
-Use \code{"optimal"} when spatial dispersion of checks in the final 2D grid is a priority.
-
-If \code{"optimal"} is selected, \code{check_opt_attempts} becomes active.}
-
-\item{check_opt_attempts}{Integer number of candidate layouts evaluated when
-\code{check_placement = "optimal"}.
-
-Larger values may improve the final spatial spread of checks but increase runtime.
-
-Ignored unless \code{check_placement = "optimal"}.}
-
-\item{use_dispersion}{Logical; if \code{TRUE}, apply post-layout swap optimization to
-reduce local relatedness among nearby non-check treatments.
-
-Use this when genetically or pedigree-similar entries should be less clustered
-in the final field.
-
-If \code{FALSE}, all dispersion-related arguments are ignored.}
-
-\item{dispersion_source}{Character specifying which matrix is used during
-dispersion optimization.
-
-Allowed values:
-\itemize{
-\item \code{"K"}
-\item \code{"A"}
-\item \code{"GRM"}
-}
-
-Active only when \code{use_dispersion = TRUE}.
-
-Use \code{"K"} when a dedicated relationship matrix for dispersion is available.
-Use \code{"A"} for pedigree-based spacing.
-Use \code{"GRM"} for genomic-based spacing.}
-
-\item{dispersion_radius}{Integer neighborhood radius used in dispersion scoring.
-
-Neighboring plots are defined using Chebyshev distance, meaning plots are neighbors
-when \verb{max(|dr|, |dc|) <= dispersion_radius}.
-
-Use \code{1} for immediate neighbors only.
-Use larger values when broader local neighborhoods matter.
-
-Active only when \code{use_dispersion = TRUE}.}
-
-\item{dispersion_iters}{Integer number of swap proposals used during local search.
-
-Larger values allow a more extensive search for reduced local relatedness but
-increase runtime.
-
-Active only when \code{use_dispersion = TRUE}.}
-
-\item{dispersion_seed}{Optional integer seed used for dispersion optimization.
-
-Active only when \code{use_dispersion = TRUE}.
-
-If \code{NULL}, the function uses \code{seed_used}.
-
-Use this when the user wants reproducibility of the dispersion step independently
-from the initial design seed.}
+\item{verbose}{Logical. If \code{TRUE}, prints a one-line summary of field
+dimensions, block count, and treatment counts.}
 }
 \value{
-A list with:
+A named list with three components:
 \describe{
-\item{layout_matrix}{A character matrix of treatment IDs with dimensions
-\verb{n_rows × n_cols}. Unused cells are \code{NA}.}
-\item{field_book}{A data frame with columns \code{Treatment}, \code{Family}, \code{Gcluster},
-\code{Block}, \code{Plot}, \code{Row}, and \code{Column}. Each row corresponds to an assigned plot.}
-\item{efficiency}{\code{NULL} or a list of efficiency metrics and notes,
-depending on \code{eval_efficiency}.}
-\item{seed_used}{The actual random seed used internally.}
+\item{\code{layout_matrix}}{Character matrix of dimension \verb{n_rows x n_cols}.
+Used cells contain treatment IDs; unused cells (when field is larger
+than required) are \code{NA}.}
+\item{\code{field_book}}{Data frame with one row per assigned plot. Columns:
+\code{Treatment}, \code{Family} (original user-supplied label), \code{Gcluster} (\code{NA}
+when \code{cluster_source = "Family"} or for check plots; otherwise the
+matrix-derived cluster label prefixed \code{"G"} or \code{"A"}), \code{Block}
+(integer 1 to \code{n_blocks}), \code{Plot} (sequential integer), \code{Row},
+\code{Column}.}
+\item{\code{seed_used}}{Integer. The random seed used.}
 }
 }
 \description{
-\code{prep_famoptg()} is a general repeated-check block design constructor in
-which \strong{check treatments are included in every block}, while non-check
-treatments are allocated across blocks according to user-specified
-replication levels.
-
-Depending on the supplied treatment structure, the same function can generate:
+\code{prep_famoptg()} builds a repeated-check block design for plant breeding
+and agronomic experiments. Check treatments are included in every block,
+while non-check treatments are allocated according to user-specified
+replication levels. Depending on the treatment structure supplied, the
+same function generates three design classes:
 \itemize{
-\item an \strong{augmented design}, when only checks are repeated and all other entries
-are unreplicated;
-\item a \strong{partially replicated (p-rep) design}, when some non-check entries are
-replicated and others are unreplicated;
-\item an \strong{RCBD-type repeated-check design}, when all non-check entries are given
-the same replication number greater than 1, especially when that replication
-equals \code{n_blocks}.
+\item \strong{Augmented repeated-check design}: checks repeated in every block,
+all test entries unreplicated (\code{p_rep_treatments = NULL}).
+\item \strong{Partially replicated (p-rep) repeated-check design}: a mixture of
+replicated and unreplicated non-check entries.
+\item \strong{RCBD-type repeated-check design}: all non-check entries given the
+same replication across blocks.
 }
 
-The basic allocation rules are:
-\itemize{
-\item \strong{Checks} are included in \strong{every block}.
-\item \strong{Replicated non-check treatments} are assigned to a subset of blocks and
-may appear more than once overall, but \strong{at most once within any single block}.
-\item \strong{Unreplicated treatments} appear exactly once in the full design.
-}
-
-This means, for example, that if a treatment has replication 2 and
-\code{n_blocks >= 2}, its two replicates are placed in \strong{two different blocks}
-rather than repeated within the same block.
-
-The function returns:
-\itemize{
-\item a \strong{layout matrix} representing the field grid, and
-\item a \strong{field book} giving one row per assigned plot with treatment identity,
-grouping metadata, block membership, and field coordinates.
-}
-
-Optionally, the function can also:
-\itemize{
-\item derive treatment groups from a genomic relationship matrix (\code{GRM}) or a
-pedigree relationship matrix (\code{A});
-\item optimize the spatial dispersion of checks;
-\item apply a swap-based local search to reduce local relatedness among nearby
-non-check plots;
-\item compute mixed-model design efficiency metrics for fixed or random treatment
-effects.
-}
+\strong{Design evaluation has been separated from construction.} This function
+returns the field book, layout matrix, and seed only. To compute A, D, and
+CDmean optimality criteria call \code{\link[=evaluate_famoptg_efficiency]{evaluate_famoptg_efficiency()}} on the
+returned \code{field_book}. To search for an optimised design across many
+randomisations call \code{\link[=optimize_famoptg]{optimize_famoptg()}}.
 }
 \details{
-Construct an augmented, partially replicated, or RCBD-type repeated-check
-field design with optional treatment grouping, optional post-layout
-dispersion optimization, and optional mixed-model efficiency diagnostics.
+\subsection{Design structure and allocation rules}{
 
-The function uses \code{mod()} imported from the \strong{pracma} package for serpentine
-traversal logic.
-
-Field dimensions do not have to match the exact number of required plots if
-\code{warn_and_correct = TRUE}. In that case, the function expands one dimension
-so the field can contain all required plots. Extra cells remain \code{NA} in the
-returned \code{layout_matrix}, but the \code{field_book} includes only assigned plots.
-
-The function separates:
+Let:
 \itemize{
-\item \strong{construction logic} (how treatments are placed);
-\item \strong{grouping logic} (how similarity is defined);
-\item \strong{dispersion logic} (how nearby related entries are discouraged);
-\item \strong{efficiency logic} (how the final design is evaluated).
+\item \eqn{c} = number of check treatments
+\item \eqn{b} = \code{n_blocks}
+\item \eqn{v_p} = number of p-rep treatments with replication counts
+\eqn{r_1, r_2, \ldots, r_{v_p}}
+\item \eqn{v_u} = number of unreplicated treatments
 }
 
-This separation is important because a user may, for example:
-\itemize{
-\item use family labels for adjacency control;
-\item use a genomic matrix for dispersion optimization;
-\item and choose not to compute efficiency;
-}
+Total plots required:
+\deqn{\text{total} = b \times c + \sum_{i=1}^{v_p} r_i + v_u}
 
-or alternatively:
-\itemize{
-\item use GRM-based clustering;
-\item skip dispersion optimization;
-\item and compute GBLUP-based efficiency using a separate matrix \code{K}.
-}
-}
-\section{Design classes represented by the same function}{
-
-
-\strong{1. Augmented repeated-check design}
-
-This is obtained when:
-\itemize{
-\item \code{p_rep_treatments = NULL} or \code{character(0)},
-\item \code{p_rep_reps = NULL} or \code{integer(0)},
-\item \code{p_rep_families = NULL} or \code{character(0)},
-\item non-check entries are supplied only through \code{unreplicated_treatments}.
-}
-
-In this case:
-\itemize{
-\item checks are repeated in every block;
-\item all test entries appear once;
-\item the design behaves as an augmented repeated-check layout.
-}
-
-This setting is especially useful for early-stage screening when many entries
-must be observed but only checks can be repeated systematically.
-
-\strong{2. Partially replicated repeated-check design}
-
-This is obtained when:
-\itemize{
-\item some non-check treatments are supplied in \code{p_rep_treatments};
-\item those treatments have replication counts greater than 1;
-\item other entries may remain unreplicated.
-}
-
-This is the classical use case of the function: a mixture of repeated checks,
-replicated candidate entries, and single-plot candidate entries.
-
-\strong{3. RCBD-type repeated-check design}
-
-This is obtained when:
-\itemize{
-\item all non-check treatments are supplied through \code{p_rep_treatments};
-\item they all receive the same replication number greater than 1.
-}
-
-If that common replication equals \code{n_blocks}, then every non-check treatment
-appears once in every block, which is the closest repeated-check analogue of
-a classical RCBD under this framework.
-
-If the common replication is less than \code{n_blocks}, the design remains balanced
-and repeated, but it is not a strict classical RCBD because not every
-treatment appears in every block.
-}
-
-\section{Conceptual workflow}{
-
-The function proceeds in several stages:
-\enumerate{
-\item \strong{Validate inputs} and reconcile field size with the required number of plots.
-\item \strong{Prepare grouping information} from family labels or from clustering on
-\code{GRM} / \code{A}.
-\item \strong{Assign replicated non-check entries to blocks} subject to the rule that
-no treatment appears twice in the same block.
-\item \strong{Distribute unreplicated entries} across blocks.
-\item \strong{Insert checks into each block} using the chosen placement strategy.
-\item \strong{Shuffle treatment order within blocks} to reduce adjacency of same-group
-entries in the 1D block ordering.
-\item \strong{Map the ordered treatments to the field grid} according to \code{order} and
-\code{serpentine}.
-\item Optionally apply \strong{genetic dispersion optimization}.
-\item Optionally compute \strong{design efficiency metrics}.
+Allocation rules enforced by construction:
+\describe{
+\item{Checks}{Appear in every block. Each check contributes \eqn{b}
+plots total.}
+\item{P-rep treatments}{Each treatment \eqn{i} appears in exactly
+\eqn{r_i} blocks, always in distinct blocks - never twice in the
+same block. This is the core p-rep constraint.}
+\item{Unreplicated treatments}{Appear exactly once in the full design,
+distributed as evenly as possible across blocks.}
 }
 }
 
-\section{What this function is most useful for}{
+\subsection{Three design classes}{
 
-This function is especially useful for:
-\itemize{
-\item early- to intermediate-stage breeding trials where many entries must be
-screened and not all can be equally replicated;
-\item augmented repeated-check designs with a large number of single-plot test entries;
-\item p-rep layouts mixing replicated and unreplicated entries;
-\item balanced repeated-check block designs in which all candidate entries are replicated;
-\item experiments where checks must appear in every block;
-\item layouts where related lines should not be clustered too closely;
-\item applications where family, pedigree, or genomic relationships should influence
-physical layout construction;
-\item cases where the user wants to compare alternative design choices using
-model-based efficiency metrics.
-}
-}
+\strong{Augmented repeated-check design} - obtained when \code{p_rep_treatments}
+is empty and all non-check entries are supplied via
+\code{unreplicated_treatments}. Checks are the only repeated treatments.
 
-\section{Grouping logic and why it matters}{
+\strong{P-rep repeated-check design} - obtained when some non-check entries
+in \code{p_rep_treatments} have \code{p_rep_reps > 1} and others are unreplicated.
+The most general use case: a mixture of replicated candidate entries and
+single-plot entries alongside repeated checks.
 
-Several parts of the function rely on the idea of a \strong{group}:
-\itemize{
-\item During block construction, groups are used to reduce adjacency of similar
-entries in the 1D ordering within each block.
-\item During optional dispersion optimization, relationship matrices are used to
-discourage close spatial placement of related non-check entries.
+\strong{RCBD-type repeated-check design} - obtained when all non-check
+treatments are supplied via \code{p_rep_treatments} with a common replication
+count greater than 1. If that count equals \code{n_blocks}, every non-check
+treatment appears once in every block - the closest repeated-check
+analogue of a classical RCBD.
 }
 
-Group labels may come from:
-\itemize{
-\item user-supplied families (\code{cluster_source = "Family"});
-\item clusters derived from a genomic relationship matrix (\code{cluster_source = "GRM"});
-\item clusters derived from a pedigree relationship matrix (\code{cluster_source = "A"}).
+\subsection{Field dimension handling}{
+
+If the supplied \verb{n_rows x n_cols} field does not exactly match the
+required total plots, the function either stops (when
+\code{warn_and_correct = FALSE}) or silently adjusts one dimension
+(\code{warn_and_correct = TRUE}). When adjusting, \code{fix_rows = TRUE} holds
+\code{n_rows} fixed and expands \code{n_cols}; \code{fix_rows = FALSE} does the reverse.
+Surplus cells remain \code{NA} in the layout matrix.
 }
 
-Family-based grouping is the simplest option and is usually appropriate when
-family labels are meaningful and easy to interpret.
+\subsection{Within-block arrangement}{
 
-Matrix-based grouping is more useful when:
-\itemize{
-\item family labels are too coarse;
-\item genomic or pedigree structure is more informative than nominal family labels;
-\item the objective is to spread genetically similar materials more effectively.
+Treatments are shuffled within each block over \code{attempts} random
+permutations to minimise the count of adjacent same-group treatment pairs
+in the 1D block ordering. The group label used for adjacency scoring is
+determined by \code{cluster_source} (see below). Checks are inserted at
+positions controlled by \code{check_placement}:
+\describe{
+\item{\code{"random"}}{Check positions drawn uniformly.}
+\item{\code{"systematic"}}{Check positions spaced evenly through the block.}
+\item{\code{"optimal"}}{Runs \code{check_opt_attempts} candidate layouts and
+keeps the one maximising the mean nearest-neighbour distance between
+check plots in the field - encouraging spatial spread of checks.}
 }
 }
 
-\section{Dependency guide}{
+\subsection{Grouping and adjacency scoring}{
 
-Many arguments are active only in certain modes.
-
-\strong{Treatment structure}
-\itemize{
-\item If \code{p_rep_treatments} is empty (or \code{NULL}) and
-\code{unreplicated_treatments} is non-empty, the function behaves as an
-\strong{augmented repeated-check design} constructor.
-\item If both \code{p_rep_treatments} and \code{unreplicated_treatments} are present,
-the function behaves as a \strong{p-rep repeated-check design} constructor.
-\item If all non-check treatments are supplied in \code{p_rep_treatments} with a common
-replication number greater than 1, the function behaves as an
-\strong{RCBD-type repeated-check design} constructor.
+\code{cluster_source} determines the group label used to penalise adjacent
+same-group treatments within blocks:
+\describe{
+\item{\code{"Family"}}{Uses \code{p_rep_families} and \code{unreplicated_families}
+directly. \code{Gcluster} column in the field book is \code{NA} for all plots.}
+\item{\code{"GRM"}}{Derives clusters from PCA of the genomic relationship
+matrix \code{GRM}. Number of clusters = \code{length(unique(p_rep_families))}.
+Cluster labels are prefixed \code{"G"}.}
+\item{\code{"A"}}{Derives clusters from PCA of the pedigree relationship
+matrix \code{A}. Cluster labels are prefixed \code{"A"}.}
 }
-
-\strong{Grouping mode}
-\itemize{
-\item If \code{cluster_source = "Family"}:
-\itemize{
-\item \code{check_families}, \code{p_rep_families}, and \code{unreplicated_families} are used.
-\item \code{GRM}, \code{A}, \code{id_map}, \code{cluster_method}, \code{cluster_seed},
-\code{cluster_attempts}, and \code{n_pcs_use} are ignored.
-}
-\item If \code{cluster_source = "GRM"}:
-\itemize{
-\item \code{GRM} is required.
-\item \code{id_map} is needed only if treatment IDs do not match \code{rownames(GRM)}.
-\item \code{cluster_method}, \code{cluster_seed}, \code{cluster_attempts}, and \code{n_pcs_use}
-are used.
-\item \code{A} is ignored.
-}
-\item If \code{cluster_source = "A"}:
-\itemize{
-\item \code{A} is required.
-\item \code{id_map} is needed only if treatment IDs do not match \code{rownames(A)}.
-\item \code{cluster_method}, \code{cluster_seed}, \code{cluster_attempts}, and \code{n_pcs_use}
-are used.
-\item \code{GRM} is ignored.
-}
+Check treatments always use \code{check_families} for grouping and always
+have \code{Gcluster = NA}.
 }
 
-\strong{Efficiency evaluation}
-\itemize{
-\item If \code{eval_efficiency = FALSE}, all efficiency-related arguments are ignored.
-\item If \code{eval_efficiency = TRUE} and \code{treatment_effect = "fixed"}:
-\itemize{
-\item fixed-effect design efficiency is computed;
-\item \code{prediction_type}, \code{K}, and \code{line_id_map} are ignored.
-}
-\item If \code{eval_efficiency = TRUE} and \code{treatment_effect = "random"}:
-\itemize{
-\item \code{prediction_type} becomes active.
-}
-\item If \code{prediction_type = "none"}:
-\itemize{
-\item no random-effect prediction efficiency is computed.
-}
-\item If \code{prediction_type = "IID"}:
-\itemize{
-\item non-check treatments are treated as independent random effects;
-\item \code{K} and \code{line_id_map} are ignored.
-}
-\item If \code{prediction_type \%in\% c("GBLUP", "PBLUP")}:
-\itemize{
-\item \code{K} is required;
-\item \code{line_id_map} may be needed if treatment IDs do not match \code{rownames(K)}.
-}
-}
+\subsection{Dispersion optimisation}{
 
-\strong{Residual structure}
-\itemize{
-\item If \code{residual_structure = "IID"}:
-\itemize{
-\item residuals are assumed independent;
-\item \code{rho_row} and \code{rho_col} are ignored.
-}
-\item If \code{residual_structure = "AR1"}:
-\itemize{
-\item row-wise correlation is used;
-\item \code{rho_row} is active;
-\item \code{rho_col} is ignored.
-}
-\item If \code{residual_structure = "AR1xAR1"}:
-\itemize{
-\item row and column correlations are both used;
-\item \code{rho_row} and \code{rho_col} are both active.
+When \code{use_dispersion = TRUE}, a local swap search runs after layout
+construction. At each of \code{dispersion_iters} iterations two non-check plots
+are selected at random; the swap is accepted if it reduces the total
+neighbourhood relatedness score - the sum of relationship matrix values
+between non-check neighbour pairs within Chebyshev distance
+\code{dispersion_radius}. The matrix used is selected by \code{dispersion_source}.
 }
 }
-
-\strong{Check placement}
-\itemize{
-\item If \code{check_placement = "optimal"}, \code{check_opt_attempts} is used.
-\item Otherwise, \code{check_opt_attempts} is ignored.
-}
-
-\strong{Dispersion optimization}
-\itemize{
-\item If \code{use_dispersion = FALSE}, all dispersion arguments are ignored.
-\item If \code{use_dispersion = TRUE} and \code{dispersion_source = "K"}:
-\itemize{
-\item \code{K} is required;
-\item \code{line_id_map} may be needed if treatment IDs differ from \code{rownames(K)}.
-}
-\item If \code{use_dispersion = TRUE} and \code{dispersion_source = "A"}:
-\itemize{
-\item \code{A} is required.
-}
-\item If \code{use_dispersion = TRUE} and \code{dispersion_source = "GRM"}:
-\itemize{
-\item \code{GRM} is required.
-}
-}
-}
-
 \examples{
-data("OptiDesign_example_data", package = "OptiDesign")
-x <- OptiDesign_example_data
-
-## ---------------------------------------------------------
-## Example 1: Family-based repeated-check design
-## This example uses the shipped family-based arguments.
-## Depending on the supplied treatment lists, the same function
-## can represent augmented, p-rep, or RCBD-type repeated-check
-## layouts.
-## ---------------------------------------------------------
-out_family <- do.call(
-  prep_famoptg,
-  c(
-    x$OptiDesign_famoptg_example,
-    x$OptiDesign_famoptg_args_family
-  )
+## Augmented repeated-check design: checks repeated, entries unreplicated
+design_aug <- prep_famoptg(
+  check_treatments        = c("CHK1", "CHK2"),
+  check_families          = c("CHECK", "CHECK"),
+  p_rep_treatments        = character(0),
+  p_rep_reps              = integer(0),
+  p_rep_families          = character(0),
+  unreplicated_treatments = paste0("E", 1:80),
+  unreplicated_families   = rep(paste0("F", 1:4), 20),
+  n_blocks = 5, n_rows = 10, n_cols = 20
 )
+dim(design_aug$layout_matrix)
+head(design_aug$field_book)
 
-dim(out_family$layout_matrix)
-head(out_family$field_book)
-out_family$seed_used
-
-\dontrun{
-## ---------------------------------------------------------
-## Example 2: GRM-based grouping with dispersion optimization
-## ---------------------------------------------------------
-out_grm <- do.call(
-  prep_famoptg,
-  c(
-    x$OptiDesign_famoptg_example,
-    x$OptiDesign_famoptg_args_grm
-  )
+## P-rep design: some entries replicated twice, others once
+design_prep <- prep_famoptg(
+  check_treatments        = c("CHK1", "CHK2"),
+  check_families          = c("CHECK", "CHECK"),
+  p_rep_treatments        = paste0("P", 1:20),
+  p_rep_reps              = rep(2L, 20),
+  p_rep_families          = rep(paste0("F", 1:4), 5),
+  unreplicated_treatments = paste0("U", 1:60),
+  unreplicated_families   = rep(paste0("F", 1:4), 15),
+  n_blocks = 5, n_rows = 15, n_cols = 20,
+  check_placement = "systematic"
 )
+table(design_prep$field_book$Block)
 
-dim(out_grm$layout_matrix)
-head(out_grm$field_book)
-out_grm$efficiency
-
-## ---------------------------------------------------------
-## Example 3: Augmented repeated-check use pattern
-## In practice, this is obtained by leaving p-rep arguments empty
-## and supplying candidate entries only as unreplicated entries.
-## ---------------------------------------------------------
-aug_args <- x$OptiDesign_famoptg_example
-aug_args$p_rep_treatments <- character(0)
-aug_args$p_rep_reps <- integer(0)
-aug_args$p_rep_families <- character(0)
-
-out_aug <- do.call(
-  prep_famoptg,
-  c(aug_args, x$OptiDesign_famoptg_args_family)
+## Evaluate separately
+eff <- evaluate_famoptg_efficiency(
+  field_book         = design_prep$field_book,
+  n_rows = 15, n_cols = 20,
+  check_treatments   = c("CHK1", "CHK2"),
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row = 0.10, rho_col = 0.10
 )
+eff$A_criterion
 
-dim(out_aug$layout_matrix)
-head(out_aug$field_book)
-
-## ---------------------------------------------------------
-## Example 4: RCBD-type repeated-check use pattern
-## Here all non-check entries are treated as replicated entries.
-## If their common replication equals n_blocks, each entry appears
-## once in every block.
-## ---------------------------------------------------------
-rcbd_args <- x$OptiDesign_famoptg_example
-all_noncheck <- c(rcbd_args$p_rep_treatments, rcbd_args$unreplicated_treatments)
-all_noncheck_fam <- c(rcbd_args$p_rep_families, rcbd_args$unreplicated_families)
-
-rcbd_args$p_rep_treatments <- all_noncheck
-rcbd_args$p_rep_reps <- rep(2L, length(all_noncheck))
-rcbd_args$p_rep_families <- all_noncheck_fam
-rcbd_args$unreplicated_treatments <- character(0)
-rcbd_args$unreplicated_families <- character(0)
-
-out_rcbd_type <- do.call(
-  prep_famoptg,
-  c(rcbd_args, x$OptiDesign_famoptg_args_family)
-)
-
-dim(out_rcbd_type$layout_matrix)
-head(out_rcbd_type$field_book)
 }
-
+\seealso{
+\code{\link[=evaluate_famoptg_efficiency]{evaluate_famoptg_efficiency()}} to compute A, D, and CDmean
+optimality criteria on the returned \code{field_book}.
+\code{\link[=optimize_famoptg]{optimize_famoptg()}} to search for a criterion-optimal design using
+Random Restart.
 }

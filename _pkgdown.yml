@@ -1,5 +1,4 @@
 url: https://FAkohoue.github.io/OptiDesign/
-
 favicon: pkgdown/assets/favicon.ico
 
 template:
@@ -7,12 +6,12 @@ template:
   includes:
     in_header: pkgdown/assets/favicon.html
   bslib:
-    primary: "#0C4C80"
-    secondary: "#3AA0FF"
-    success: "#7ED957"
-    base_font: {google: "Inter"}
+    primary:      "#0C4C80"
+    secondary:    "#3AA0FF"
+    success:      "#7ED957"
+    base_font:    {google: "Inter"}
     heading_font: {google: "Inter"}
-    code_font: {google: "Fira Code"}
+    code_font:    {google: "Fira Code"}
 
 authors:
   Félicien Akohoue:
@@ -20,12 +19,16 @@ authors:
 
 home:
   title: OptiDesign
-  description: Optimized experimental field design for breeding and agronomy
+  description: >
+    Optimized experimental field design for plant breeding and agronomy.
+    Construct, evaluate, and optimise repeated-check block designs and
+    alpha row-column stream designs under mixed models with A, D, and
+    CDmean optimality criteria.
 
 navbar:
   bg: primary
   structure:
-    left: [home, reference, articles, news]
+    left:  [home, reference, articles, news]
     right: [github]
   components:
     github:
@@ -34,14 +37,40 @@ navbar:
       aria-label: GitHub repository
 
 reference:
-  - title: Design functions
+
+  - title: "Alpha row-column stream designs"
+    desc: >
+      Functions for constructing, evaluating, and optimising fixed-grid
+      alpha row-column designs with repeated checks. Optimisation supports
+      Random Restart, Simulated Annealing, and a Genetic Algorithm.
     contents:
-      - prep_famoptg
-      - alpha_rc_stream
-  - title: Datasets
+      - starts_with("alpha_rc")
+      - starts_with("evaluate_alpha")
+      - starts_with("optimize_alpha")
+
+  - title: "Repeated-check block designs"
+    desc: >
+      Functions for constructing, evaluating, and optimising augmented,
+      partially replicated (p-rep), and RCBD-type repeated-check block
+      designs. The p-rep constraint (no replicated entry in the same block
+      twice) is enforced by construction.
+    contents:
+      - starts_with("evaluate_famoptg")
+      - starts_with("optimize_famoptg")
+      - starts_with("prep_famoptg")
+
+  - title: "Datasets"
+    desc: >
+      Synthetic example data for illustrating and testing both design
+      families, including treatment vectors, field dimensions, relationship
+      matrices, and ready-to-use argument lists.
     contents:
       - OptiDesign_example_data
-  - title: Package
+
+  - title: "Package"
+    desc: >
+      Package-level documentation covering the full function overview,
+      typical workflows for both design families, and key references.
     contents:
       - OptiDesign-package
 

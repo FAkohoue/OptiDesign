@@ -11,6 +11,9 @@ permissions:
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,7 +25,12 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, any::roxygen2, local::.
+          extra-packages: |
+            any::pkgdown
+            any::roxygen2
+            any::Matrix
+            local::.
+          needs: website
 
       - name: Document package
         shell: Rscript {0}
@@ -37,3 +45,4 @@ jobs:
         with:
           branch: gh-pages
           folder: docs
+          clean: true

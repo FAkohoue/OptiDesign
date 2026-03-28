@@ -46,12 +46,80 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="optidesign-010">OptiDesign 0.1.0<a class="anchor" aria-label="anchor" href="#optidesign-010"></a></h2>
-<ul><li>Initial package structure.</li>
-<li>Added <code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code>.</li>
-<li>Added <code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code>.</li>
-<li>Added package documentation, tests, pkgdown configuration, and GitHub Actions workflow.</li>
+<div class="section level3">
+<h3 id="initial-release-0-1-0">Initial release<a class="anchor" aria-label="anchor" href="#initial-release-0-1-0"></a></h3>
+<div class="section level4">
+<h4 id="new-design-constructors-0-1-0">New design constructors<a class="anchor" aria-label="anchor" href="#new-design-constructors-0-1-0"></a></h4>
+<ul><li><p>Added <code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code>: constructs repeated-check block designs with flexible replication, supporting augmented, partially replicated (p-rep), and RCBD-type repeated-check layouts. The p-rep constraint — no replicated treatment appears twice in the same block — is enforced by construction.</p></li>
+<li><p>Added <code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code>: constructs fixed-grid alpha row-column stream designs with repeated checks. The field is treated as a global traversal stream partitioned into contiguous replicate segments and incomplete blocks. Block-size constraints are expressed as total block size (checks + entries) via <code>min_block_size</code> and <code>max_block_size</code>.</p></li>
 </ul></div>
-  </main></div>
+<div class="section level4">
+<h4 id="new-evaluation-functions-0-1-0">New evaluation functions<a class="anchor" aria-label="anchor" href="#new-evaluation-functions-0-1-0"></a></h4>
+<ul><li><p>Added <code><a href="../reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency()</a></code>: standalone mixed-model efficiency evaluator for designs produced by <code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code>. Model contains Block + Row + Column random effects (<code>sigma_b2</code>). Computes A-criterion, D-criterion, and CDmean. Fully decoupled from construction.</p></li>
+<li><p>Added <code><a href="../reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency()</a></code>: standalone mixed-model efficiency evaluator for designs produced by <code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code>. Model contains Rep + IBlock(Rep) + Row + Column random effects (<code>sigma_rep2</code>, <code>sigma_ib2</code>). Computes A-criterion, D-criterion, and CDmean. Fully decoupled from construction.</p></li>
+</ul></div>
+<div class="section level4">
+<h4 id="new-optimisation-functions-0-1-0">New optimisation functions<a class="anchor" aria-label="anchor" href="#new-optimisation-functions-0-1-0"></a></h4>
+<ul><li><p>Added <code><a href="../reference/optimize_famoptg.html">optimize_famoptg()</a></code>: Random Restart (RS) optimiser for <code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> designs. Searches across <code>n_restarts</code> independent randomisations and returns the design with the best criterion value. Supports A, D, both, and CDmean criteria. RS is used exclusively because the p-rep constraint is preserved by construction at every call.</p></li>
+<li>
+<p>Added <code><a href="../reference/optimize_alpha_rc.html">optimize_alpha_rc()</a></code>: criterion-driven optimiser for <code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code> designs with three search strategies:</p>
+<ul><li>
+<strong>RS</strong> (Random Restart): independent randomisations, return best.</li>
+<li>
+<strong>SA</strong> (Simulated Annealing): iterative entry-permutation swaps with temperature-governed acceptance, repeated across multiple restarts.</li>
+<li>
+<strong>GA</strong> (Genetic Algorithm): population of entry permutations evolved via Order Crossover (OX1), swap mutation, and elitism. Supports A, D, both, and CDmean criteria. All methods preserve structural constraints by construction.</li>
+</ul></li>
+</ul></div>
+<div class="section level4">
+<h4 id="optimality-criteria-0-1-0">Optimality criteria<a class="anchor" aria-label="anchor" href="#optimality-criteria-0-1-0"></a></h4>
+<p>Both evaluation and optimisation functions support:</p>
+<ul><li>
+<strong>A-criterion</strong>: mean pairwise contrast variance (fixed effects) or mean prediction error variance / PEV (random effects). Lower is better.</li>
+<li>
+<strong>D-criterion</strong>: geometric mean of contrast covariance eigenvalues (fixed effects only). Lower is better.</li>
+<li>
+<strong>CDmean</strong>: mean coefficient of determination for genomic breeding value prediction, <code>CDmean = 1 - mean_PEV / sigma_g2</code> (Rincent et al. 2012). Higher is better. Requires random treatment effects and a genomic prediction model (<code>prediction_type = "GBLUP"</code> or <code>"PBLUP"</code>).</li>
+</ul></div>
+<div class="section level4">
+<h4 id="integrity-checking-0-1-0">Integrity checking<a class="anchor" aria-label="anchor" href="#integrity-checking-0-1-0"></a></h4>
+<p>Both optimisers implement a four-point integrity checking strategy: post-construction validation, re-check before storing as best, final check before return, and emergency fallback if no valid design is found across all iterations.</p>
+</div>
+<div class="section level4">
+<h4 id="internal-architecture-0-1-0">Internal architecture<a class="anchor" aria-label="anchor" href="#internal-architecture-0-1-0"></a></h4>
+<ul><li><p>Added <code>alpha_rc_helpers.R</code>: internal helper functions shared across all six exported functions — sparse incidence matrix construction, AR1 precision matrices, the mixed model solver, the Hutchinson stochastic trace estimator (Hutchinson 1990) for scalable criterion approximation in large designs, Chebyshev neighbourhood enumeration, and the dispersion scoring function.</p></li>
+<li><p>Construction, evaluation, and optimisation follow a <strong>single-responsibility architecture</strong>: each step is a separate function that can be called independently or chained.</p></li>
+</ul></div>
+<div class="section level4">
+<h4 id="supported-residual-structures-0-1-0">Supported residual structures<a class="anchor" aria-label="anchor" href="#supported-residual-structures-0-1-0"></a></h4>
+<p>All evaluation and optimisation functions support:</p>
+<ul><li>
+<code>"IID"</code>: independent residuals.</li>
+<li>
+<code>"AR1"</code>: row-only AR1 autocorrelation.</li>
+<li>
+<code>"AR1xAR1"</code>: separable row × column AR1 autocorrelation.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="grouping-and-dispersion-0-1-0">Grouping and dispersion<a class="anchor" aria-label="anchor" href="#grouping-and-dispersion-0-1-0"></a></h4>
+<p>Both design families support:</p>
+<ul><li>Family-based adjacency scoring (<code>cluster_source = "Family"</code>).</li>
+<li>GRM-based clustering (<code>cluster_source = "GRM"</code>).</li>
+<li>Pedigree-based clustering (<code>cluster_source = "A"</code>).</li>
+<li>Optional post-layout genetic dispersion optimisation (<code>use_dispersion = TRUE</code>) using swap-based local search to reduce spatial clustering of related entries.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="package-infrastructure-0-1-0">Package infrastructure<a class="anchor" aria-label="anchor" href="#package-infrastructure-0-1-0"></a></h4>
+<ul><li>Added package documentation (<code>OptiDesign-package.R</code>) covering both design families, typical workflows, function overview table, and key references.</li>
+<li>Added <code>OptiDesign_example_data</code>: synthetic dataset with treatment vectors, field dimensions, relationship matrices (GRM, A, K), and ready-to-use argument lists for both design families.</li>
+<li>Added pkgdown site configuration (<code>_pkgdown.yml</code>) with reference sections organised by design family.</li>
+<li>Added GitHub Actions workflows for R CMD CHECK and pkgdown site deployment.</li>
+<li>Added unit tests (<code>testthat &gt;= 3.0.0</code>).</li>
+</ul></div>
+</div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

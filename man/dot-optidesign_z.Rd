@@ -2,17 +2,27 @@
 % Please edit documentation in R/utils_internal.R
 \name{.optidesign_z}
 \alias{.optidesign_z}
-\title{Internal z-score helper}
+\title{Internal z-score normalisation helper}
 \usage{
 .optidesign_z(x)
 }
 \arguments{
-\item{x}{Numeric vector.}
+\item{x}{Numeric vector. \code{NA} values are ignored when computing the mean
+and standard deviation but are returned as \code{NA} in the output.}
 }
 \value{
-Numeric vector.
+Numeric vector of the same length as \code{x} containing z-scores,
+or a zero vector if the standard deviation is zero or non-finite.
 }
 \description{
-Internal z-score helper
+Computes the z-score (standard normal transformation) of a numeric vector,
+handling edge cases where the standard deviation is zero or non-finite.
+Used internally when combining or scaling multiple optimality criteria
+prior to comparison.
+}
+\details{
+If the standard deviation is zero or non-finite (e.g. all values identical,
+or all \code{NA}), returns a zero vector of the same length rather than
+producing \code{NaN} or \code{Inf}.
 }
 \keyword{internal}

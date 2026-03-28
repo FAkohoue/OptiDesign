@@ -1,6 +1,6 @@
 Package: OptiDesign
 Type: Package
-Title: Experimental Field Design Utilities for Optimized Layout Construction
+Title: Optimized Experimental Field Design for Plant Breeding
 Version: 0.1.0
 Authors@R:
     person(
@@ -10,16 +10,30 @@ Authors@R:
       role    = c("aut", "cre"),
       comment = c(ORCID = "0000-0002-2160-0182")
     )
-Description: Tools for constructing optimized experimental field layouts,
-    including augmented, RCBD-type repeated-check designs, p-rep designs,
-    and fixed-grid alpha row-column designs with repeated checks, optional
-    grouping from family or relationship matrices, optional post-layout
-    dispersion, and optional mixed-model efficiency diagnostics.
+Description: Tools for constructing, evaluating, and optimizing experimental
+    field designs for plant breeding and related agricultural applications.
+    Provides two design families: (1) repeated-check block designs supporting
+    augmented, partially replicated (p-rep), and RCBD-type layouts via
+    prep_famoptg(), with evaluation by evaluate_famoptg_efficiency() and
+    Random Restart optimisation by optimize_famoptg(); (2) fixed-grid alpha
+    row-column stream designs with repeated checks via alpha_rc_stream(),
+    with evaluation by evaluate_alpha_efficiency() and criterion-driven
+    optimisation by optimize_alpha_rc() using Random Restart, Simulated
+    Annealing, or a Genetic Algorithm. Both families support optional
+    grouping from family labels or genomic and pedigree relationship matrices,
+    optional post-layout genetic dispersion optimisation, and mixed-model
+    efficiency evaluation under fixed or random treatment effects with IID,
+    AR1, or AR1xAR1 residual structures. Efficiency criteria include
+    A-optimality, D-optimality, and CDmean for genomic selection training
+    population optimisation (Rincent et al. 2012
+    <doi:10.1534/genetics.112.141473>). Large designs use a Hutchinson
+    stochastic trace estimator (Hutchinson 1990
+    <doi:10.1080/03610919008812866>) for scalable criterion approximation.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends:
-    R (>= 2.10)
+    R (>= 4.1.0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:

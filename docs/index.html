@@ -18,8 +18,10 @@
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="OptiDesign">
-<meta name="description" content="Optimized experimental field design for breeding and agronomy">
-<meta property="og:description" content="Optimized experimental field design for breeding and agronomy">
+<meta name="description" content="Optimized experimental field design for plant breeding and agronomy. Construct, evaluate, and optimise repeated-check block designs and alpha row-column stream designs under mixed models with A, D, and CDmean optimality criteria.
+">
+<meta property="og:description" content="Optimized experimental field design for plant breeding and agronomy. Construct, evaluate, and optimise repeated-check block designs and alpha row-column stream designs under mixed models with A, D, and CDmean optimality criteria.
+">
 <meta property="og:image" content="https://FAkohoue.github.io/OptiDesign/logo.svg">
 </head>
 <body>
@@ -73,21 +75,22 @@
 </h1>
 </div>
 <p align="center">
-<img src="reference/figures/logo.svg" alt="OptiDesign logo" width="100%"></p>
+<img src="reference/figures/logo.png" alt="OptiDesign logo" width="100%"></p>
 <!-- badges: start -->
 
 <hr>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p><code>OptiDesign</code> provides advanced tools for constructing optimized experimental field designs for plant breeding and agronomic experiments. It integrates:</p>
+<p><code>OptiDesign</code> provides tools for constructing, evaluating, and optimizing experimental field designs for plant breeding and related agricultural applications. It integrates:</p>
 <ul>
 <li>field layout construction</li>
 <li>genetic structure (family, pedigree, genomic relationships)</li>
 <li>optional spatial dispersion optimization</li>
-<li>optional mixed-model efficiency evaluation</li>
+<li>statistical efficiency evaluation under mixed models</li>
+<li>criterion-driven design optimization</li>
 </ul>
-<p>into a single, flexible workflow.</p>
+<p>into a single, flexible workflow built around two design families.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -100,7 +103,7 @@
 <li>ability to separate genetic from environmental effects</li>
 <li>robustness to field spatial heterogeneity</li>
 </ul>
-<p><code>OptiDesign</code> allows users to <strong>explicitly control these aspects at the design stage</strong>, rather than correcting them post hoc during analysis.</p>
+<p><code>OptiDesign</code> allows users to <strong>explicitly control these aspects at the design stage</strong>, rather than correcting them post hoc during analysis. Uniquely, OptiDesign goes beyond single-design construction by offering <strong>criterion-driven optimisation</strong> — searching across many randomisations to return the design with the best statistical properties for your specific trial objective.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -130,23 +133,74 @@
 <p>This enables reduction of local genetic relatedness, improved sampling of genetic diversity across spatial blocks, and better estimation of genetic effects.</p>
 </div>
 <div class="section level3">
-<h3 id="id_3-integrated-evaluation">3. Integrated evaluation<a class="anchor" aria-label="anchor" href="#id_3-integrated-evaluation"></a>
+<h3 id="id_3-integrated-evaluation-and-optimisation">3. Integrated evaluation and optimisation<a class="anchor" aria-label="anchor" href="#id_3-integrated-evaluation-and-optimisation"></a>
 </h3>
-<p>Designs can be evaluated using mixed-model principles before field implementation:</p>
+<p>Designs can be evaluated and optimised using mixed-model principles before field implementation:</p>
 <ul>
-<li>fixed-effect precision (BLUEs)</li>
-<li>random-effect prediction (BLUP / GBLUP / PBLUP)</li>
+<li>fixed-effect precision (BLUEs) — A and D optimality criteria</li>
+<li>random-effect prediction (BLUP / GBLUP / PBLUP) — mean PEV and CDmean</li>
 <li>spatial residual structures (IID, AR1, AR1×AR1)</li>
+<li>criterion-driven search returning the statistically best design</li>
 </ul>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
+<h2 id="package-architecture">Package Architecture<a class="anchor" aria-label="anchor" href="#package-architecture"></a>
+</h2>
+<p><code>OptiDesign</code> follows a <strong>single-responsibility architecture</strong>: construction, evaluation, and optimisation are separated into distinct functions that can be called independently or chained together.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>Function</th>
+<th>Role</th>
+<th>Design family</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code><a href="reference/prep_famoptg.html">prep_famoptg()</a></code></td>
+<td>Construction</td>
+<td>Repeated-check block</td>
+</tr>
+<tr>
+<td><code><a href="reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency()</a></code></td>
+<td>Evaluation</td>
+<td>Repeated-check block</td>
+</tr>
+<tr>
+<td><code><a href="reference/optimize_famoptg.html">optimize_famoptg()</a></code></td>
+<td>Optimisation (RS)</td>
+<td>Repeated-check block</td>
+</tr>
+<tr>
+<td><code><a href="reference/alpha_rc_stream.html">alpha_rc_stream()</a></code></td>
+<td>Construction</td>
+<td>Alpha row-column stream</td>
+</tr>
+<tr>
+<td><code><a href="reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency()</a></code></td>
+<td>Evaluation</td>
+<td>Alpha row-column stream</td>
+</tr>
+<tr>
+<td><code><a href="reference/optimize_alpha_rc.html">optimize_alpha_rc()</a></code></td>
+<td>Optimisation (RS / SA / GA)</td>
+<td>Alpha row-column stream</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="design-family-1-repeated-check-block-designs">Design Family 1: Repeated-Check Block Designs<a class="anchor" aria-label="anchor" href="#design-family-1-repeated-check-block-designs"></a>
 </h2>
 <div class="section level3">
-<h3 id="prep_famoptg">
-<code>prep_famoptg()</code><a class="anchor" aria-label="anchor" href="#prep_famoptg"></a>
+<h3 id="prep_famoptg--construction">
+<code>prep_famoptg()</code> — construction<a class="anchor" aria-label="anchor" href="#prep_famoptg--construction"></a>
 </h3>
 <p>Constructs <strong>repeated-check block designs with flexible replication</strong>, covering augmented designs, partially replicated (p-rep) designs, and RCBD-type repeated-check designs. Checks appear in every block; entries may be replicated, partially replicated, or unreplicated.</p>
 <p><strong>Use this function when:</strong></p>
@@ -173,11 +227,11 @@
 </tr>
 <tr>
 <td>Block allocation</td>
-<td>No treatment repeats within a block</td>
+<td>P-rep constraint: no treatment appears twice in the same block</td>
 </tr>
 <tr>
 <td>Design types</td>
-<td>Augmented, p-rep, balanced repeated-check</td>
+<td>Augmented, p-rep, RCBD-type repeated-check</td>
 </tr>
 <tr>
 <td>Grouping</td>
@@ -187,32 +241,76 @@
 <td>Dispersion optimization</td>
 <td>Optional; reduces clustering of related entries</td>
 </tr>
-<tr>
-<td>Efficiency diagnostics</td>
-<td>Optional; mixed-model based evaluation</td>
-</tr>
 </tbody>
 </table>
 <blockquote>
-<p><strong>Key design rule:</strong> a treatment can appear multiple times overall, but at most once per block.</p>
+<p><strong>Key design rule:</strong> a treatment can appear multiple times overall, but always in distinct blocks — never twice in the same block.</p>
 </blockquote>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="alpha_rc_stream">
-<code>alpha_rc_stream()</code><a class="anchor" aria-label="anchor" href="#alpha_rc_stream"></a>
+<h3 id="evaluate_famoptg_efficiency--evaluation">
+<code>evaluate_famoptg_efficiency()</code> — evaluation<a class="anchor" aria-label="anchor" href="#evaluate_famoptg_efficiency--evaluation"></a>
 </h3>
-<p>Constructs <strong>alpha row–column designs on a fixed grid</strong> using a stream-based layout. The field is converted into a single ordered stream of positions, split into contiguous replicate segments, then further divided into incomplete blocks.</p>
+<p>Evaluates the statistical efficiency of a design produced by <code><a href="reference/prep_famoptg.html">prep_famoptg()</a></code>. The mixed model contains <strong>Block + Row + Column</strong> random effects (no replicate or incomplete-block nesting). Uses variance component <code>sigma_b2</code> for the flat block structure. Fully decoupled from construction — the same field book can be evaluated multiple times under different model assumptions without rebuilding the layout.</p>
+<p><strong>Supported criteria:</strong></p>
+<table class="table">
+<thead><tr>
+<th>Criterion</th>
+<th>Effect type</th>
+<th>Direction</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>A-criterion</td>
+<td>Fixed or random</td>
+<td>Lower is better</td>
+</tr>
+<tr>
+<td>D-criterion</td>
+<td>Fixed only</td>
+<td>Lower is better</td>
+</tr>
+<tr>
+<td>CDmean</td>
+<td>Random only</td>
+<td>Higher is better</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="optimize_famoptg--optimisation">
+<code>optimize_famoptg()</code> — optimisation<a class="anchor" aria-label="anchor" href="#optimize_famoptg--optimisation"></a>
+</h3>
+<p>Wraps <code><a href="reference/prep_famoptg.html">prep_famoptg()</a></code> and <code><a href="reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency()</a></code> in a <strong>Random Restart (RS)</strong> loop. RS is used exclusively because the p-rep constraint is enforced by construction at every call — permutation-based methods would require block-aware swap logic to preserve it. Every candidate design is valid by construction. Supports A, D, both, and CDmean criteria.</p>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="design-family-2-alpha-row-column-stream-designs">Design Family 2: Alpha Row-Column Stream Designs<a class="anchor" aria-label="anchor" href="#design-family-2-alpha-row-column-stream-designs"></a>
+</h2>
+<div class="section level3">
+<h3 id="alpha_rc_stream--construction">
+<code>alpha_rc_stream()</code> — construction<a class="anchor" aria-label="anchor" href="#alpha_rc_stream--construction"></a>
+</h3>
+<p>Constructs <strong>alpha row-column designs on a fixed grid</strong> using a stream-based layout. The field is converted into a single ordered stream of positions, split into contiguous replicate segments, then further divided into incomplete blocks. Checks appear in every incomplete block; entries appear once per replicate.</p>
+<p>Block-size constraints are expressed as <strong>total block size</strong> (checks + entries) through <code>min_block_size</code> and <code>max_block_size</code>. The function translates these into entry-slot limits internally and derives or validates the number of incomplete blocks per replicate accordingly.</p>
 <p><strong>Use this function when:</strong></p>
 <ul>
 <li>field dimensions are fixed and cannot change</li>
 <li>planting follows field-book order</li>
 <li>replicates are defined operationally rather than geometrically</li>
 <li>checks must appear in every incomplete block</li>
-<li>classical rectangular alpha designs are not practical</li>
+<li>you want to control block sizes in whole-block terms</li>
 </ul>
 <p><strong>Key capabilities:</strong></p>
 <table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
 <thead><tr>
 <th>Feature</th>
 <th>Details</th>
@@ -229,11 +327,15 @@
 </tr>
 <tr>
 <td>Block sizes</td>
-<td>Unequal incomplete blocks supported</td>
+<td>Controlled via <code>min_block_size</code> / <code>max_block_size</code> (total: checks + entries)</td>
 </tr>
 <tr>
 <td>Checks</td>
-<td>Present in every block</td>
+<td>Present in every incomplete block</td>
+</tr>
+<tr>
+<td>Block count</td>
+<td>User-fixed or automatically derived as the largest feasible value</td>
 </tr>
 <tr>
 <td>Grouping</td>
@@ -243,22 +345,113 @@
 <td>Dispersion optimization</td>
 <td>Optional</td>
 </tr>
-<tr>
-<td>Efficiency diagnostics</td>
-<td>Optional</td>
-</tr>
 </tbody>
 </table>
 <blockquote>
-<p><strong>Important:</strong> unused cells are placed only at the end of the field stream, not scattered, which is critical for practical field implementation.</p>
+<p><strong>Important:</strong> unused cells are placed only at the end of the field stream, not scattered — which is critical for practical field implementation.</p>
 </blockquote>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="evaluate_alpha_efficiency--evaluation">
+<code>evaluate_alpha_efficiency()</code> — evaluation<a class="anchor" aria-label="anchor" href="#evaluate_alpha_efficiency--evaluation"></a>
+</h3>
+<p>Evaluates the statistical efficiency of a design produced by <code><a href="reference/alpha_rc_stream.html">alpha_rc_stream()</a></code>. The mixed model contains <strong>Rep + IBlock(Rep) + Row + Column</strong> random effects. Uses variance components <code>sigma_rep2</code> and <code>sigma_ib2</code> for replicate and incomplete-block variance. Supports the same A, D, and CDmean criteria as <code><a href="reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency()</a></code>.</p>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="optimize_alpha_rc--optimisation">
+<code>optimize_alpha_rc()</code> — optimisation<a class="anchor" aria-label="anchor" href="#optimize_alpha_rc--optimisation"></a>
+</h3>
+<p>Wraps <code><a href="reference/alpha_rc_stream.html">alpha_rc_stream()</a></code> and <code><a href="reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency()</a></code> in an optimisation loop with three search strategies:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>Method</th>
+<th>Description</th>
+<th>Best for</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+<strong>RS</strong> (Random Restart)</td>
+<td>Generate <code>n_restarts</code> independent designs, return the best</td>
+<td>Quick exploration, guaranteed validity</td>
+</tr>
+<tr>
+<td>
+<strong>SA</strong> (Simulated Annealing)</td>
+<td>Iterative entry-permutation swaps with temperature-governed acceptance</td>
+<td>Escaping local optima</td>
+</tr>
+<tr>
+<td>
+<strong>GA</strong> (Genetic Algorithm)</td>
+<td>Population of permutations evolved via OX1 crossover, swap mutation, and elitism</td>
+<td>Thorough global search</td>
+</tr>
+</tbody>
+</table>
+<p>All three methods preserve all structural constraints by construction. Supports A, D, both, and CDmean criteria.</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
+<h2 id="key-differences-between-design-families">Key Differences Between Design Families<a class="anchor" aria-label="anchor" href="#key-differences-between-design-families"></a>
+</h2>
+<table class="table">
+<thead><tr>
+<th>Feature</th>
+<th>
+<code>prep_famoptg</code> family</th>
+<th>
+<code>alpha_rc_stream</code> family</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Blocking structure</td>
+<td>Flat blocks</td>
+<td>Replicates → incomplete blocks</td>
+</tr>
+<tr>
+<td>Replication</td>
+<td>Flexible per-entry</td>
+<td>Uniform across entries</td>
+</tr>
+<tr>
+<td>Design types</td>
+<td>Augmented, p-rep, RCBD-type</td>
+<td>Alpha-lattice</td>
+</tr>
+<tr>
+<td>Block variance</td>
+<td><code>sigma_b2</code></td>
+<td>
+<code>sigma_rep2</code> + <code>sigma_ib2</code>
+</td>
+</tr>
+<tr>
+<td>Optimisation methods</td>
+<td>RS only</td>
+<td>RS, SA, GA</td>
+</tr>
+<tr>
+<td>P-rep constraint</td>
+<td>Enforced</td>
+<td>Not applicable</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+<div class="section level2">
 <h2 id="grouping-options">Grouping Options<a class="anchor" aria-label="anchor" href="#grouping-options"></a>
 </h2>
-<p>Both functions support three grouping strategies:</p>
+<p>Both families support three grouping strategies for adjacency scoring within blocks and genomic dispersion:</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -291,40 +484,185 @@
 <hr>
 </div>
 <div class="section level2">
-<h2 id="dispersion-optimization">Dispersion Optimization<a class="anchor" aria-label="anchor" href="#dispersion-optimization"></a>
+<h2 id="efficiency-criteria">Efficiency Criteria<a class="anchor" aria-label="anchor" href="#efficiency-criteria"></a>
 </h2>
-<p>An optional step that improves the spatial distribution of genetically related entries across the field. Use it when:</p>
-<ul>
-<li>genomic or pedigree structure matters</li>
-<li>strong local spatial correlation is expected</li>
-<li>you want to avoid confounding spatial and genetic effects</li>
-</ul>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr>
+<th>Criterion</th>
+<th>Meaning</th>
+<th>Direction</th>
+<th>Available for</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>A-criterion</td>
+<td>Mean pairwise contrast variance (fixed) or mean PEV (random)</td>
+<td>Lower is better</td>
+<td>Both families</td>
+</tr>
+<tr>
+<td>D-criterion</td>
+<td>Geometric mean of contrast covariance eigenvalues</td>
+<td>Lower is better</td>
+<td>Fixed effects only</td>
+</tr>
+<tr>
+<td>CDmean</td>
+<td>Mean coefficient of determination for GEBV prediction</td>
+<td>Higher is better</td>
+<td>Random effects + GBLUP/PBLUP</td>
+</tr>
+</tbody>
+</table>
+<p>CDmean is defined as:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">CDmean</mtext><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mtext mathvariant="normal">mean PEV</mtext><msubsup><mi>σ</mi><mi>g</mi><mn>2</mn></msubsup></mfrac></mrow><annotation encoding="application/x-tex">\text{CDmean} = 1 - \frac{\text{mean PEV}}{\sigma_g^2}</annotation></semantics></math></p>
+<p>and directly measures the expected reliability of genomic prediction. It is particularly useful for optimising training population designs in genomic selection (Rincent et al. 2012).</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="efficiency-evaluation">Efficiency Evaluation<a class="anchor" aria-label="anchor" href="#efficiency-evaluation"></a>
+<h2 id="typical-workflows">Typical Workflows<a class="anchor" aria-label="anchor" href="#typical-workflows"></a>
 </h2>
-<p>An optional diagnostic step that evaluates a candidate design under a mixed-model framework before it is implemented. Useful for:</p>
-<ul>
-<li>comparing alternative designs</li>
-<li>studying the impact of block structure and replication level</li>
-<li>optimizing design parameters for a specific trial objective</li>
-</ul>
-<p>Supported models include fixed-effect precision (BLUEs), random-effect prediction (BLUP / GBLUP / PBLUP), and spatial structures (AR1, AR1×AR1).</p>
+<div class="section level3">
+<h3 id="repeated-check-block-design">Repeated-check block design<a class="anchor" aria-label="anchor" href="#repeated-check-block-design"></a>
+</h3>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/FAkohoue/OptiDesign" class="external-link">OptiDesign</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 1. Construct</span></span>
+<span><span class="va">design</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prep_famoptg.html">prep_famoptg</a></span><span class="op">(</span></span>
+<span>  check_treatments        <span class="op">=</span> <span class="va">checks</span>,</span>
+<span>  check_families          <span class="op">=</span> <span class="va">check_fam</span>,</span>
+<span>  p_rep_treatments        <span class="op">=</span> <span class="va">prep_trts</span>,</span>
+<span>  p_rep_reps              <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">2L</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">prep_trts</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  p_rep_families          <span class="op">=</span> <span class="va">prep_fam</span>,</span>
+<span>  unreplicated_treatments <span class="op">=</span> <span class="va">unrep_trts</span>,</span>
+<span>  unreplicated_families   <span class="op">=</span> <span class="va">unrep_fam</span>,</span>
+<span>  n_blocks <span class="op">=</span> <span class="fl">5</span>, n_rows <span class="op">=</span> <span class="fl">15</span>, n_cols <span class="op">=</span> <span class="fl">20</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 2. Evaluate</span></span>
+<span><span class="va">eff</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency</a></span><span class="op">(</span></span>
+<span>  field_book         <span class="op">=</span> <span class="va">design</span><span class="op">$</span><span class="va">field_book</span>,</span>
+<span>  n_rows             <span class="op">=</span> <span class="fl">15</span>, n_cols <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">checks</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"AR1xAR1"</span>,</span>
+<span>  rho_row <span class="op">=</span> <span class="fl">0.10</span>, rho_col <span class="op">=</span> <span class="fl">0.10</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">eff</span><span class="op">$</span><span class="va">A_criterion</span>   <span class="co"># lower is better</span></span>
+<span><span class="va">eff</span><span class="op">$</span><span class="va">D_criterion</span></span>
+<span></span>
+<span><span class="co"># 3. Or optimise directly (returns best of 50 random designs)</span></span>
+<span><span class="va">opt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/optimize_famoptg.html">optimize_famoptg</a></span><span class="op">(</span></span>
+<span>  check_treatments        <span class="op">=</span> <span class="va">checks</span>,</span>
+<span>  check_families          <span class="op">=</span> <span class="va">check_fam</span>,</span>
+<span>  p_rep_treatments        <span class="op">=</span> <span class="va">prep_trts</span>,</span>
+<span>  p_rep_reps              <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">2L</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">prep_trts</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  p_rep_families          <span class="op">=</span> <span class="va">prep_fam</span>,</span>
+<span>  unreplicated_treatments <span class="op">=</span> <span class="va">unrep_trts</span>,</span>
+<span>  unreplicated_families   <span class="op">=</span> <span class="va">unrep_fam</span>,</span>
+<span>  n_blocks           <span class="op">=</span> <span class="fl">5</span>, n_rows <span class="op">=</span> <span class="fl">15</span>, n_cols <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"AR1xAR1"</span>,</span>
+<span>  rho_row <span class="op">=</span> <span class="fl">0.10</span>, rho_col <span class="op">=</span> <span class="fl">0.10</span>,</span>
+<span>  criterion <span class="op">=</span> <span class="st">"A"</span>, n_restarts <span class="op">=</span> <span class="fl">50</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">opt</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">best_score</span></span>
+<span><span class="va">opt</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">score_history</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="alpha-row-column-stream-design">Alpha row-column stream design<a class="anchor" aria-label="anchor" href="#alpha-row-column-stream-design"></a>
+</h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/FAkohoue/OptiDesign" class="external-link">OptiDesign</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 1. Construct</span></span>
+<span><span class="va">design</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/alpha_rc_stream.html">alpha_rc_stream</a></span><span class="op">(</span></span>
+<span>  check_treatments <span class="op">=</span> <span class="va">checks</span>,</span>
+<span>  check_families   <span class="op">=</span> <span class="va">check_fam</span>,</span>
+<span>  entry_treatments <span class="op">=</span> <span class="va">entries</span>,</span>
+<span>  entry_families   <span class="op">=</span> <span class="va">entry_fam</span>,</span>
+<span>  n_reps <span class="op">=</span> <span class="fl">3</span>, n_rows <span class="op">=</span> <span class="fl">30</span>, n_cols <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  min_block_size <span class="op">=</span> <span class="fl">19</span>, max_block_size <span class="op">=</span> <span class="fl">20</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 2. Evaluate</span></span>
+<span><span class="va">eff</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency</a></span><span class="op">(</span></span>
+<span>  field_book         <span class="op">=</span> <span class="va">design</span><span class="op">$</span><span class="va">field_book</span>,</span>
+<span>  n_rows <span class="op">=</span> <span class="fl">30</span>, n_cols <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">checks</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"AR1xAR1"</span>,</span>
+<span>  rho_row <span class="op">=</span> <span class="fl">0.10</span>, rho_col <span class="op">=</span> <span class="fl">0.10</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">eff</span><span class="op">$</span><span class="va">A_criterion</span></span>
+<span><span class="va">eff</span><span class="op">$</span><span class="va">D_criterion</span></span>
+<span></span>
+<span><span class="co"># 3. Or optimise directly using Simulated Annealing</span></span>
+<span><span class="va">opt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/optimize_alpha_rc.html">optimize_alpha_rc</a></span><span class="op">(</span></span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">checks</span>,</span>
+<span>  check_families     <span class="op">=</span> <span class="va">check_fam</span>,</span>
+<span>  entry_treatments   <span class="op">=</span> <span class="va">entries</span>,</span>
+<span>  entry_families     <span class="op">=</span> <span class="va">entry_fam</span>,</span>
+<span>  n_reps <span class="op">=</span> <span class="fl">3</span>, n_rows <span class="op">=</span> <span class="fl">30</span>, n_cols <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  min_block_size     <span class="op">=</span> <span class="fl">19</span>, max_block_size <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"AR1xAR1"</span>,</span>
+<span>  rho_row <span class="op">=</span> <span class="fl">0.10</span>, rho_col <span class="op">=</span> <span class="fl">0.10</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"SA"</span>, criterion <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>  n_restarts <span class="op">=</span> <span class="fl">5</span>, sa_max_iter <span class="op">=</span> <span class="fl">500</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">opt</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">best_score</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="genomic-prediction-optimisation-cdmean">Genomic prediction optimisation (CDmean)<a class="anchor" aria-label="anchor" href="#genomic-prediction-optimisation-cdmean"></a>
+</h3>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/FAkohoue/OptiDesign" class="external-link">OptiDesign</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Maximise CDmean for genomic selection training population</span></span>
+<span><span class="va">opt_cdmean</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/optimize_alpha_rc.html">optimize_alpha_rc</a></span><span class="op">(</span></span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">checks</span>,</span>
+<span>  check_families     <span class="op">=</span> <span class="va">check_fam</span>,</span>
+<span>  entry_treatments   <span class="op">=</span> <span class="va">entries</span>,</span>
+<span>  entry_families     <span class="op">=</span> <span class="va">entry_fam</span>,</span>
+<span>  n_reps <span class="op">=</span> <span class="fl">3</span>, n_rows <span class="op">=</span> <span class="fl">30</span>, n_cols <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  min_block_size     <span class="op">=</span> <span class="fl">19</span>, max_block_size <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"random"</span>,</span>
+<span>  prediction_type    <span class="op">=</span> <span class="st">"GBLUP"</span>,</span>
+<span>  K                  <span class="op">=</span> <span class="va">my_kinship_matrix</span>,</span>
+<span>  varcomp            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    sigma_g2   <span class="op">=</span> <span class="fl">0.4</span>, sigma_e2   <span class="op">=</span> <span class="fl">0.6</span>,</span>
+<span>    sigma_rep2 <span class="op">=</span> <span class="fl">0.1</span>, sigma_ib2  <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>    sigma_r2   <span class="op">=</span> <span class="fl">0.02</span>, sigma_c2  <span class="op">=</span> <span class="fl">0.02</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  method    <span class="op">=</span> <span class="st">"GA"</span>,</span>
+<span>  criterion <span class="op">=</span> <span class="st">"CDmean"</span>,</span>
+<span>  ga_pop_size <span class="op">=</span> <span class="fl">20</span>, ga_n_generations <span class="op">=</span> <span class="fl">50</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">opt_cdmean</span><span class="op">$</span><span class="va">efficiency</span><span class="op">$</span><span class="va">CDmean</span>        <span class="co"># mean GEBV prediction reliability</span></span>
+<span><span class="va">opt_cdmean</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">best_score</span>  <span class="co"># positive CDmean, higher is better</span></span></code></pre></div>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <p>Install from GitHub with vignettes (recommended):</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"FAkohoue/OptiDesign"</span>,</span>
 <span>  build_vignettes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  dependencies    <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Install without vignettes for a faster install:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"FAkohoue/OptiDesign"</span>,</span>
 <span>  build_vignettes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  dependencies    <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -337,7 +675,7 @@
 <p>Full documentation, function reference, and tutorials are available at:</p>
 <p><a href="https://FAkohoue.github.io/OptiDesign/" class="uri">https://FAkohoue.github.io/OptiDesign/</a></p>
 <p>To read the vignette after installation:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"OptiDesign-introduction"</span>, package <span class="op">=</span> <span class="st">"OptiDesign"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
@@ -346,9 +684,14 @@
 </h2>
 <p>If you use <code>OptiDesign</code> in published research, please cite:</p>
 <pre><code>Akohoue, F. (2026).
-OptiDesign: Experimental Field Design Utilities for Optimized Layout
-Construction. R package version 0.1.0.
+OptiDesign: Optimized Experimental Field Design for Plant Breeding.
+R package version 0.1.0.
 https://github.com/FAkohoue/OptiDesign</code></pre>
+<p>If you use CDmean-based optimisation, additionally cite:</p>
+<pre><code>Rincent, R., Laloë, D., Nicolas, S., et al. (2012).
+Maximizing the reliability of genomic selection by optimizing the calibration
+set of reference individuals. Genetics, 192(2), 715–728.
+https://doi.org/10.1534/genetics.112.141473</code></pre>
 <hr>
 </div>
 <div class="section level2">

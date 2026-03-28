@@ -1,7 +1,7 @@
 # OptiDesign
 
 <p align="center">
-  <img src="man/figures/logo.svg" alt="OptiDesign logo" width="100%">
+  <img src="man/figures/logo.png" alt="OptiDesign logo" width="100%">
 </p>
 
 <!-- badges: start -->
@@ -13,15 +13,17 @@
 
 ## Overview
 
-`OptiDesign` provides advanced tools for constructing optimized experimental
-field designs for plant breeding and agronomic experiments. It integrates:
+`OptiDesign` provides tools for constructing, evaluating, and optimizing
+experimental field designs for plant breeding and related agricultural
+applications. It integrates:
 
 - field layout construction
 - genetic structure (family, pedigree, genomic relationships)
 - optional spatial dispersion optimization
-- optional mixed-model efficiency evaluation
+- statistical efficiency evaluation under mixed models
+- criterion-driven design optimization
 
-into a single, flexible workflow.
+into a single, flexible workflow built around two design families.
 
 ---
 
@@ -36,7 +38,10 @@ logistical step. However, design choices strongly affect:
 - robustness to field spatial heterogeneity
 
 `OptiDesign` allows users to **explicitly control these aspects at the design
-stage**, rather than correcting them post hoc during analysis.
+stage**, rather than correcting them post hoc during analysis. Uniquely,
+OptiDesign goes beyond single-design construction by offering **criterion-driven
+optimisation** — searching across many randomisations to return the design with
+the best statistical properties for your specific trial objective.
 
 ---
 
@@ -65,20 +70,38 @@ This enables reduction of local genetic relatedness, improved sampling of
 genetic diversity across spatial blocks, and better estimation of genetic
 effects.
 
-### 3. Integrated evaluation
+### 3. Integrated evaluation and optimisation
 
-Designs can be evaluated using mixed-model principles before field
-implementation:
+Designs can be evaluated and optimised using mixed-model principles before
+field implementation:
 
-- fixed-effect precision (BLUEs)
-- random-effect prediction (BLUP / GBLUP / PBLUP)
+- fixed-effect precision (BLUEs) — A and D optimality criteria
+- random-effect prediction (BLUP / GBLUP / PBLUP) — mean PEV and CDmean
 - spatial residual structures (IID, AR1, AR1×AR1)
+- criterion-driven search returning the statistically best design
 
 ---
 
-## Main Functions
+## Package Architecture
 
-### `prep_famoptg()`
+`OptiDesign` follows a **single-responsibility architecture**: construction,
+evaluation, and optimisation are separated into distinct functions that can
+be called independently or chained together.
+
+| Function | Role | Design family |
+|---|---|---|
+| `prep_famoptg()` | Construction | Repeated-check block |
+| `evaluate_famoptg_efficiency()` | Evaluation | Repeated-check block |
+| `optimize_famoptg()` | Optimisation (RS) | Repeated-check block |
+| `alpha_rc_stream()` | Construction | Alpha row-column stream |
+| `evaluate_alpha_efficiency()` | Evaluation | Alpha row-column stream |
+| `optimize_alpha_rc()` | Optimisation (RS / SA / GA) | Alpha row-column stream |
+
+---
+
+## Design Family 1: Repeated-Check Block Designs
+
+### `prep_famoptg()` — construction
 
 Constructs **repeated-check block designs with flexible replication**,
 covering augmented designs, partially replicated (p-rep) designs, and
@@ -97,23 +120,59 @@ be replicated, partially replicated, or unreplicated.
 | Feature | Details |
 |---|---|
 | Replication | Flexible per-entry replication |
-| Block allocation | No treatment repeats within a block |
-| Design types | Augmented, p-rep, balanced repeated-check |
+| Block allocation | P-rep constraint: no treatment appears twice in the same block |
+| Design types | Augmented, p-rep, RCBD-type repeated-check |
 | Grouping | Family labels, GRM, or pedigree (A) matrix |
 | Dispersion optimization | Optional; reduces clustering of related entries |
-| Efficiency diagnostics | Optional; mixed-model based evaluation |
 
 > **Key design rule:** a treatment can appear multiple times overall, but
-> at most once per block.
+> always in distinct blocks — never twice in the same block.
 
 ---
 
-### `alpha_rc_stream()`
+### `evaluate_famoptg_efficiency()` — evaluation
 
-Constructs **alpha row–column designs on a fixed grid** using a stream-based
+Evaluates the statistical efficiency of a design produced by `prep_famoptg()`.
+The mixed model contains **Block + Row + Column** random effects (no replicate
+or incomplete-block nesting). Uses variance component `sigma_b2` for the flat
+block structure. Fully decoupled from construction — the same field book can
+be evaluated multiple times under different model assumptions without
+rebuilding the layout.
+
+**Supported criteria:**
+
+| Criterion | Effect type | Direction |
+|---|---|---|
+| A-criterion | Fixed or random | Lower is better |
+| D-criterion | Fixed only | Lower is better |
+| CDmean | Random only | Higher is better |
+
+---
+
+### `optimize_famoptg()` — optimisation
+
+Wraps `prep_famoptg()` and `evaluate_famoptg_efficiency()` in a
+**Random Restart (RS)** loop. RS is used exclusively because the p-rep
+constraint is enforced by construction at every call — permutation-based
+methods would require block-aware swap logic to preserve it. Every candidate
+design is valid by construction. Supports A, D, both, and CDmean criteria.
+
+---
+
+## Design Family 2: Alpha Row-Column Stream Designs
+
+### `alpha_rc_stream()` — construction
+
+Constructs **alpha row-column designs on a fixed grid** using a stream-based
 layout. The field is converted into a single ordered stream of positions,
 split into contiguous replicate segments, then further divided into incomplete
-blocks.
+blocks. Checks appear in every incomplete block; entries appear once per
+replicate.
+
+Block-size constraints are expressed as **total block size** (checks +
+entries) through `min_block_size` and `max_block_size`. The function
+translates these into entry-slot limits internally and derives or validates
+the number of incomplete blocks per replicate accordingly.
 
 **Use this function when:**
 
@@ -121,7 +180,7 @@ blocks.
 - planting follows field-book order
 - replicates are defined operationally rather than geometrically
 - checks must appear in every incomplete block
-- classical rectangular alpha designs are not practical
+- you want to control block sizes in whole-block terms
 
 **Key capabilities:**
 
@@ -129,20 +188,60 @@ blocks.
 |---|---|
 | Grid | Fixed `n_rows × n_cols` |
 | Replicates | Contiguous field segments |
-| Block sizes | Unequal incomplete blocks supported |
-| Checks | Present in every block |
+| Block sizes | Controlled via `min_block_size` / `max_block_size` (total: checks + entries) |
+| Checks | Present in every incomplete block |
+| Block count | User-fixed or automatically derived as the largest feasible value |
 | Grouping | Family labels, GRM, or pedigree (A) matrix |
 | Dispersion optimization | Optional |
-| Efficiency diagnostics | Optional |
 
 > **Important:** unused cells are placed only at the end of the field stream,
-> not scattered, which is critical for practical field implementation.
+> not scattered — which is critical for practical field implementation.
+
+---
+
+### `evaluate_alpha_efficiency()` — evaluation
+
+Evaluates the statistical efficiency of a design produced by
+`alpha_rc_stream()`. The mixed model contains **Rep + IBlock(Rep) + Row +
+Column** random effects. Uses variance components `sigma_rep2` and `sigma_ib2`
+for replicate and incomplete-block variance. Supports the same A, D, and
+CDmean criteria as `evaluate_famoptg_efficiency()`.
+
+---
+
+### `optimize_alpha_rc()` — optimisation
+
+Wraps `alpha_rc_stream()` and `evaluate_alpha_efficiency()` in an
+optimisation loop with three search strategies:
+
+| Method | Description | Best for |
+|---|---|---|
+| **RS** (Random Restart) | Generate `n_restarts` independent designs, return the best | Quick exploration, guaranteed validity |
+| **SA** (Simulated Annealing) | Iterative entry-permutation swaps with temperature-governed acceptance | Escaping local optima |
+| **GA** (Genetic Algorithm) | Population of permutations evolved via OX1 crossover, swap mutation, and elitism | Thorough global search |
+
+All three methods preserve all structural constraints by construction.
+Supports A, D, both, and CDmean criteria.
+
+---
+
+## Key Differences Between Design Families
+
+| Feature | `prep_famoptg` family | `alpha_rc_stream` family |
+|---|---|---|
+| Blocking structure | Flat blocks | Replicates → incomplete blocks |
+| Replication | Flexible per-entry | Uniform across entries |
+| Design types | Augmented, p-rep, RCBD-type | Alpha-lattice |
+| Block variance | `sigma_b2` | `sigma_rep2` + `sigma_ib2` |
+| Optimisation methods | RS only | RS, SA, GA |
+| P-rep constraint | Enforced | Not applicable |
 
 ---
 
 ## Grouping Options
 
-Both functions support three grouping strategies:
+Both families support three grouping strategies for adjacency scoring within
+blocks and genomic dispersion:
 
 | Strategy | Source | Best for |
 |---|---|---|
@@ -152,28 +251,146 @@ Both functions support three grouping strategies:
 
 ---
 
-## Dispersion Optimization
+## Efficiency Criteria
 
-An optional step that improves the spatial distribution of genetically related
-entries across the field. Use it when:
+| Criterion | Meaning | Direction | Available for |
+|---|---|---|---|
+| A-criterion | Mean pairwise contrast variance (fixed) or mean PEV (random) | Lower is better | Both families |
+| D-criterion | Geometric mean of contrast covariance eigenvalues | Lower is better | Fixed effects only |
+| CDmean | Mean coefficient of determination for GEBV prediction | Higher is better | Random effects + GBLUP/PBLUP |
 
-- genomic or pedigree structure matters
-- strong local spatial correlation is expected
-- you want to avoid confounding spatial and genetic effects
+CDmean is defined as:
+
+$$\text{CDmean} = 1 - \frac{\text{mean PEV}}{\sigma_g^2}$$
+
+and directly measures the expected reliability of genomic prediction. It is
+particularly useful for optimising training population designs in genomic
+selection (Rincent et al. 2012).
 
 ---
 
-## Efficiency Evaluation
+## Typical Workflows
 
-An optional diagnostic step that evaluates a candidate design under a
-mixed-model framework before it is implemented. Useful for:
+### Repeated-check block design
 
-- comparing alternative designs
-- studying the impact of block structure and replication level
-- optimizing design parameters for a specific trial objective
+```r
+library(OptiDesign)
 
-Supported models include fixed-effect precision (BLUEs), random-effect
-prediction (BLUP / GBLUP / PBLUP), and spatial structures (AR1, AR1×AR1).
+# 1. Construct
+design <- prep_famoptg(
+  check_treatments        = checks,
+  check_families          = check_fam,
+  p_rep_treatments        = prep_trts,
+  p_rep_reps              = rep(2L, length(prep_trts)),
+  p_rep_families          = prep_fam,
+  unreplicated_treatments = unrep_trts,
+  unreplicated_families   = unrep_fam,
+  n_blocks = 5, n_rows = 15, n_cols = 20
+)
+
+# 2. Evaluate
+eff <- evaluate_famoptg_efficiency(
+  field_book         = design$field_book,
+  n_rows             = 15, n_cols = 20,
+  check_treatments   = checks,
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row = 0.10, rho_col = 0.10
+)
+eff$A_criterion   # lower is better
+eff$D_criterion
+
+# 3. Or optimise directly (returns best of 50 random designs)
+opt <- optimize_famoptg(
+  check_treatments        = checks,
+  check_families          = check_fam,
+  p_rep_treatments        = prep_trts,
+  p_rep_reps              = rep(2L, length(prep_trts)),
+  p_rep_families          = prep_fam,
+  unreplicated_treatments = unrep_trts,
+  unreplicated_families   = unrep_fam,
+  n_blocks           = 5, n_rows = 15, n_cols = 20,
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row = 0.10, rho_col = 0.10,
+  criterion = "A", n_restarts = 50
+)
+opt$optimization$best_score
+opt$optimization$score_history
+```
+
+### Alpha row-column stream design
+
+```r
+library(OptiDesign)
+
+# 1. Construct
+design <- alpha_rc_stream(
+  check_treatments = checks,
+  check_families   = check_fam,
+  entry_treatments = entries,
+  entry_families   = entry_fam,
+  n_reps = 3, n_rows = 30, n_cols = 20,
+  min_block_size = 19, max_block_size = 20
+)
+
+# 2. Evaluate
+eff <- evaluate_alpha_efficiency(
+  field_book         = design$field_book,
+  n_rows = 30, n_cols = 20,
+  check_treatments   = checks,
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row = 0.10, rho_col = 0.10
+)
+eff$A_criterion
+eff$D_criterion
+
+# 3. Or optimise directly using Simulated Annealing
+opt <- optimize_alpha_rc(
+  check_treatments   = checks,
+  check_families     = check_fam,
+  entry_treatments   = entries,
+  entry_families     = entry_fam,
+  n_reps = 3, n_rows = 30, n_cols = 20,
+  min_block_size     = 19, max_block_size = 20,
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row = 0.10, rho_col = 0.10,
+  method = "SA", criterion = "A",
+  n_restarts = 5, sa_max_iter = 500
+)
+opt$optimization$best_score
+```
+
+### Genomic prediction optimisation (CDmean)
+
+```r
+library(OptiDesign)
+
+# Maximise CDmean for genomic selection training population
+opt_cdmean <- optimize_alpha_rc(
+  check_treatments   = checks,
+  check_families     = check_fam,
+  entry_treatments   = entries,
+  entry_families     = entry_fam,
+  n_reps = 3, n_rows = 30, n_cols = 20,
+  min_block_size     = 19, max_block_size = 20,
+  treatment_effect   = "random",
+  prediction_type    = "GBLUP",
+  K                  = my_kinship_matrix,
+  varcomp            = list(
+    sigma_g2   = 0.4, sigma_e2   = 0.6,
+    sigma_rep2 = 0.1, sigma_ib2  = 0.05,
+    sigma_r2   = 0.02, sigma_c2  = 0.02
+  ),
+  method    = "GA",
+  criterion = "CDmean",
+  ga_pop_size = 20, ga_n_generations = 50
+)
+opt_cdmean$efficiency$CDmean        # mean GEBV prediction reliability
+opt_cdmean$optimization$best_score  # positive CDmean, higher is better
+```
 
 ---
 
@@ -220,9 +437,18 @@ If you use `OptiDesign` in published research, please cite:
 
 ```
 Akohoue, F. (2026).
-OptiDesign: Experimental Field Design Utilities for Optimized Layout
-Construction. R package version 0.1.0.
+OptiDesign: Optimized Experimental Field Design for Plant Breeding.
+R package version 0.1.0.
 https://github.com/FAkohoue/OptiDesign
+```
+
+If you use CDmean-based optimisation, additionally cite:
+
+```
+Rincent, R., Laloë, D., Nicolas, S., et al. (2012).
+Maximizing the reliability of genomic selection by optimizing the calibration
+set of reference individuals. Genetics, 192(2), 715–728.
+https://doi.org/10.1534/genetics.112.141473
 ```
 
 ---

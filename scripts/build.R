@@ -4,10 +4,11 @@
 
 source("data-raw/generate_example_data.R")
 devtools::document()
+devtools::test()
+
 devtools::check()
 
 devtools::install()
-
 
 unloadNamespace("OptiDesign")
 pkgdown::build_site()

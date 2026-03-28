@@ -4,93 +4,295 @@
 \name{OptiDesign-package}
 \alias{OptiDesign}
 \alias{OptiDesign-package}
-\title{OptiDesign: Experimental Field Design Utilities for Optimized Layout Construction}
+\title{OptiDesign: Optimized Experimental Field Design for Plant Breeding}
 \description{
-\code{OptiDesign} provides tools for constructing optimized experimental field
-designs for plant breeding and related applications. The package focuses on
-layouts where field structure, treatment grouping, and optional mixed-model
-evaluation are integrated into the design stage rather than treated as
-separate downstream tasks.
+\code{OptiDesign} provides tools for constructing, evaluating, and optimizing
+experimental field designs for plant breeding and related agricultural
+applications. The package integrates field structure, treatment grouping,
+genetic relationship information, spatial modelling, and mixed-model
+efficiency evaluation directly into the design stage.
 }
 \details{
-The package currently includes two main design constructors:
-\itemize{
-\item \code{prep_famoptg()} for repeated-check block designs with flexible replication,
-supporting augmented designs, partially replicated (p-rep) designs, and
-RCBD-type repeated-check designs. This function allows optional grouping
-from family labels or relationship matrices, optional dispersion
-optimization, and optional mixed-model efficiency evaluation.
-\item \code{alpha_rc_stream()} for fixed-grid alpha row-column stream
-designs where the field is treated as a global traversal stream, replicates
-are contiguous stream segments, incomplete blocks may be unequal, checks are
-included in every block, and unused cells appear only at the end of the
-stream.
+\subsection{Design constructors}{
+
+The package provides two main design construction functions:
+
+\strong{\code{prep_famoptg()}} constructs repeated-check block designs with flexible
+replication, supporting three design classes: augmented repeated-check
+designs (checks repeated, all entries unreplicated), partially replicated
+(p-rep) repeated-check designs (mixture of replicated and unreplicated
+entries), and RCBD-type repeated-check designs (all entries equally
+replicated). The p-rep constraint - that no replicated entry appears twice
+in the same block - is enforced by construction. Supports optional grouping
+from family labels or relationship matrices and optional genetic dispersion
+optimisation. Construction only; evaluation is performed separately by
+\code{evaluate_famoptg_efficiency()}.
+
+\strong{\code{alpha_rc_stream()}} constructs fixed-grid alpha row-column stream
+designs where the field is treated as a global traversal stream. Replicates
+are contiguous stream segments, incomplete blocks may be unequal in size,
+checks are included in every block, and unused cells appear only at the end
+of the stream. Construction only; evaluation is performed separately by
+\code{evaluate_alpha_efficiency()}.
 }
 
-The package is intended for users who need designs that are not only feasible
-in the field, but also informed by:
-\itemize{
-\item family structure,
-\item pedigree or genomic relationship matrices,
-\item spatial distribution of related materials,
-\item and mixed-model design efficiency considerations.
-}
-}
-\section{Main objectives of the package}{
+\subsection{Design evaluation}{
 
-\code{OptiDesign} is particularly useful when the user wants to:
+\strong{\code{evaluate_famoptg_efficiency()}} evaluates the statistical efficiency of
+a design produced by \code{prep_famoptg()}. The mixed model contains Block + Row
 \itemize{
-\item construct designs with repeated checks and heterogeneous entry replication,
-\item generate augmented, p-rep, or balanced repeated-check layouts,
-\item avoid local clustering of related entries,
-\item use family, pedigree, or genomic structure to guide placement,
-\item preserve realistic field-book order and layout constraints,
-\item evaluate a design under fixed- or random-effect mixed models,
-\item compare alternative layout strategies before field implementation.
+\item Column random effects (no replicate or incomplete-block nesting). Variance
+component \code{sigma_b2} controls block variance. Supported criteria:
+}
+\itemize{
+\item \strong{A-criterion}: mean pairwise contrast variance (fixed) or mean PEV
+(random). Lower is better.
+\item \strong{D-criterion}: geometric mean of contrast covariance eigenvalues
+(fixed only). Lower is better.
+\item \strong{CDmean}: mean coefficient of determination for GEBV prediction
+(Rincent et al. 2012). Higher is better. Requires random treatment
+effects and a genomic prediction model.
+}
+
+\strong{\code{evaluate_alpha_efficiency()}} evaluates the statistical efficiency of
+a design produced by \code{alpha_rc_stream()}. The mixed model contains
+Rep + IBlock(Rep) + Row + Column random effects. Variance components
+\code{sigma_rep2} and \code{sigma_ib2} control replicate and incomplete-block
+variance respectively. Supports the same A, D, and CDmean criteria as
+\code{evaluate_famoptg_efficiency()}.
+
+Both evaluation functions are fully decoupled from construction so the same
+field book can be evaluated multiple times under different model assumptions
+without rebuilding the layout.
+}
+
+\subsection{Design optimisation}{
+
+\strong{\code{optimize_famoptg()}} wraps \code{prep_famoptg()} and
+\code{evaluate_famoptg_efficiency()} in a \strong{Random Restart (RS)} optimisation
+loop. RS is used exclusively because the p-rep constraint (no replicated
+treatment in the same block twice) is enforced by construction at every
+\code{prep_famoptg()} call - permutation-based methods such as SA and GA would
+require block-aware swap logic to preserve this constraint. Every candidate
+is a valid design with all constraints satisfied. Supports A, D, both, and
+CDmean criteria.
+
+\strong{\code{optimize_alpha_rc()}} wraps \code{alpha_rc_stream()} and
+\code{evaluate_alpha_efficiency()} in an optimisation loop with three search
+strategies:
+\itemize{
+\item \strong{RS} (Random Restart): generate many independent designs, return the
+best by criterion. Simple and fully safe by construction.
+\item \strong{SA} (Simulated Annealing): iteratively propose entry permutation swaps,
+accepting improvements always and degradations with a temperature-governed
+probability. Repeated across multiple restarts.
+\item \strong{GA} (Genetic Algorithm): maintain a population of entry permutations
+and evolve it using Order Crossover (OX1), swap mutation, and elitism.
+}
+
+All methods in both optimisers preserve structural constraints by
+construction. Both implement a four-point integrity checking strategy:
+post-construction validation, re-check before storing as best, final check
+before return, and emergency fallback if no valid design is found.
+}
+
+\subsection{Internal helpers}{
+
+\strong{\code{alpha_rc_helpers.R}} provides internal functions shared across all six
+exported functions: sparse incidence matrix construction, AR1 precision
+matrix generation, the mixed model solver, the Hutchinson stochastic trace
+estimator, Chebyshev neighbourhood enumeration, and the dispersion scoring
+function. These functions are prefixed with \code{.} and are not exported.
+}
+}
+\section{Function overview}{
+\tabular{lll}{
+   Function \tab Role \tab Design family \cr
+   \code{prep_famoptg()} \tab Construction \tab Repeated-check block \cr
+   \code{evaluate_famoptg_efficiency()} \tab Evaluation \tab Repeated-check block \cr
+   \code{optimize_famoptg()} \tab Optimisation (RS) \tab Repeated-check block \cr
+   \code{alpha_rc_stream()} \tab Construction \tab Alpha row-column stream \cr
+   \code{evaluate_alpha_efficiency()} \tab Evaluation \tab Alpha row-column stream \cr
+   \code{optimize_alpha_rc()} \tab Optimisation (RS/SA/GA) \tab Alpha row-column stream \cr
+}
+}
+
+\section{Typical workflow - repeated-check block design}{
+
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# 1. Construct
+design <- prep_famoptg(
+  check_treatments        = checks,
+  check_families          = check_fam,
+  p_rep_treatments        = prep_trts,
+  p_rep_reps              = rep(2L, length(prep_trts)),
+  p_rep_families          = prep_fam,
+  unreplicated_treatments = unrep_trts,
+  unreplicated_families   = unrep_fam,
+  n_blocks = 5, n_rows = 15, n_cols = 20
+)
+
+# 2. Evaluate
+eff <- evaluate_famoptg_efficiency(
+  field_book         = design$field_book,
+  n_rows             = 15,
+  n_cols             = 20,
+  check_treatments   = checks,
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row            = 0.10,
+  rho_col            = 0.10
+)
+
+# 3. Or optimise directly
+opt <- optimize_famoptg(
+  check_treatments        = checks,
+  check_families          = check_fam,
+  p_rep_treatments        = prep_trts,
+  p_rep_reps              = rep(2L, length(prep_trts)),
+  p_rep_families          = prep_fam,
+  unreplicated_treatments = unrep_trts,
+  unreplicated_families   = unrep_fam,
+  n_blocks           = 5,
+  n_rows             = 15,
+  n_cols             = 20,
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row            = 0.10,
+  rho_col            = 0.10,
+  criterion          = "A",
+  n_restarts         = 50
+)
+}\if{html}{\out{</div>}}
+}
+
+\section{Typical workflow - alpha row-column stream design}{
+
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# 1. Construct
+design <- alpha_rc_stream(
+  check_treatments = checks,
+  check_families   = check_fam,
+  entry_treatments = entries,
+  entry_families   = entry_fam,
+  n_reps           = 3,
+  n_rows           = 30,
+  n_cols           = 20,
+  min_block_size   = 19,
+  max_block_size   = 20
+)
+
+# 2. Evaluate
+eff <- evaluate_alpha_efficiency(
+  field_book         = design$field_book,
+  n_rows             = 30,
+  n_cols             = 20,
+  check_treatments   = checks,
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row            = 0.10,
+  rho_col            = 0.10
+)
+
+# 3. Or optimise directly
+opt <- optimize_alpha_rc(
+  check_treatments   = checks,
+  check_families     = check_fam,
+  entry_treatments   = entries,
+  entry_families     = entry_fam,
+  n_reps             = 3,
+  n_rows             = 30,
+  n_cols             = 20,
+  min_block_size     = 19,
+  max_block_size     = 20,
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row            = 0.10,
+  rho_col            = 0.10,
+  method             = "RS",
+  criterion          = "A",
+  n_restarts         = 50
+)
+}\if{html}{\out{</div>}}
+}
+
+\section{Key differences between the two design families}{
+\tabular{lll}{
+   Feature \tab \code{prep_famoptg} family \tab \code{alpha_rc_stream} family \cr
+   Blocking structure \tab Flat blocks \tab Replicates -> incomplete blocks \cr
+   Replication \tab Flexible per-entry \tab Uniform across entries \cr
+   Design types \tab Augmented, p-rep, RCBD-type \tab Alpha-lattice \cr
+   Block variance component \tab \code{sigma_b2} \tab \code{sigma_rep2} + \code{sigma_ib2} \cr
+   Optimisation methods \tab RS only \tab RS, SA, GA \cr
+   P-rep constraint enforced \tab Yes \tab Not applicable \cr
 }
 }
 
 \section{Relationship matrices and grouping}{
 
-Several design routines in the package can use one of three grouping sources:
+
+Both design families accept one of three grouping sources for adjacency
+scoring and clustering within blocks:
 \itemize{
-\item direct family labels,
-\item a genomic relationship matrix (\code{GRM}),
-\item a pedigree relationship matrix (\code{A}).
+\item Direct family labels (\code{cluster_source = "Family"})
+\item A genomic relationship matrix (\code{cluster_source = "GRM"}, argument \code{GRM})
+\item A pedigree relationship matrix (\code{cluster_source = "A"}, argument \code{A})
 }
 
-In addition, some workflows may use a separate relationship matrix \code{K} for:
+A separate relationship matrix \code{K} can be provided independently for:
 \itemize{
-\item BLUP-style prediction efficiency calculations,
-\item or dispersion optimization.
+\item GBLUP/PBLUP prediction efficiency (\code{prediction_type = "GBLUP"})
+\item CDmean computation for genomic selection training population optimisation
+\item Spatial dispersion optimisation (\code{dispersion_source = "K"})
 }
 
-When treatment names do not match matrix row names directly, mapping tables
-such as \code{id_map} or \code{line_id_map} can be used to reconcile identifiers.
+When treatment names do not match matrix rownames, mapping tables \code{id_map}
+and \code{line_id_map} reconcile identifiers.
 }
 
 \section{Included example dataset}{
 
-The package ships with the dataset \code{OptiDesign_example_data}, which contains
-synthetic example objects for:
+
+The package ships with \code{OptiDesign_example_data}, containing synthetic
+objects for treatment and family lists, example relationship matrices, and
+example argument lists for both design families. Load with:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{data("OptiDesign_example_data", package = "OptiDesign")
+}\if{html}{\out{</div>}}
+}
+
+\section{Dependencies}{
+
 \itemize{
-\item treatment and family lists,
-\item example relationship matrices,
-\item example argument lists for both main design functions.
+\item \strong{Matrix}: sparse matrix operations used throughout efficiency evaluation,
+AR1 precision matrix construction, and the mixed model coefficient matrix.
+Required by all six exported functions.
+\item \strong{pracma}: \code{mod()} is imported for serpentine parity handling in
+\code{prep_famoptg()} (alternating row/column traversal direction).
+}
 }
 
-Load it with:
+\section{References}{
 
-\code{data("OptiDesign_example_data", package = "OptiDesign")}
-}
 
-\section{Imported functionality}{
+Rincent, R., Laloe, D., Nicolas, S., Altmann, T., Brunel, D., Revilla, P.,
+... & Moreau, L. (2012). Maximizing the reliability of genomic selection by
+optimizing the calibration set of reference individuals: comparison of
+methods in two diverse groups of maize inbreds. \emph{Genetics}, 192(2), 715-728.
 
-The package imports \code{mod()} from \strong{pracma} for serpentine parity handling in
-layouts where alternating row or column direction is required.
+Jones, B., Allen-Moyer, K., & Goos, P. (2021). A-optimal versus D-optimal
+design of screening experiments. \emph{Journal of Quality Technology}, 53(4),
+369-382.
 
-Matrix computations used in efficiency evaluation and some optimization steps
-rely on the \strong{Matrix} package.
+Hutchinson, M.F. (1990). A stochastic estimator of the trace of the
+influence matrix for Laplacian smoothing splines. \emph{Communications in
+Statistics - Simulation and Computation}, 19(2), 433-450.
+
+Kirkpatrick, S., Gelatt, C. D., & Vecchi, M. P. (1983). Optimization by
+simulated annealing. \emph{Science}, 220(4598), 671-680.
+
+Holland, J. H. (1992). \emph{Adaptation in Natural and Artificial Systems}.
+MIT Press.
 }
 
 \seealso{

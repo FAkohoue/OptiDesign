@@ -2,7 +2,7 @@
 % Please edit documentation in R/alpha_rc_stream.R
 \name{alpha_rc_stream}
 \alias{alpha_rc_stream}
-\title{Create a fixed-grid alpha row-column design with unequal incomplete blocks and checks in every block}
+\title{Construct a stream-based repeated-check alpha row-column design}
 \usage{
 alpha_rc_stream(
   check_treatments,
@@ -26,23 +26,9 @@ alpha_rc_stream(
   cluster_seed = 1,
   cluster_attempts = 25,
   n_pcs_use = Inf,
-  min_entry_slots_per_block = 8,
-  max_blocks_per_rep = NULL,
-  eval_efficiency = FALSE,
-  treatment_effect = c("random", "fixed"),
-  prediction_type = c("none", "IID", "GBLUP", "PBLUP"),
-  K = NULL,
-  line_id_map = NULL,
-  varcomp = list(sigma_e2 = 1, sigma_g2 = 1, sigma_rep2 = 1, sigma_ib2 = 1, sigma_r2 = 1,
-    sigma_c2 = 1),
-  check_as_fixed = TRUE,
-  residual_structure = c("IID", "AR1", "AR1xAR1"),
-  rho_row = 0,
-  rho_col = 0,
-  spatial_engine = c("auto", "sparse", "dense"),
-  dense_max_n = 5000,
-  eff_trace_samples = 80,
-  eff_full_max = 400,
+  n_blocks_per_rep = NULL,
+  min_block_size = NULL,
+  max_block_size = NULL,
   check_placement = c("systematic", "random"),
   check_position_pattern = c("spread", "corners_first"),
   use_dispersion = FALSE,
@@ -50,775 +36,325 @@ alpha_rc_stream(
   dispersion_radius = 1,
   dispersion_iters = 2000,
   dispersion_seed = 1,
+  K = NULL,
+  line_id_map = NULL,
   verbose = TRUE
 )
 }
 \arguments{
-\item{check_treatments}{Character vector of check IDs.
+\item{check_treatments}{Character vector of check treatment identifiers.
+Checks appear in every incomplete block of every replicate. Must not
+overlap with \code{entry_treatments} and must not contain duplicates.}
 
-Every check is placed exactly once in every incomplete block.
+\item{check_families}{Character vector of the same length as
+\code{check_treatments}. Family labels for checks, used for adjacency scoring.
+Always stored in the \code{Family} column; \code{Gcluster} is always \code{NA} for
+check plots.}
 
-This argument is always active and is central to the design because repeated
-checks define the benchmark structure across blocks and replicates.
+\item{entry_treatments}{Character vector of non-check treatment identifiers.
+Each entry appears exactly once per replicate. Must not contain duplicates.}
 
-Use this when the trial requires standard controls or benchmark entries in
-every incomplete block.
+\item{entry_families}{Character vector of the same length as
+\code{entry_treatments}. Family labels for entries. Used for adjacency scoring
+when \code{cluster_source = "Family"} and to set the number of clusters when
+\code{cluster_source \%in\% c("GRM", "A")}.}
 
-Example use case:
-a trial with 3 commercial checks that must appear in all incomplete blocks.}
+\item{n_reps}{Positive integer. Number of contiguous replicate segments.}
 
-\item{check_families}{Character vector of the same length as \code{check_treatments}.
+\item{n_rows}{Positive integer. Number of field rows.}
 
-Family labels for checks.
+\item{n_cols}{Positive integer. Number of field columns.}
 
-These are used directly when \code{cluster_source = "Family"} and are also stored in
-the output field book under all settings.
+\item{order}{Character. Stream traversal direction: \code{"row"} fills row by
+row; \code{"column"} fills column by column.}
 
-This argument must align exactly with \code{check_treatments}.
+\item{serpentine}{Logical. If \code{TRUE}, alternate rows (when \code{order = "row"})
+or alternate columns (when \code{order = "column"}) traverse in reverse
+direction.}
 
-Use it when checks belong to known families or control groups, or when the user
-wants family labels preserved in the output.}
+\item{seed}{Optional integer. If \code{NULL}, a seed is drawn from
+\code{1:.Machine$integer.max} and returned as \code{seed_used}. Controls all
+randomised steps including entry randomisation, within-block shuffling,
+check placement, and dispersion optimisation.}
 
-\item{entry_treatments}{Character vector of distinct entries.
+\item{attempts}{Positive integer. Number of within-block shuffling attempts
+to minimise adjacent same-group pairs. Exits early when score reaches
+zero.}
 
-Each entry appears exactly once \strong{per replicate}.
+\item{warn_and_correct}{Logical. Retained for interface compatibility.
+Field capacity violations always raise an error.}
 
-This is the main set of test entries being evaluated.
+\item{fix_rows}{Logical. Retained for interface compatibility. Field
+geometry is always fixed.}
 
-Use this for breeding lines, hybrids, progeny, or other candidate materials
-that should be represented once in each replicate.
+\item{cluster_source}{Character. Grouping source for adjacency scoring.
+\code{"Family"} uses \code{entry_families} directly. \code{"GRM"} and \code{"A"} derive
+clusters from PCA of the respective relationship matrix.}
 
-Entries must not overlap with \code{check_treatments}.}
+\item{GRM}{Optional square numeric matrix with rownames and colnames equal
+to line IDs. Required when \code{cluster_source = "GRM"} or when
+\code{use_dispersion = TRUE} and \code{dispersion_source = "GRM"}.}
 
-\item{entry_families}{Character vector of the same length as \code{entry_treatments}.
+\item{A}{Optional square numeric matrix. Required when
+\code{cluster_source = "A"} or \code{dispersion_source = "A"}.}
 
-Family labels for entries.
+\item{id_map}{Optional data frame with columns \code{Treatment} and \code{LineID}.
+Required when treatment labels do not match relationship matrix rownames.}
 
-These are used directly when \code{cluster_source = "Family"}. When
-\code{cluster_source \%in\% c("GRM", "A")}, they still help determine the target number
-of clusters among entries.
+\item{cluster_method}{Character. Clustering algorithm: \code{"kmeans"} uses
+\code{stats::kmeans()} with \code{cluster_attempts} random starts; \code{"hclust"} uses
+Ward's D2 linkage.}
 
-Use this when family structure matters for spacing, grouping, or interpretation.}
+\item{cluster_seed}{Integer. Seed for k-means initialisation, run in an
+isolated RNG scope.}
 
-\item{n_reps}{Integer giving the number of replicates.
+\item{cluster_attempts}{Positive integer. Number of k-means random restarts.
+Ignored when \code{cluster_method = "hclust"}.}
 
-Each replicate is defined as a contiguous segment of the global stream.
+\item{n_pcs_use}{Positive number or \code{Inf}. Number of leading PCs for
+matrix-based clustering. Actual number used is
+\code{min(n_pcs_use, n_positive_eigenvalues - 1)}.}
 
-Use more replicates when stronger replication is needed for entry precision,
-provided the field can still support repeated checks in every block.
+\item{n_blocks_per_rep}{Optional positive integer. If supplied, the exact
+number of incomplete blocks per replicate. Validated against the feasible
+range derived from \code{min_block_size}, \code{max_block_size}, and field capacity.
+If \code{NULL}, the block count is set automatically to \eqn{b_\text{max}}.}
 
-This argument affects:
-\itemize{
-\item total number of used plots,
-\item the length of each replicate segment,
-\item the total number of times entries appear.
-}}
+\item{min_block_size}{Optional positive integer \eqn{\geq c}. Minimum
+\strong{total} block size (checks + entries). Sets an upper bound on \eqn{b}.}
 
-\item{n_rows}{Integer giving the number of field rows.
+\item{max_block_size}{Optional positive integer \eqn{\geq c}. Maximum
+\strong{total} block size (checks + entries). Sets a lower bound on \eqn{b}.}
 
-The field size is fixed in this function and is never altered.
+\item{check_placement}{Character. Check position rule within blocks.
+\code{"systematic"} distributes checks evenly; \code{"random"} draws positions
+uniformly without replacement.}
 
-Use this to reflect the true row dimension of the physical field.
+\item{check_position_pattern}{Character. Retained for interface
+compatibility.}
 
-It directly affects:
-\itemize{
-\item total field capacity,
-\item the global traversal stream,
-\item spatial coordinates in the returned \code{layout_matrix} and \code{field_book}.
-}}
+\item{use_dispersion}{Logical. If \code{TRUE}, apply a post-layout swap-based
+local dispersion optimisation to reduce pairwise relatedness among
+neighbouring non-check plots.}
 
-\item{n_cols}{Integer giving the number of field columns.
+\item{dispersion_source}{Character. Matrix used for dispersion scoring:
+\code{"K"}, \code{"A"}, or \code{"GRM"}. The corresponding argument must be non-\code{NULL}.}
 
-The field size is fixed in this function and is never altered.
+\item{dispersion_radius}{Positive integer. Chebyshev distance radius
+defining the neighbourhood for dispersion scoring.}
 
-Use this to reflect the true column dimension of the physical field.
+\item{dispersion_iters}{Non-negative integer. Number of random swap
+proposals for dispersion optimisation.}
 
-Together with \code{n_rows}, it determines field capacity and stream structure.}
+\item{dispersion_seed}{Integer. Seed for the dispersion step, run in an
+isolated RNG scope. Defaults to \code{seed_used} when \code{NULL}.}
 
-\item{order}{Character specifying the global traversal order.
+\item{K}{Optional square numeric matrix. Used for dispersion scoring when
+\code{dispersion_source = "K"}.}
 
-Allowed values:
-\itemize{
-\item \code{"column"}: column-major traversal,
-\item \code{"row"}: row-major traversal.
-}
+\item{line_id_map}{Optional data frame with columns \code{Treatment} and
+\code{LineID}. Required when treatment labels do not match \code{rownames(K)} or
+the dispersion matrix.}
 
-This determines:
-\itemize{
-\item the order of the global field stream,
-\item where replicate boundaries occur,
-\item where incomplete block boundaries occur,
-\item where trailing \code{NA} cells are placed.
-}
-
-Use \code{"row"} when operational movement follows rows.
-Use \code{"column"} when operational movement follows columns.
-
-This argument interacts directly with \code{serpentine}.}
-
-\item{serpentine}{Logical indicating whether alternate rows or columns reverse
-direction during stream generation.
-
-If \code{TRUE}, traversal alternates direction:
-\itemize{
-\item by row when \code{order = "row"},
-\item by column when \code{order = "column"}.
-}
-
-Use this when field-book order should mimic serpentine movement in the field.
-
-This changes the stream order, which in turn changes replicate and incomplete
-block boundaries.
-
-Depends on:
-\itemize{
-\item \code{order}
-}}
-
-\item{seed}{Optional integer seed for reproducibility.
-
-If \code{NULL}, a seed is generated internally and returned as \code{seed_used}.
-
-Use this when the layout should be reproducible.
-
-It affects:
-\itemize{
-\item entry allocation,
-\item within-block arrangement,
-\item random check placement,
-\item optional dispersion optimization (unless a separate dispersion seed is supplied).
-}}
-
-\item{attempts}{Integer giving the number of swap proposals used when improving
-entry allocation across blocks within each replicate.
-
-Larger values increase search effort but do not change the design algorithm itself.
-
-Use larger values when:
-\itemize{
-\item family structure is strongly imbalanced,
-\item the user wants better separation of similar materials,
-\item the number of entries per replicate is large.
-}}
-
-\item{warn_and_correct}{Logical retained for interface continuity.
-
-In this function, the field dimensions are fixed and are \strong{not} altered.
-
-This argument is included so the interface stays similar to related design
-functions, but it does not drive field resizing here.}
-
-\item{fix_rows}{Logical retained for interface continuity.
-
-In this function, the field dimensions are fixed and are \strong{not} altered.
-
-Included mainly for consistency with related interfaces.}
-
-\item{cluster_source}{Character specifying the grouping source used during
-allocation and arrangement.
-
-Allowed values:
-\itemize{
-\item \code{"Family"}
-\item \code{"GRM"}
-\item \code{"A"}
-}
-
-Use \code{"Family"} when user-supplied family labels are adequate and interpretable.
-
-Use \code{"GRM"} when genomic structure should define similarity more precisely.
-
-Use \code{"A"} when pedigree relationships are available and should define grouping.
-
-This argument determines whether \code{GRM}, \code{A}, \code{id_map}, \code{cluster_method},
-\code{cluster_seed}, \code{cluster_attempts}, and \code{n_pcs_use} become active.}
-
-\item{GRM}{Optional genomic relationship matrix.
-
-Required when:
-\itemize{
-\item \code{cluster_source = "GRM"}, or
-\item \code{use_dispersion = TRUE} and \code{dispersion_source = "GRM"}.
-}
-
-Ignored otherwise.
-
-Use this when genomic relatedness should influence grouping or dispersion.
-
-Matrix row and column names must match entry IDs, or be reachable through \code{id_map}.}
-
-\item{A}{Optional pedigree relationship matrix.
-
-Required when:
-\itemize{
-\item \code{cluster_source = "A"}, or
-\item \code{use_dispersion = TRUE} and \code{dispersion_source = "A"}.
-}
-
-Ignored otherwise.
-
-Use this when pedigree relatedness should influence grouping or dispersion.}
-
-\item{id_map}{Optional \code{data.frame} with columns \code{Treatment} and \code{LineID}.
-
-Used only when \code{cluster_source \%in\% c("GRM", "A")} and treatment IDs do not
-already match matrix row/column names.
-
-Use this when field-book treatment labels are different from matrix IDs.
-
-Example:
-treatment labels may be breeder-friendly names while \code{GRM} or \code{A} uses internal IDs.}
-
-\item{cluster_method}{Character specifying the clustering method applied after PCA
-in matrix-based grouping.
-
-Allowed values:
-\itemize{
-\item \code{"kmeans"}
-\item \code{"hclust"}
-}
-
-Use \code{"kmeans"} when reproducible compact clustering is preferred.
-
-Use \code{"hclust"} when a hierarchical approach is preferred.
-
-Active only when \code{cluster_source \%in\% c("GRM", "A")}.}
-
-\item{cluster_seed}{Integer seed for k-means initialization.
-
-Active only when:
-\itemize{
-\item \code{cluster_source \%in\% c("GRM", "A")}, and
-\item \code{cluster_method = "kmeans"}.
-}
-
-Use this to make matrix-based grouping reproducible.}
-
-\item{cluster_attempts}{Integer number of random starts for k-means clustering.
-
-Active only when:
-\itemize{
-\item \code{cluster_source \%in\% c("GRM", "A")}, and
-\item \code{cluster_method = "kmeans"}.
-}
-
-Use larger values when clustering stability is important.}
-
-\item{n_pcs_use}{Integer or \code{Inf} giving the number of principal components used
-for matrix-based clustering.
-
-Ignored when \code{cluster_source = "Family"}.
-
-Use smaller values when only broad structure should drive grouping.
-Use \code{Inf} when the function should use as many informative components as possible.}
-
-\item{min_entry_slots_per_block}{Integer giving the minimum number of entry slots
-allowed in any incomplete block.
-
-This argument constrains the automatically chosen number of blocks per replicate.
-
-Use smaller values when more blocks per replicate are acceptable.
-Use larger values when blocks should not become too small once checks are inserted.
-
-This is particularly important when checks are numerous, because repeated checks
-consume capacity in every incomplete block.}
-
-\item{max_blocks_per_rep}{Optional integer giving an upper bound on the number of
-incomplete blocks per replicate.
-
-If \code{NULL}, the number of blocks per replicate is derived from capacity constraints.
-
-Use this when the user wants to prevent the design from creating too many
-incomplete blocks, even if more could fit mathematically.
-
-Useful when operational simplicity or analysis preference favors fewer blocks.}
-
-\item{eval_efficiency}{Logical indicating whether efficiency diagnostics should be computed.
-
-Use \code{TRUE} when the user wants to compare design quality under a mixed model.
-
-Use \code{FALSE} when only the layout itself is needed.
-
-If \code{FALSE}, all efficiency-related arguments are ignored.}
-
-\item{treatment_effect}{Character indicating how entries are treated in efficiency evaluation.
-
-Allowed values:
-\itemize{
-\item \code{"random"}
-\item \code{"fixed"}
-}
-
-Active only when \code{eval_efficiency = TRUE}.
-
-Use \code{"fixed"} when interest lies in contrast precision among entry means.
-
-Use \code{"random"} when interest lies in BLUP-style prediction quality.}
-
-\item{prediction_type}{Character controlling the random-effect efficiency model.
-
-Allowed values:
-\itemize{
-\item \code{"none"}
-\item \code{"IID"}
-\item \code{"GBLUP"}
-\item \code{"PBLUP"}
-}
-
-Active only when:
-\itemize{
-\item \code{eval_efficiency = TRUE}, and
-\item \code{treatment_effect = "random"}.
-}
-
-Use \code{"none"} to skip random-effect efficiency.
-
-Use \code{"IID"} when entry random effects are assumed independent.
-
-Use \code{"GBLUP"} or \code{"PBLUP"} when prediction should use a relationship matrix \code{K}.}
-
-\item{K}{Optional relationship matrix used in two contexts:
-\enumerate{
-\item random-effect efficiency when:
-\itemize{
-\item \code{eval_efficiency = TRUE},
-\item \code{treatment_effect = "random"},
-\item \code{prediction_type \%in\% c("GBLUP", "PBLUP")};
-}
-\item dispersion optimization when:
-\itemize{
-\item \code{use_dispersion = TRUE},
-\item \code{dispersion_source = "K"}.
-}
-}
-
-Ignored otherwise.
-
-Use this when prediction or dispersion should be based on an explicit
-relationship matrix.}
-
-\item{line_id_map}{Optional \code{data.frame} with columns \code{Treatment} and \code{LineID}.
-
-Used only when \code{K} is active and treatment labels differ from \code{rownames(K)}.
-
-This serves the same role for \code{K} that \code{id_map} serves for \code{GRM} or \code{A}.}
-
-\item{varcomp}{Named list of variance components used only in efficiency evaluation.
-
-Must contain:
-\itemize{
-\item \code{sigma_e2}
-\item \code{sigma_g2}
-\item \code{sigma_rep2}
-\item \code{sigma_ib2}
-\item \code{sigma_r2}
-\item \code{sigma_c2}
-}
-
-Use realistic values when efficiency should reflect a plausible trial model.
-
-Example:
-use larger \code{sigma_ib2} when incomplete blocks are expected to differ strongly.}
-
-\item{check_as_fixed}{Logical indicating whether checks are included as fixed
-indicators during efficiency evaluation.
-
-Active only when \code{eval_efficiency = TRUE}.
-
-Use \code{TRUE} when checks should be explicitly modeled as benchmark fixed effects.}
-
-\item{residual_structure}{Character specifying the residual correlation model.
-
-Allowed values:
-\itemize{
-\item \code{"IID"}
-\item \code{"AR1"}
-\item \code{"AR1xAR1"}
-}
-
-Active only when \code{eval_efficiency = TRUE}.
-
-Use \code{"IID"} when no spatial residual correlation is assumed.
-
-Use \code{"AR1"} when row-wise spatial correlation is expected.
-
-Use \code{"AR1xAR1"} when both row and column spatial correlation are expected.}
-
-\item{rho_row}{Numeric AR1 row parameter.
-
-Active only when:
-\itemize{
-\item \code{eval_efficiency = TRUE}, and
-\item \code{residual_structure \%in\% c("AR1", "AR1xAR1")}.
-}
-
-Use values near 0 for weak row correlation and larger absolute values for stronger correlation.}
-
-\item{rho_col}{Numeric AR1 column parameter.
-
-Active only when:
-\itemize{
-\item \code{eval_efficiency = TRUE}, and
-\item \code{residual_structure = "AR1xAR1"}.
-}
-
-Use this when column-wise correlation is expected in addition to row-wise correlation.}
-
-\item{spatial_engine}{Character retained for interface compatibility.
-
-Allowed values:
-\itemize{
-\item \code{"auto"}
-\item \code{"sparse"}
-\item \code{"dense"}
-}
-
-In this function the efficiency code primarily uses sparse Matrix operations,
-but the argument is retained so the interface remains aligned with related functions.}
-
-\item{dense_max_n}{Integer retained for interface compatibility.
-
-This argument is included for consistency with related functions.}
-
-\item{eff_trace_samples}{Integer number of Hutchinson trace samples used when
-approximate efficiency is needed because the target treatment dimension exceeds
-\code{eff_full_max}.
-
-Larger values improve approximation stability but increase runtime.}
-
-\item{eff_full_max}{Integer maximum target dimension for exact efficiency extraction.
-
-Above this threshold, the function switches to an approximate trace-based method.
-
-Use larger values for more exact computation when memory and runtime allow.}
-
-\item{check_placement}{Character specifying how check positions are chosen within blocks.
-
-Allowed values:
-\itemize{
-\item \code{"systematic"}
-\item \code{"random"}
-}
-
-Use \code{"systematic"} when checks should be approximately evenly spread in each block.
-
-Use \code{"random"} when check positions may vary freely.}
-
-\item{check_position_pattern}{Argument retained for interface compatibility.
-
-It is not used by the current stream-based placement logic.}
-
-\item{use_dispersion}{Logical; if \code{TRUE}, apply post-hoc dispersion optimization
-among non-check treatments.
-
-Use this when genetically or pedigree-similar entries should be less clustered
-within replicates.
-
-If \code{FALSE}, all dispersion-related arguments are ignored.}
-
-\item{dispersion_source}{Character selecting which matrix is used for dispersion scoring.
-
-Allowed values:
-\itemize{
-\item \code{"K"}
-\item \code{"A"}
-\item \code{"GRM"}
-}
-
-Active only when \code{use_dispersion = TRUE}.
-
-Use \code{"K"} when a dedicated relationship matrix is preferred.
-Use \code{"A"} for pedigree-based dispersion.
-Use \code{"GRM"} for genomic-based dispersion.}
-
-\item{dispersion_radius}{Integer neighborhood radius for dispersion scoring.
-
-Two plots are considered neighbors when:
-
-\verb{max(|dr|, |dc|) <= dispersion_radius}
-
-Use \code{1} for immediate neighbors only.
-Use larger values when broader local dispersion matters.}
-
-\item{dispersion_iters}{Integer number of swap proposals used in the dispersion search.
-
-Larger values increase optimization effort and runtime.}
-
-\item{dispersion_seed}{Optional integer seed used in dispersion search.
-
-Use this when dispersion optimization should be reproducible independently of
-the initial design seed.
-
-If left at its default, the function uses the supplied value in the interface.}
-
-\item{verbose}{Logical; if \code{TRUE}, print the derived replicate and block structure.
-
-Use this for diagnostics, debugging, or understanding how the function chose
-replicate sizes and incomplete block sizes.}
+\item{verbose}{Logical. If \code{TRUE}, prints a one-line summary of field
+usage, trailing \code{NA} plots, replicate sizes, block count and origin,
+block sizes in replicate 1, and active block-size bounds.}
 }
 \value{
-A list with:
+A named list with four components:
 \describe{
-\item{layout_matrix}{A character matrix of size \verb{n_rows × n_cols}. Unused cells are \code{NA}.}
-\item{field_book}{A plot-level data frame with one row per field cell, including unused cells.}
-\item{efficiency}{\code{NULL} or a list of efficiency summaries computed from non-\code{NA} plots.}
-\item{seed_used}{The actual random seed used internally.}
-\item{design_info}{A list summarizing replicate sizes, incomplete block sizes, used and unused cells, and key settings.}
+\item{\code{layout_matrix}}{Character matrix of dimension \verb{n_rows x n_cols}.
+Used cells contain treatment IDs; unused trailing cells are \code{NA}.}
+\item{\code{field_book}}{Data frame with one row per field plot. Columns:
+\code{Plot} (stream position), \code{Row}, \code{Column}, \code{Rep} (\code{NA} for unused),
+\code{IBlock} (global block index), \code{BlockInRep} (block index within rep),
+\code{Treatment} (\code{NA} for unused), \code{Family}, \code{Gcluster} (\code{NA} when
+\code{cluster_source = "Family"} or for check plots), \code{Check} (logical).}
+\item{\code{design_info}}{Named list: \code{n_rows}, \code{n_cols}, \code{total_plots},
+\code{n_reps}, \code{n_checks}, \code{n_entries}, \code{n_blocks_per_rep} (resolved),
+\code{n_blocks_per_rep_user}, \code{min_block_size}, \code{max_block_size},
+\code{min_entry_slots_per_block}, \code{max_entry_slots_per_block}, \code{rep_sizes},
+\code{total_used_plots}, \code{trailing_na_plots}, \code{block_plan}, \code{block_meta},
+\code{order}, \code{serpentine}.}
+\item{\code{seed_used}}{Integer. The random seed used.}
 }
 }
 \description{
-\code{alpha_rc_stream()} is intended for practical field situations where:
-\itemize{
-\item the overall field size is fixed in advance,
-\item replicate boundaries are determined by field-book order rather than by rigid
-rectangular subfields,
-\item replicate 2 begins exactly where replicate 1 ends in the traversal stream,
-\item incomplete blocks may differ in size,
-\item checks must be repeated in every incomplete block,
-\item all entries must appear exactly once in each replicate,
-\item any leftover field cells should remain unused and appear at the end of the stream.
-}
+\code{alpha_rc_stream()} builds a randomised alpha-lattice incomplete block
+design for breeding and agronomic experiments on a fixed field grid of
+\verb{n_rows x n_cols} plots. The field is converted to a one-dimensional
+planting stream according to \code{order} and \code{serpentine}, partitioned into
+\code{n_reps} contiguous replicate segments, and each replicate is further
+divided into incomplete blocks. Every incomplete block contains all check
+treatments plus a subset of entry treatments. Entry treatments appear
+exactly once per replicate. Trailing unused field cells remain \code{NA} in the
+layout matrix and field book.
 
-The function:
-\enumerate{
-\item Builds the full field stream using \code{order} and \code{serpentine}.
-\item Determines how many incomplete blocks can be supported in each replicate.
-\item Divides each replicate into incomplete blocks.
-\item Allocates checks and entries subject to the block plan.
-\item Arranges entries heuristically to reduce clustering of similar materials.
-\item Leaves any surplus cells as trailing \code{NA}.
-\item Optionally performs dispersion optimization.
-\item Optionally computes mixed-model efficiency diagnostics.
-}
+\strong{Design evaluation has been separated from construction.} This function
+returns the field book, layout matrix, and design metadata only. To compute
+A-, D-, and CDmean optimality criteria, call
+\code{\link[=evaluate_alpha_efficiency]{evaluate_alpha_efficiency()}} on the returned \code{field_book}. To search for
+an optimised design using Random Restart, Simulated Annealing, or a Genetic
+Algorithm, call \code{\link[=optimize_alpha_rc]{optimize_alpha_rc()}}.
 }
 \details{
-Construct a fixed-field row-column design in which the full \verb{n_rows × n_cols}
-grid is first converted into a single ordered stream of positions, then split
-into contiguous replicate segments, then subdivided into incomplete blocks of
-possibly unequal size. Within each replicate, every entry appears exactly once,
-every incomplete block contains all checks, and any unused field cells are left
-as trailing \code{NA} positions at the end of the global stream.
+\subsection{Design structure}{
 
 Let:
 \itemize{
-\item \code{E} = number of entries,
-\item \code{C} = number of checks,
-\item \code{R} = number of replicates,
-\item \code{b} = number of incomplete blocks per replicate.
+\item \eqn{r} = number of replicates (\code{n_reps})
+\item \eqn{c} = number of checks (\code{length(check_treatments)})
+\item \eqn{v} = number of entries (\code{length(entry_treatments)})
+\item \eqn{b} = number of incomplete blocks per replicate
 }
 
-Then the number of \strong{used plots per replicate} is:
+Each replicate contains all \eqn{v} entries exactly once and all \eqn{c}
+checks repeated once in each of the \eqn{b} incomplete blocks. Entries are
+split across blocks as evenly as possible - block entry counts differ by at
+most one. The number of used plots per replicate is:
 
-\code{E + b * C}
+\deqn{\text{plots per rep} = v + b \times c}
 
-and the \strong{total number of used plots} is:
+The total used plots in the design is:
 
-\code{R * (E + b * C)}
+\deqn{\text{total used} = r \times (v + b \times c)}
 
-This total must fit within the fixed field capacity:
-
-\code{n_rows * n_cols}
-
-The function chooses a block plan that respects:
-\itemize{
-\item the number of entries,
-\item the number of checks,
-\item the minimum entry capacity per block,
-\item any user-supplied cap on blocks per replicate,
-\item the total fixed field capacity.
+If the fixed field contains more cells than this total, unused trailing
+cells remain \code{NA}. The function stops if the required plots exceed field
+capacity.
 }
 
-In efficiency evaluation, the function uses only the observed non-\code{NA} plots.
-Depending on \code{treatment_effect}, the returned metrics represent either:
-\itemize{
-\item precision of fixed treatment contrasts, or
-\item average prediction error variance of random treatment effects.
+\subsection{Block-size parameterisation}{
+
+Block-size constraints are expressed in terms of \strong{total block size}
+(checks + entries) because in a repeated-check design the whole block is
+the operational unit. The mapping is:
+
+\deqn{\text{min\_entry\_slots} = \text{min\_block\_size} - c}
+\deqn{\text{max\_entry\_slots} = \text{max\_block\_size} - c}
+
+For example, with \eqn{c = 3} checks, \code{min_block_size = 19} and
+\code{max_block_size = 20} means each block holds between 16 and 17 entries plus
+3 check positions. Both bounds must be \eqn{\geq c}.
 }
 
-The arguments \code{warn_and_correct}, \code{fix_rows}, \code{spatial_engine},
-\code{dense_max_n}, and \code{check_position_pattern} are retained for interface
-continuity, even where they do not materially alter the stream-based design logic.
+\subsection{Block-count determination}{
+
+After translating total-block-size limits into entry-slot limits, the number
+of incomplete blocks per replicate \eqn{b} must satisfy a feasible range
+\eqn{[b_\text{min},\, b_\text{max}]}:
+
+\describe{
+\item{Lower bound from \code{max_block_size}}{
+\eqn{b \geq \lceil v / (\text{max\_block\_size} - c)\rceil}
 }
-\section{Conceptual design}{
-
-The key feature of this function is that it is \strong{stream-based} rather than
-\strong{rectangle-based}.
-
-Instead of cutting the field into rectangular replicate areas, the function:
-\itemize{
-\item lists all grid cells in a single global order,
-\item cuts that order into \code{n_reps} contiguous replicate segments,
-\item then cuts each replicate segment into incomplete blocks.
+\item{Upper bound from \code{min_block_size}}{
+\eqn{b \leq \lfloor v / (\text{min\_block\_size} - c)\rfloor}
 }
-
-This is useful when:
-\itemize{
-\item planting follows a continuous field-book order,
-\item operational field movement is row-wise or column-wise,
-\item replicate boundaries are administrative or logistical rather than geometric,
-\item the user wants all unused cells to appear only at the tail of the field stream.
-}
-
-For each replicate:
-\itemize{
-\item each entry is used exactly once,
-\item each incomplete block receives every check,
-\item the remaining block capacity is filled with entries,
-\item allocation is then improved heuristically to reduce local grouping conflicts.
+\item{Upper bound from field capacity}{
+\eqn{b \leq \lfloor (\text{total\_plots}/r - v) / c \rfloor}
 }
 }
 
-\section{What this function is most useful for}{
+The function stops with an informative error if
+\eqn{b_\text{min} > b_\text{max}}. At least one of \code{n_blocks_per_rep},
+\code{min_block_size}, or \code{max_block_size} must be supplied.
 
-This function is particularly useful when:
-\itemize{
-\item the field geometry is fixed and should never be auto-resized,
-\item the design requires repeated checks in every incomplete block,
-\item the user wants a row-column design without forcing rectangular replicate areas,
-\item practical planting or harvesting follows a stream order,
-\item family, pedigree, or genomic structure should influence entry placement,
-\item the user wants to evaluate the resulting design using a mixed-model framework.
-}
-}
+\strong{User-fixed mode} (\code{n_blocks_per_rep} supplied): the value is validated
+against the feasible range and all block-size constraints.
 
-\section{Dependency guide}{
-
-Many arguments are active only under particular modes.
-
-\strong{Grouping source}
-\itemize{
-\item If \code{cluster_source = "Family"}:
-\itemize{
-\item grouping comes directly from \code{check_families} and \code{entry_families},
-\item \code{GRM}, \code{A}, \code{id_map}, \code{cluster_method}, \code{cluster_seed},
-\code{cluster_attempts}, and \code{n_pcs_use} are ignored.
-}
-\item If \code{cluster_source = "GRM"}:
-\itemize{
-\item \code{GRM} is required,
-\item \code{id_map} is only needed if entry names differ from \code{rownames(GRM)},
-\item grouping labels are derived by PCA followed by clustering.
-}
-\item If \code{cluster_source = "A"}:
-\itemize{
-\item \code{A} is required,
-\item \code{id_map} is only needed if entry names differ from \code{rownames(A)},
-\item grouping labels are derived by PCA followed by clustering.
-}
+\strong{Automatic mode} (\code{n_blocks_per_rep = NULL}): \eqn{b} is set to
+\eqn{b_\text{max}} - the largest feasible number of blocks, producing the
+smallest feasible blocks, which generally gives the best local control.
 }
 
-\strong{Derived block structure}
-\itemize{
-\item \code{min_entry_slots_per_block} controls the minimum number of non-check entry
-slots permitted in an incomplete block.
-\item \code{max_blocks_per_rep} optionally limits the number of blocks per replicate.
-\item If \code{max_blocks_per_rep = NULL}, block count is derived from capacity and
-\code{min_entry_slots_per_block}.
+\subsection{Field stream construction}{
+
+The field is mapped to a one-dimensional stream by iterating over rows
+(\code{order = "row"}) or columns (\code{order = "column"}). When \code{serpentine = TRUE},
+alternate rows or columns reverse direction, producing a boustrophedon
+planting path. Replicate segments occupy contiguous portions of the stream
+and incomplete blocks occupy contiguous sub-segments within each replicate.
 }
 
-\strong{Efficiency evaluation}
+\subsection{Within-block arrangement}{
+
+Entries are randomised independently within each replicate, then split
+across blocks. Checks are inserted at positions determined by
+\code{check_placement}:
 \itemize{
-\item If \code{eval_efficiency = FALSE}, all efficiency arguments are ignored.
-\item If \code{eval_efficiency = TRUE} and \code{treatment_effect = "fixed"}:
-\itemize{
-\item fixed-treatment contrast precision is computed,
-\item \code{prediction_type}, \code{K}, and \code{line_id_map} are ignored.
+\item \code{"systematic"}: positions computed as
+\code{round(seq(1, block_size, length.out = n_checks + 2))[2:(n_checks + 1)]},
+distributing checks as evenly as possible.
+\item \code{"random"}: positions drawn uniformly without replacement.
 }
-\item If \code{eval_efficiency = TRUE} and \code{treatment_effect = "random"}:
-\itemize{
-\item \code{prediction_type} becomes active.
+
+Within-block order is optimised over \code{attempts} random shuffles to minimise
+the count of adjacent same-group treatment pairs. The search exits early
+when the adjacency score reaches zero.
 }
-\item If \code{prediction_type = "none"}:
+
+\subsection{Grouping and adjacency scoring}{
+
+The grouping label used for adjacency scoring is determined by
+\code{cluster_source}:
 \itemize{
-\item random-effect efficiency is skipped.
-}
-\item If \code{prediction_type = "IID"}:
-\itemize{
-\item entry random effects are treated as independent,
-\item \code{K} and \code{line_id_map} are ignored.
-}
-\item If \code{prediction_type \%in\% c("GBLUP", "PBLUP")}:
-\itemize{
-\item \code{K} is required,
-\item \code{line_id_map} may be required if treatment IDs differ from \code{rownames(K)}.
+\item \code{"Family"}: uses \code{entry_families} and \code{check_families} directly.
+\code{Gcluster} is \code{NA} for all plots.
+\item \code{"GRM"} or \code{"A"}: derives clusters from the leading principal components
+of the relationship matrix. The number of clusters equals
+\code{length(unique(entry_families))}. Cluster labels are prefixed \code{"G"}
+(GRM) or \code{"A"} (A matrix). Check treatments always use \code{check_families}
+and always have \code{Gcluster = NA}.
 }
 }
 
-\strong{Residual structure}
-\itemize{
-\item If \code{residual_structure = "IID"}:
-\itemize{
-\item \code{rho_row} and \code{rho_col} are ignored.
-}
-\item If \code{residual_structure = "AR1"}:
-\itemize{
-\item only \code{rho_row} is used.
-}
-\item If \code{residual_structure = "AR1xAR1"}:
-\itemize{
-\item both \code{rho_row} and \code{rho_col} are used.
-}
-}
+\subsection{Dispersion optimisation}{
 
-\strong{Dispersion optimization}
-\itemize{
-\item If \code{use_dispersion = FALSE}, all dispersion arguments are ignored.
-\item If \code{use_dispersion = TRUE}, \code{dispersion_source} selects which matrix is used.
-\item If \code{dispersion_source = "K"}:
-\itemize{
-\item \code{K} is required,
-\item \code{line_id_map} may be needed if treatment IDs differ from matrix row names.
-}
-\item If \code{dispersion_source = "A"}:
-\itemize{
-\item \code{A} is required.
-}
-\item If \code{dispersion_source = "GRM"}:
-\itemize{
-\item \code{GRM} is required.
+When \code{use_dispersion = TRUE}, a local swap search is applied after layout
+construction. At each of \code{dispersion_iters} iterations, two non-check plots
+are selected at random; the swap is accepted if it reduces the total
+neighbourhood relatedness score - the sum of relationship matrix values
+between all non-check neighbour pairs within Chebyshev distance
+\code{dispersion_radius}. The matrix used is selected by \code{dispersion_source}.
 }
 }
-
-\strong{Check placement}
-\itemize{
-\item \code{check_placement = "systematic"} spreads checks approximately evenly within
-each block stream.
-\item \code{check_placement = "random"} randomizes check positions.
-\item \code{check_position_pattern} is retained for interface continuity but is not
-used by the current stream-based placement logic.
-}
-}
-
 \examples{
-data("OptiDesign_example_data", package = "OptiDesign")
-x <- OptiDesign_example_data
-
-## Family-based row-column stream design
-out_alpha_family <- do.call(
-  alpha_rc_stream,
-  c(
-    x$OptiDesign_alpha_example,
-    x$OptiDesign_alpha_args_family
-  )
+## Basic construction: 167 entries, 3 checks, 3 reps
+design <- alpha_rc_stream(
+  check_treatments = c("CHK1", "CHK2", "CHK3"),
+  check_families   = c("CHECK", "CHECK", "CHECK"),
+  entry_treatments = paste0("G", 1:167),
+  entry_families   = rep(paste0("F", 1:7), length.out = 167),
+  n_reps           = 3,
+  n_rows           = 30,
+  n_cols           = 20,
+  min_block_size   = 19,
+  max_block_size   = 20
 )
 
-dim(out_alpha_family$layout_matrix)
-head(out_alpha_family$field_book)
-out_alpha_family$design_info$n_blocks_per_rep
+dim(design$layout_matrix)             # 30 x 20
+head(design$field_book)
+design$design_info$n_blocks_per_rep
+design$design_info$trailing_na_plots
 
-\dontrun{
-## GRM-based row-column stream design with dispersion
-out_alpha_grm <- do.call(
-  alpha_rc_stream,
-  c(
-    x$OptiDesign_alpha_example,
-    x$OptiDesign_alpha_args_grm
-  )
+## Evaluate separately
+eff <- evaluate_alpha_efficiency(
+  field_book         = design$field_book,
+  n_rows             = 30,
+  n_cols             = 20,
+  check_treatments   = c("CHK1", "CHK2", "CHK3"),
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row = 0.10, rho_col = 0.10
 )
+eff$A_criterion
+eff$D_criterion
 
-dim(out_alpha_grm$layout_matrix)
-head(out_alpha_grm$field_book)
-out_alpha_grm$efficiency
 }
-
+\seealso{
+\code{\link[=evaluate_alpha_efficiency]{evaluate_alpha_efficiency()}} to compute A, D, and CDmean
+optimality criteria on the returned \code{field_book}.
+\code{\link[=optimize_alpha_rc]{optimize_alpha_rc()}} to search for a criterion-optimal design using
+Random Restart, Simulated Annealing, or a Genetic Algorithm.
 }

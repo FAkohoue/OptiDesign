@@ -44,9 +44,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="design-functions">Design functions<a class="anchor" aria-label="anchor" href="#design-functions"></a></h2>
+      <h2 id="alpha-row-column-stream-designs">Alpha row-column stream designs<a class="anchor" aria-label="anchor" href="#alpha-row-column-stream-designs"></a></h2>
 
-
+      <div class="section-desc"><p>Functions for constructing, evaluating, and optimising fixed-grid alpha row-column designs with repeated checks. Optimisation supports Random Restart, Simulated Annealing, and a Genetic Algorithm.</p></div>
 
 
     </div><div class="section level2">
@@ -56,20 +56,55 @@
 
       <dl><dt>
 
-          <code><a href="prep_famoptg.html">prep_famoptg()</a></code>
-
-        </dt>
-        <dd>Create a repeated-check block design with flexible replication</dd>
-      </dl><dl><dt>
-
           <code><a href="alpha_rc_stream.html">alpha_rc_stream()</a></code>
 
         </dt>
-        <dd>Create a fixed-grid alpha row-column design with unequal incomplete blocks and checks in every block</dd>
+        <dd>Construct a stream-based repeated-check alpha row-column design</dd>
+      </dl><dl><dt>
+
+          <code><a href="evaluate_alpha_efficiency.html">evaluate_alpha_efficiency()</a></code>
+
+        </dt>
+        <dd>Evaluate the statistical efficiency of an alpha-lattice design</dd>
+      </dl><dl><dt>
+
+          <code><a href="optimize_alpha_rc.html">optimize_alpha_rc()</a></code>
+
+        </dt>
+        <dd>Search for a criterion-optimal alpha-lattice design</dd>
+      </dl></div><div class="section level2">
+      <h2 id="repeated-check-block-designs">Repeated-check block designs<a class="anchor" aria-label="anchor" href="#repeated-check-block-designs"></a></h2>
+
+      <div class="section-desc"><p>Functions for constructing, evaluating, and optimising augmented, partially replicated (p-rep), and RCBD-type repeated-check block designs. The p-rep constraint (no replicated entry in the same block twice) is enforced by construction.</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency()</a></code>
+
+        </dt>
+        <dd>Evaluate the statistical efficiency of a repeated-check block design</dd>
+      </dl><dl><dt>
+
+          <code><a href="optimize_famoptg.html">optimize_famoptg()</a></code>
+
+        </dt>
+        <dd>Search for a criterion-optimal repeated-check block design</dd>
+      </dl><dl><dt>
+
+          <code><a href="prep_famoptg.html">prep_famoptg()</a></code>
+
+        </dt>
+        <dd>Construct a repeated-check block design with flexible replication</dd>
       </dl></div><div class="section level2">
       <h2 id="datasets">Datasets<a class="anchor" aria-label="anchor" href="#datasets"></a></h2>
 
-
+      <div class="section-desc"><p>Synthetic example data for illustrating and testing both design families, including treatment vectors, field dimensions, relationship matrices, and ready-to-use argument lists.</p></div>
 
 
     </div><div class="section level2">
@@ -86,7 +121,7 @@
       </dl></div><div class="section level2">
       <h2 id="package">Package<a class="anchor" aria-label="anchor" href="#package"></a></h2>
 
-
+      <div class="section-desc"><p>Package-level documentation covering the full function overview, typical workflows for both design families, and key references.</p></div>
 
 
     </div><div class="section level2">
@@ -99,7 +134,7 @@
           <code><a href="OptiDesign-package.html">OptiDesign</a></code> <code><a href="OptiDesign-package.html">OptiDesign-package</a></code>
 
         </dt>
-        <dd>OptiDesign: Experimental Field Design Utilities for Optimized Layout Construction</dd>
+        <dd>OptiDesign: Optimized Experimental Field Design for Plant Breeding</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
