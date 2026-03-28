@@ -10,12 +10,12 @@
 Source:
 [`DESCRIPTION`](https://github.com/FAkohoue/OptiDesign/blob/main/DESCRIPTION)
 
-Akohoue F (2026). *OptiDesign: Experimental Field Design Utilities for
-Optimized Layout Construction*. R package version 0.1.0,
+Akohoue F (2026). *OptiDesign: Optimized Experimental Field Design for
+Plant Breeding*. R package version 0.1.0,
 <https://github.com/FAkohoue/OptiDesign>.
 
     @Manual{,
-      title = {OptiDesign: Experimental Field Design Utilities for Optimized Layout Construction},
+      title = {OptiDesign: Optimized Experimental Field Design for Plant Breeding},
       author = {Félicien Akohoue},
       year = {2026},
       note = {R package version 0.1.0},

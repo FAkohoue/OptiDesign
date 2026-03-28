@@ -1,43 +1,22 @@
-# Create a fixed-grid alpha row-column design with unequal incomplete blocks and checks in every block
+# Construct a stream-based repeated-check alpha row-column design
 
-`alpha_rc_stream()` is intended for practical field situations where:
+`alpha_rc_stream()` builds a randomised alpha-lattice incomplete block
+design for breeding and agronomic experiments on a fixed field grid of
+`n_rows x n_cols` plots. The field is converted to a one-dimensional
+planting stream according to `order` and `serpentine`, partitioned into
+`n_reps` contiguous replicate segments, and each replicate is further
+divided into incomplete blocks. Every incomplete block contains all
+check treatments plus a subset of entry treatments. Entry treatments
+appear exactly once per replicate. Trailing unused field cells remain
+`NA` in the layout matrix and field book.
 
-- the overall field size is fixed in advance,
-
-- replicate boundaries are determined by field-book order rather than by
-  rigid rectangular subfields,
-
-- replicate 2 begins exactly where replicate 1 ends in the traversal
-  stream,
-
-- incomplete blocks may differ in size,
-
-- checks must be repeated in every incomplete block,
-
-- all entries must appear exactly once in each replicate,
-
-- any leftover field cells should remain unused and appear at the end of
-  the stream.
-
-The function:
-
-1.  Builds the full field stream using `order` and `serpentine`.
-
-2.  Determines how many incomplete blocks can be supported in each
-    replicate.
-
-3.  Divides each replicate into incomplete blocks.
-
-4.  Allocates checks and entries subject to the block plan.
-
-5.  Arranges entries heuristically to reduce clustering of similar
-    materials.
-
-6.  Leaves any surplus cells as trailing `NA`.
-
-7.  Optionally performs dispersion optimization.
-
-8.  Optionally computes mixed-model efficiency diagnostics.
+**Design evaluation has been separated from construction.** This
+function returns the field book, layout matrix, and design metadata
+only. To compute A-, D-, and CDmean optimality criteria, call
+[`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md)
+on the returned `field_book`. To search for an optimised design using
+Random Restart, Simulated Annealing, or a Genetic Algorithm, call
+[`optimize_alpha_rc()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_alpha_rc.md).
 
 ## Usage
 
@@ -64,23 +43,9 @@ alpha_rc_stream(
   cluster_seed = 1,
   cluster_attempts = 25,
   n_pcs_use = Inf,
-  min_entry_slots_per_block = 8,
-  max_blocks_per_rep = NULL,
-  eval_efficiency = FALSE,
-  treatment_effect = c("random", "fixed"),
-  prediction_type = c("none", "IID", "GBLUP", "PBLUP"),
-  K = NULL,
-  line_id_map = NULL,
-  varcomp = list(sigma_e2 = 1, sigma_g2 = 1, sigma_rep2 = 1, sigma_ib2 = 1, sigma_r2 = 1,
-    sigma_c2 = 1),
-  check_as_fixed = TRUE,
-  residual_structure = c("IID", "AR1", "AR1xAR1"),
-  rho_row = 0,
-  rho_col = 0,
-  spatial_engine = c("auto", "sparse", "dense"),
-  dense_max_n = 5000,
-  eff_trace_samples = 80,
-  eff_full_max = 400,
+  n_blocks_per_rep = NULL,
+  min_block_size = NULL,
+  max_block_size = NULL,
   check_placement = c("systematic", "random"),
   check_position_pattern = c("spread", "corners_first"),
   use_dispersion = FALSE,
@@ -88,6 +53,8 @@ alpha_rc_stream(
   dispersion_radius = 1,
   dispersion_iters = 2000,
   dispersion_seed = 1,
+  K = NULL,
+  line_id_map = NULL,
   verbose = TRUE
 )
 ```
@@ -96,948 +63,390 @@ alpha_rc_stream(
 
 - check_treatments:
 
-  Character vector of check IDs.
-
-  Every check is placed exactly once in every incomplete block.
-
-  This argument is always active and is central to the design because
-  repeated checks define the benchmark structure across blocks and
-  replicates.
-
-  Use this when the trial requires standard controls or benchmark
-  entries in every incomplete block.
-
-  Example use case: a trial with 3 commercial checks that must appear in
-  all incomplete blocks.
+  Character vector of check treatment identifiers. Checks appear in
+  every incomplete block of every replicate. Must not overlap with
+  `entry_treatments` and must not contain duplicates.
 
 - check_families:
 
-  Character vector of the same length as `check_treatments`.
-
-  Family labels for checks.
-
-  These are used directly when `cluster_source = "Family"` and are also
-  stored in the output field book under all settings.
-
-  This argument must align exactly with `check_treatments`.
-
-  Use it when checks belong to known families or control groups, or when
-  the user wants family labels preserved in the output.
+  Character vector of the same length as `check_treatments`. Family
+  labels for checks, used for adjacency scoring. Always stored in the
+  `Family` column; `Gcluster` is always `NA` for check plots.
 
 - entry_treatments:
 
-  Character vector of distinct entries.
-
-  Each entry appears exactly once **per replicate**.
-
-  This is the main set of test entries being evaluated.
-
-  Use this for breeding lines, hybrids, progeny, or other candidate
-  materials that should be represented once in each replicate.
-
-  Entries must not overlap with `check_treatments`.
+  Character vector of non-check treatment identifiers. Each entry
+  appears exactly once per replicate. Must not contain duplicates.
 
 - entry_families:
 
-  Character vector of the same length as `entry_treatments`.
-
-  Family labels for entries.
-
-  These are used directly when `cluster_source = "Family"`. When
-  `cluster_source %in% c("GRM", "A")`, they still help determine the
-  target number of clusters among entries.
-
-  Use this when family structure matters for spacing, grouping, or
-  interpretation.
+  Character vector of the same length as `entry_treatments`. Family
+  labels for entries. Used for adjacency scoring when
+  `cluster_source = "Family"` and to set the number of clusters when
+  `cluster_source %in% c("GRM", "A")`.
 
 - n_reps:
 
-  Integer giving the number of replicates.
-
-  Each replicate is defined as a contiguous segment of the global
-  stream.
-
-  Use more replicates when stronger replication is needed for entry
-  precision, provided the field can still support repeated checks in
-  every block.
-
-  This argument affects:
-
-  - total number of used plots,
-
-  - the length of each replicate segment,
-
-  - the total number of times entries appear.
+  Positive integer. Number of contiguous replicate segments.
 
 - n_rows:
 
-  Integer giving the number of field rows.
-
-  The field size is fixed in this function and is never altered.
-
-  Use this to reflect the true row dimension of the physical field.
-
-  It directly affects:
-
-  - total field capacity,
-
-  - the global traversal stream,
-
-  - spatial coordinates in the returned `layout_matrix` and
-    `field_book`.
+  Positive integer. Number of field rows.
 
 - n_cols:
 
-  Integer giving the number of field columns.
-
-  The field size is fixed in this function and is never altered.
-
-  Use this to reflect the true column dimension of the physical field.
-
-  Together with `n_rows`, it determines field capacity and stream
-  structure.
+  Positive integer. Number of field columns.
 
 - order:
 
-  Character specifying the global traversal order.
-
-  Allowed values:
-
-  - `"column"`: column-major traversal,
-
-  - `"row"`: row-major traversal.
-
-  This determines:
-
-  - the order of the global field stream,
-
-  - where replicate boundaries occur,
-
-  - where incomplete block boundaries occur,
-
-  - where trailing `NA` cells are placed.
-
-  Use `"row"` when operational movement follows rows. Use `"column"`
-  when operational movement follows columns.
-
-  This argument interacts directly with `serpentine`.
+  Character. Stream traversal direction: `"row"` fills row by row;
+  `"column"` fills column by column.
 
 - serpentine:
 
-  Logical indicating whether alternate rows or columns reverse direction
-  during stream generation.
-
-  If `TRUE`, traversal alternates direction:
-
-  - by row when `order = "row"`,
-
-  - by column when `order = "column"`.
-
-  Use this when field-book order should mimic serpentine movement in the
-  field.
-
-  This changes the stream order, which in turn changes replicate and
-  incomplete block boundaries.
-
-  Depends on:
-
-  - `order`
+  Logical. If `TRUE`, alternate rows (when `order = "row"`) or alternate
+  columns (when `order = "column"`) traverse in reverse direction.
 
 - seed:
 
-  Optional integer seed for reproducibility.
-
-  If `NULL`, a seed is generated internally and returned as `seed_used`.
-
-  Use this when the layout should be reproducible.
-
-  It affects:
-
-  - entry allocation,
-
-  - within-block arrangement,
-
-  - random check placement,
-
-  - optional dispersion optimization (unless a separate dispersion seed
-    is supplied).
+  Optional integer. If `NULL`, a seed is drawn from
+  `1:.Machine$integer.max` and returned as `seed_used`. Controls all
+  randomised steps including entry randomisation, within-block
+  shuffling, check placement, and dispersion optimisation.
 
 - attempts:
 
-  Integer giving the number of swap proposals used when improving entry
-  allocation across blocks within each replicate.
-
-  Larger values increase search effort but do not change the design
-  algorithm itself.
-
-  Use larger values when:
-
-  - family structure is strongly imbalanced,
-
-  - the user wants better separation of similar materials,
-
-  - the number of entries per replicate is large.
+  Positive integer. Number of within-block shuffling attempts to
+  minimise adjacent same-group pairs. Exits early when score reaches
+  zero.
 
 - warn_and_correct:
 
-  Logical retained for interface continuity.
-
-  In this function, the field dimensions are fixed and are **not**
-  altered.
-
-  This argument is included so the interface stays similar to related
-  design functions, but it does not drive field resizing here.
+  Logical. Retained for interface compatibility. Field capacity
+  violations always raise an error.
 
 - fix_rows:
 
-  Logical retained for interface continuity.
-
-  In this function, the field dimensions are fixed and are **not**
-  altered.
-
-  Included mainly for consistency with related interfaces.
+  Logical. Retained for interface compatibility. Field geometry is
+  always fixed.
 
 - cluster_source:
 
-  Character specifying the grouping source used during allocation and
-  arrangement.
-
-  Allowed values:
-
-  - `"Family"`
-
-  - `"GRM"`
-
-  - `"A"`
-
-  Use `"Family"` when user-supplied family labels are adequate and
-  interpretable.
-
-  Use `"GRM"` when genomic structure should define similarity more
-  precisely.
-
-  Use `"A"` when pedigree relationships are available and should define
-  grouping.
-
-  This argument determines whether `GRM`, `A`, `id_map`,
-  `cluster_method`, `cluster_seed`, `cluster_attempts`, and `n_pcs_use`
-  become active.
+  Character. Grouping source for adjacency scoring. `"Family"` uses
+  `entry_families` directly. `"GRM"` and `"A"` derive clusters from PCA
+  of the respective relationship matrix.
 
 - GRM:
 
-  Optional genomic relationship matrix.
-
-  Required when:
-
-  - `cluster_source = "GRM"`, or
-
-  - `use_dispersion = TRUE` and `dispersion_source = "GRM"`.
-
-  Ignored otherwise.
-
-  Use this when genomic relatedness should influence grouping or
-  dispersion.
-
-  Matrix row and column names must match entry IDs, or be reachable
-  through `id_map`.
+  Optional square numeric matrix with rownames and colnames equal to
+  line IDs. Required when `cluster_source = "GRM"` or when
+  `use_dispersion = TRUE` and `dispersion_source = "GRM"`.
 
 - A:
 
-  Optional pedigree relationship matrix.
-
-  Required when:
-
-  - `cluster_source = "A"`, or
-
-  - `use_dispersion = TRUE` and `dispersion_source = "A"`.
-
-  Ignored otherwise.
-
-  Use this when pedigree relatedness should influence grouping or
-  dispersion.
+  Optional square numeric matrix. Required when `cluster_source = "A"`
+  or `dispersion_source = "A"`.
 
 - id_map:
 
-  Optional `data.frame` with columns `Treatment` and `LineID`.
-
-  Used only when `cluster_source %in% c("GRM", "A")` and treatment IDs
-  do not already match matrix row/column names.
-
-  Use this when field-book treatment labels are different from matrix
-  IDs.
-
-  Example: treatment labels may be breeder-friendly names while `GRM` or
-  `A` uses internal IDs.
+  Optional data frame with columns `Treatment` and `LineID`. Required
+  when treatment labels do not match relationship matrix rownames.
 
 - cluster_method:
 
-  Character specifying the clustering method applied after PCA in
-  matrix-based grouping.
-
-  Allowed values:
-
-  - `"kmeans"`
-
-  - `"hclust"`
-
-  Use `"kmeans"` when reproducible compact clustering is preferred.
-
-  Use `"hclust"` when a hierarchical approach is preferred.
-
-  Active only when `cluster_source %in% c("GRM", "A")`.
+  Character. Clustering algorithm: `"kmeans"` uses
+  [`stats::kmeans()`](https://rdrr.io/r/stats/kmeans.html) with
+  `cluster_attempts` random starts; `"hclust"` uses Ward's D2 linkage.
 
 - cluster_seed:
 
-  Integer seed for k-means initialization.
-
-  Active only when:
-
-  - `cluster_source %in% c("GRM", "A")`, and
-
-  - `cluster_method = "kmeans"`.
-
-  Use this to make matrix-based grouping reproducible.
+  Integer. Seed for k-means initialisation, run in an isolated RNG
+  scope.
 
 - cluster_attempts:
 
-  Integer number of random starts for k-means clustering.
-
-  Active only when:
-
-  - `cluster_source %in% c("GRM", "A")`, and
-
-  - `cluster_method = "kmeans"`.
-
-  Use larger values when clustering stability is important.
+  Positive integer. Number of k-means random restarts. Ignored when
+  `cluster_method = "hclust"`.
 
 - n_pcs_use:
 
-  Integer or `Inf` giving the number of principal components used for
-  matrix-based clustering.
+  Positive number or `Inf`. Number of leading PCs for matrix-based
+  clustering. Actual number used is
+  `min(n_pcs_use, n_positive_eigenvalues - 1)`.
 
-  Ignored when `cluster_source = "Family"`.
+- n_blocks_per_rep:
 
-  Use smaller values when only broad structure should drive grouping.
-  Use `Inf` when the function should use as many informative components
-  as possible.
+  Optional positive integer. If supplied, the exact number of incomplete
+  blocks per replicate. Validated against the feasible range derived
+  from `min_block_size`, `max_block_size`, and field capacity. If
+  `NULL`, the block count is set automatically to \\b\_\text{max}\\.
 
-- min_entry_slots_per_block:
+- min_block_size:
 
-  Integer giving the minimum number of entry slots allowed in any
-  incomplete block.
+  Optional positive integer \\\geq c\\. Minimum **total** block size
+  (checks + entries). Sets an upper bound on \\b\\.
 
-  This argument constrains the automatically chosen number of blocks per
-  replicate.
+- max_block_size:
 
-  Use smaller values when more blocks per replicate are acceptable. Use
-  larger values when blocks should not become too small once checks are
-  inserted.
-
-  This is particularly important when checks are numerous, because
-  repeated checks consume capacity in every incomplete block.
-
-- max_blocks_per_rep:
-
-  Optional integer giving an upper bound on the number of incomplete
-  blocks per replicate.
-
-  If `NULL`, the number of blocks per replicate is derived from capacity
-  constraints.
-
-  Use this when the user wants to prevent the design from creating too
-  many incomplete blocks, even if more could fit mathematically.
-
-  Useful when operational simplicity or analysis preference favors fewer
-  blocks.
-
-- eval_efficiency:
-
-  Logical indicating whether efficiency diagnostics should be computed.
-
-  Use `TRUE` when the user wants to compare design quality under a mixed
-  model.
-
-  Use `FALSE` when only the layout itself is needed.
-
-  If `FALSE`, all efficiency-related arguments are ignored.
-
-- treatment_effect:
-
-  Character indicating how entries are treated in efficiency evaluation.
-
-  Allowed values:
-
-  - `"random"`
-
-  - `"fixed"`
-
-  Active only when `eval_efficiency = TRUE`.
-
-  Use `"fixed"` when interest lies in contrast precision among entry
-  means.
-
-  Use `"random"` when interest lies in BLUP-style prediction quality.
-
-- prediction_type:
-
-  Character controlling the random-effect efficiency model.
-
-  Allowed values:
-
-  - `"none"`
-
-  - `"IID"`
-
-  - `"GBLUP"`
-
-  - `"PBLUP"`
-
-  Active only when:
-
-  - `eval_efficiency = TRUE`, and
-
-  - `treatment_effect = "random"`.
-
-  Use `"none"` to skip random-effect efficiency.
-
-  Use `"IID"` when entry random effects are assumed independent.
-
-  Use `"GBLUP"` or `"PBLUP"` when prediction should use a relationship
-  matrix `K`.
-
-- K:
-
-  Optional relationship matrix used in two contexts:
-
-  1.  random-effect efficiency when:
-
-      - `eval_efficiency = TRUE`,
-
-      - `treatment_effect = "random"`,
-
-      - `prediction_type %in% c("GBLUP", "PBLUP")`;
-
-  2.  dispersion optimization when:
-
-      - `use_dispersion = TRUE`,
-
-      - `dispersion_source = "K"`.
-
-  Ignored otherwise.
-
-  Use this when prediction or dispersion should be based on an explicit
-  relationship matrix.
-
-- line_id_map:
-
-  Optional `data.frame` with columns `Treatment` and `LineID`.
-
-  Used only when `K` is active and treatment labels differ from
-  `rownames(K)`.
-
-  This serves the same role for `K` that `id_map` serves for `GRM` or
-  `A`.
-
-- varcomp:
-
-  Named list of variance components used only in efficiency evaluation.
-
-  Must contain:
-
-  - `sigma_e2`
-
-  - `sigma_g2`
-
-  - `sigma_rep2`
-
-  - `sigma_ib2`
-
-  - `sigma_r2`
-
-  - `sigma_c2`
-
-  Use realistic values when efficiency should reflect a plausible trial
-  model.
-
-  Example: use larger `sigma_ib2` when incomplete blocks are expected to
-  differ strongly.
-
-- check_as_fixed:
-
-  Logical indicating whether checks are included as fixed indicators
-  during efficiency evaluation.
-
-  Active only when `eval_efficiency = TRUE`.
-
-  Use `TRUE` when checks should be explicitly modeled as benchmark fixed
-  effects.
-
-- residual_structure:
-
-  Character specifying the residual correlation model.
-
-  Allowed values:
-
-  - `"IID"`
-
-  - `"AR1"`
-
-  - `"AR1xAR1"`
-
-  Active only when `eval_efficiency = TRUE`.
-
-  Use `"IID"` when no spatial residual correlation is assumed.
-
-  Use `"AR1"` when row-wise spatial correlation is expected.
-
-  Use `"AR1xAR1"` when both row and column spatial correlation are
-  expected.
-
-- rho_row:
-
-  Numeric AR1 row parameter.
-
-  Active only when:
-
-  - `eval_efficiency = TRUE`, and
-
-  - `residual_structure %in% c("AR1", "AR1xAR1")`.
-
-  Use values near 0 for weak row correlation and larger absolute values
-  for stronger correlation.
-
-- rho_col:
-
-  Numeric AR1 column parameter.
-
-  Active only when:
-
-  - `eval_efficiency = TRUE`, and
-
-  - `residual_structure = "AR1xAR1"`.
-
-  Use this when column-wise correlation is expected in addition to
-  row-wise correlation.
-
-- spatial_engine:
-
-  Character retained for interface compatibility.
-
-  Allowed values:
-
-  - `"auto"`
-
-  - `"sparse"`
-
-  - `"dense"`
-
-  In this function the efficiency code primarily uses sparse Matrix
-  operations, but the argument is retained so the interface remains
-  aligned with related functions.
-
-- dense_max_n:
-
-  Integer retained for interface compatibility.
-
-  This argument is included for consistency with related functions.
-
-- eff_trace_samples:
-
-  Integer number of Hutchinson trace samples used when approximate
-  efficiency is needed because the target treatment dimension exceeds
-  `eff_full_max`.
-
-  Larger values improve approximation stability but increase runtime.
-
-- eff_full_max:
-
-  Integer maximum target dimension for exact efficiency extraction.
-
-  Above this threshold, the function switches to an approximate
-  trace-based method.
-
-  Use larger values for more exact computation when memory and runtime
-  allow.
+  Optional positive integer \\\geq c\\. Maximum **total** block size
+  (checks + entries). Sets a lower bound on \\b\\.
 
 - check_placement:
 
-  Character specifying how check positions are chosen within blocks.
-
-  Allowed values:
-
-  - `"systematic"`
-
-  - `"random"`
-
-  Use `"systematic"` when checks should be approximately evenly spread
-  in each block.
-
-  Use `"random"` when check positions may vary freely.
+  Character. Check position rule within blocks. `"systematic"`
+  distributes checks evenly; `"random"` draws positions uniformly
+  without replacement.
 
 - check_position_pattern:
 
-  Argument retained for interface compatibility.
-
-  It is not used by the current stream-based placement logic.
+  Character. Retained for interface compatibility.
 
 - use_dispersion:
 
-  Logical; if `TRUE`, apply post-hoc dispersion optimization among
-  non-check treatments.
-
-  Use this when genetically or pedigree-similar entries should be less
-  clustered within replicates.
-
-  If `FALSE`, all dispersion-related arguments are ignored.
+  Logical. If `TRUE`, apply a post-layout swap-based local dispersion
+  optimisation to reduce pairwise relatedness among neighbouring
+  non-check plots.
 
 - dispersion_source:
 
-  Character selecting which matrix is used for dispersion scoring.
-
-  Allowed values:
-
-  - `"K"`
-
-  - `"A"`
-
-  - `"GRM"`
-
-  Active only when `use_dispersion = TRUE`.
-
-  Use `"K"` when a dedicated relationship matrix is preferred. Use `"A"`
-  for pedigree-based dispersion. Use `"GRM"` for genomic-based
-  dispersion.
+  Character. Matrix used for dispersion scoring: `"K"`, `"A"`, or
+  `"GRM"`. The corresponding argument must be non-`NULL`.
 
 - dispersion_radius:
 
-  Integer neighborhood radius for dispersion scoring.
-
-  Two plots are considered neighbors when:
-
-  `max(|dr|, |dc|) <= dispersion_radius`
-
-  Use `1` for immediate neighbors only. Use larger values when broader
-  local dispersion matters.
+  Positive integer. Chebyshev distance radius defining the neighbourhood
+  for dispersion scoring.
 
 - dispersion_iters:
 
-  Integer number of swap proposals used in the dispersion search.
-
-  Larger values increase optimization effort and runtime.
+  Non-negative integer. Number of random swap proposals for dispersion
+  optimisation.
 
 - dispersion_seed:
 
-  Optional integer seed used in dispersion search.
+  Integer. Seed for the dispersion step, run in an isolated RNG scope.
+  Defaults to `seed_used` when `NULL`.
 
-  Use this when dispersion optimization should be reproducible
-  independently of the initial design seed.
+- K:
 
-  If left at its default, the function uses the supplied value in the
-  interface.
+  Optional square numeric matrix. Used for dispersion scoring when
+  `dispersion_source = "K"`.
+
+- line_id_map:
+
+  Optional data frame with columns `Treatment` and `LineID`. Required
+  when treatment labels do not match `rownames(K)` or the dispersion
+  matrix.
 
 - verbose:
 
-  Logical; if `TRUE`, print the derived replicate and block structure.
-
-  Use this for diagnostics, debugging, or understanding how the function
-  chose replicate sizes and incomplete block sizes.
+  Logical. If `TRUE`, prints a one-line summary of field usage, trailing
+  `NA` plots, replicate sizes, block count and origin, block sizes in
+  replicate 1, and active block-size bounds.
 
 ## Value
 
-A list with:
+A named list with four components:
 
-- layout_matrix:
+- `layout_matrix`:
 
-  A character matrix of size `n_rows × n_cols`. Unused cells are `NA`.
+  Character matrix of dimension `n_rows x n_cols`. Used cells contain
+  treatment IDs; unused trailing cells are `NA`.
 
-- field_book:
+- `field_book`:
 
-  A plot-level data frame with one row per field cell, including unused
-  cells.
+  Data frame with one row per field plot. Columns: `Plot` (stream
+  position), `Row`, `Column`, `Rep` (`NA` for unused), `IBlock` (global
+  block index), `BlockInRep` (block index within rep), `Treatment` (`NA`
+  for unused), `Family`, `Gcluster` (`NA` when
+  `cluster_source = "Family"` or for check plots), `Check` (logical).
 
-- efficiency:
+- `design_info`:
 
-  `NULL` or a list of efficiency summaries computed from non-`NA` plots.
+  Named list: `n_rows`, `n_cols`, `total_plots`, `n_reps`, `n_checks`,
+  `n_entries`, `n_blocks_per_rep` (resolved), `n_blocks_per_rep_user`,
+  `min_block_size`, `max_block_size`, `min_entry_slots_per_block`,
+  `max_entry_slots_per_block`, `rep_sizes`, `total_used_plots`,
+  `trailing_na_plots`, `block_plan`, `block_meta`, `order`,
+  `serpentine`.
 
-- seed_used:
+- `seed_used`:
 
-  The actual random seed used internally.
-
-- design_info:
-
-  A list summarizing replicate sizes, incomplete block sizes, used and
-  unused cells, and key settings.
+  Integer. The random seed used.
 
 ## Details
 
-Construct a fixed-field row-column design in which the full
-`n_rows × n_cols` grid is first converted into a single ordered stream
-of positions, then split into contiguous replicate segments, then
-subdivided into incomplete blocks of possibly unequal size. Within each
-replicate, every entry appears exactly once, every incomplete block
-contains all checks, and any unused field cells are left as trailing
-`NA` positions at the end of the global stream.
+### Design structure
 
 Let:
 
-- `E` = number of entries,
+- \\r\\ = number of replicates (`n_reps`)
 
-- `C` = number of checks,
+- \\c\\ = number of checks (`length(check_treatments)`)
 
-- `R` = number of replicates,
+- \\v\\ = number of entries (`length(entry_treatments)`)
 
-- `b` = number of incomplete blocks per replicate.
+- \\b\\ = number of incomplete blocks per replicate
 
-Then the number of **used plots per replicate** is:
+Each replicate contains all \\v\\ entries exactly once and all \\c\\
+checks repeated once in each of the \\b\\ incomplete blocks. Entries are
+split across blocks as evenly as possible - block entry counts differ by
+at most one. The number of used plots per replicate is:
 
-`E + b * C`
+\$\$\text{plots per rep} = v + b \times c\$\$
 
-and the **total number of used plots** is:
+The total used plots in the design is:
 
-`R * (E + b * C)`
+\$\$\text{total used} = r \times (v + b \times c)\$\$
 
-This total must fit within the fixed field capacity:
+If the fixed field contains more cells than this total, unused trailing
+cells remain `NA`. The function stops if the required plots exceed field
+capacity.
 
-`n_rows * n_cols`
+### Block-size parameterisation
 
-The function chooses a block plan that respects:
+Block-size constraints are expressed in terms of **total block size**
+(checks + entries) because in a repeated-check design the whole block is
+the operational unit. The mapping is:
 
-- the number of entries,
+\$\$\text{min\\entry\\slots} = \text{min\\block\\size} - c\$\$
+\$\$\text{max\\entry\\slots} = \text{max\\block\\size} - c\$\$
 
-- the number of checks,
+For example, with \\c = 3\\ checks, `min_block_size = 19` and
+`max_block_size = 20` means each block holds between 16 and 17 entries
+plus 3 check positions. Both bounds must be \\\geq c\\.
 
-- the minimum entry capacity per block,
+### Block-count determination
 
-- any user-supplied cap on blocks per replicate,
+After translating total-block-size limits into entry-slot limits, the
+number of incomplete blocks per replicate \\b\\ must satisfy a feasible
+range \\\[b\_\text{min},\\ b\_\text{max}\]\\:
 
-- the total fixed field capacity.
+- Lower bound from `max_block_size`:
 
-In efficiency evaluation, the function uses only the observed non-`NA`
-plots. Depending on `treatment_effect`, the returned metrics represent
-either:
+  \\b \geq \lceil v / (\text{max\\block\\size} - c)\rceil\\
 
-- precision of fixed treatment contrasts, or
+- Upper bound from `min_block_size`:
 
-- average prediction error variance of random treatment effects.
+  \\b \leq \lfloor v / (\text{min\\block\\size} - c)\rfloor\\
 
-The arguments `warn_and_correct`, `fix_rows`, `spatial_engine`,
-`dense_max_n`, and `check_position_pattern` are retained for interface
-continuity, even where they do not materially alter the stream-based
-design logic.
+- Upper bound from field capacity:
 
-## Conceptual design
+  \\b \leq \lfloor (\text{total\\plots}/r - v) / c \rfloor\\
 
-The key feature of this function is that it is **stream-based** rather
-than **rectangle-based**.
+The function stops with an informative error if \\b\_\text{min} \>
+b\_\text{max}\\. At least one of `n_blocks_per_rep`, `min_block_size`,
+or `max_block_size` must be supplied.
 
-Instead of cutting the field into rectangular replicate areas, the
-function:
+**User-fixed mode** (`n_blocks_per_rep` supplied): the value is
+validated against the feasible range and all block-size constraints.
 
-- lists all grid cells in a single global order,
+**Automatic mode** (`n_blocks_per_rep = NULL`): \\b\\ is set to
+\\b\_\text{max}\\ - the largest feasible number of blocks, producing the
+smallest feasible blocks, which generally gives the best local control.
 
-- cuts that order into `n_reps` contiguous replicate segments,
+### Field stream construction
 
-- then cuts each replicate segment into incomplete blocks.
+The field is mapped to a one-dimensional stream by iterating over rows
+(`order = "row"`) or columns (`order = "column"`). When
+`serpentine = TRUE`, alternate rows or columns reverse direction,
+producing a boustrophedon planting path. Replicate segments occupy
+contiguous portions of the stream and incomplete blocks occupy
+contiguous sub-segments within each replicate.
 
-This is useful when:
+### Within-block arrangement
 
-- planting follows a continuous field-book order,
+Entries are randomised independently within each replicate, then split
+across blocks. Checks are inserted at positions determined by
+`check_placement`:
 
-- operational field movement is row-wise or column-wise,
+- `"systematic"`: positions computed as
+  `round(seq(1, block_size, length.out = n_checks + 2))[2:(n_checks + 1)]`,
+  distributing checks as evenly as possible.
 
-- replicate boundaries are administrative or logistical rather than
-  geometric,
+- `"random"`: positions drawn uniformly without replacement.
 
-- the user wants all unused cells to appear only at the tail of the
-  field stream.
+Within-block order is optimised over `attempts` random shuffles to
+minimise the count of adjacent same-group treatment pairs. The search
+exits early when the adjacency score reaches zero.
 
-For each replicate:
+### Grouping and adjacency scoring
 
-- each entry is used exactly once,
+The grouping label used for adjacency scoring is determined by
+`cluster_source`:
 
-- each incomplete block receives every check,
+- `"Family"`: uses `entry_families` and `check_families` directly.
+  `Gcluster` is `NA` for all plots.
 
-- the remaining block capacity is filled with entries,
-
-- allocation is then improved heuristically to reduce local grouping
-  conflicts.
-
-## What this function is most useful for
-
-This function is particularly useful when:
-
-- the field geometry is fixed and should never be auto-resized,
-
-- the design requires repeated checks in every incomplete block,
-
-- the user wants a row-column design without forcing rectangular
-  replicate areas,
-
-- practical planting or harvesting follows a stream order,
-
-- family, pedigree, or genomic structure should influence entry
-  placement,
-
-- the user wants to evaluate the resulting design using a mixed-model
-  framework.
-
-## Dependency guide
-
-Many arguments are active only under particular modes.
-
-**Grouping source**
-
-- If `cluster_source = "Family"`:
-
-  - grouping comes directly from `check_families` and `entry_families`,
-
-  - `GRM`, `A`, `id_map`, `cluster_method`, `cluster_seed`,
-    `cluster_attempts`, and `n_pcs_use` are ignored.
-
-- If `cluster_source = "GRM"`:
-
-  - `GRM` is required,
-
-  - `id_map` is only needed if entry names differ from `rownames(GRM)`,
-
-  - grouping labels are derived by PCA followed by clustering.
-
-- If `cluster_source = "A"`:
-
-  - `A` is required,
-
-  - `id_map` is only needed if entry names differ from `rownames(A)`,
-
-  - grouping labels are derived by PCA followed by clustering.
-
-**Derived block structure**
-
-- `min_entry_slots_per_block` controls the minimum number of non-check
-  entry slots permitted in an incomplete block.
-
-- `max_blocks_per_rep` optionally limits the number of blocks per
-  replicate.
-
-- If `max_blocks_per_rep = NULL`, block count is derived from capacity
-  and `min_entry_slots_per_block`.
-
-**Efficiency evaluation**
-
-- If `eval_efficiency = FALSE`, all efficiency arguments are ignored.
-
-- If `eval_efficiency = TRUE` and `treatment_effect = "fixed"`:
-
-  - fixed-treatment contrast precision is computed,
-
-  - `prediction_type`, `K`, and `line_id_map` are ignored.
-
-- If `eval_efficiency = TRUE` and `treatment_effect = "random"`:
-
-  - `prediction_type` becomes active.
-
-- If `prediction_type = "none"`:
-
-  - random-effect efficiency is skipped.
-
-- If `prediction_type = "IID"`:
-
-  - entry random effects are treated as independent,
-
-  - `K` and `line_id_map` are ignored.
-
-- If `prediction_type %in% c("GBLUP", "PBLUP")`:
-
-  - `K` is required,
-
-  - `line_id_map` may be required if treatment IDs differ from
-    `rownames(K)`.
-
-**Residual structure**
-
-- If `residual_structure = "IID"`:
-
-  - `rho_row` and `rho_col` are ignored.
-
-- If `residual_structure = "AR1"`:
-
-  - only `rho_row` is used.
-
-- If `residual_structure = "AR1xAR1"`:
-
-  - both `rho_row` and `rho_col` are used.
-
-**Dispersion optimization**
-
-- If `use_dispersion = FALSE`, all dispersion arguments are ignored.
-
-- If `use_dispersion = TRUE`, `dispersion_source` selects which matrix
-  is used.
-
-- If `dispersion_source = "K"`:
-
-  - `K` is required,
-
-  - `line_id_map` may be needed if treatment IDs differ from matrix row
-    names.
-
-- If `dispersion_source = "A"`:
-
-  - `A` is required.
-
-- If `dispersion_source = "GRM"`:
-
-  - `GRM` is required.
-
-**Check placement**
-
-- `check_placement = "systematic"` spreads checks approximately evenly
-  within each block stream.
-
-- `check_placement = "random"` randomizes check positions.
-
-- `check_position_pattern` is retained for interface continuity but is
-  not used by the current stream-based placement logic.
+- `"GRM"` or `"A"`: derives clusters from the leading principal
+  components of the relationship matrix. The number of clusters equals
+  `length(unique(entry_families))`. Cluster labels are prefixed `"G"`
+  (GRM) or `"A"` (A matrix). Check treatments always use
+  `check_families` and always have `Gcluster = NA`.
+
+### Dispersion optimisation
+
+When `use_dispersion = TRUE`, a local swap search is applied after
+layout construction. At each of `dispersion_iters` iterations, two
+non-check plots are selected at random; the swap is accepted if it
+reduces the total neighbourhood relatedness score - the sum of
+relationship matrix values between all non-check neighbour pairs within
+Chebyshev distance `dispersion_radius`. The matrix used is selected by
+`dispersion_source`.
+
+## See also
+
+[`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md)
+to compute A, D, and CDmean optimality criteria on the returned
+`field_book`.
+[`optimize_alpha_rc()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_alpha_rc.md)
+to search for a criterion-optimal design using Random Restart, Simulated
+Annealing, or a Genetic Algorithm.
 
 ## Examples
 
 ``` r
-data("OptiDesign_example_data", package = "OptiDesign")
-x <- OptiDesign_example_data
-
-## Family-based row-column stream design
-out_alpha_family <- do.call(
-  alpha_rc_stream,
-  c(
-    x$OptiDesign_alpha_example,
-    x$OptiDesign_alpha_args_family
-  )
+## Basic construction: 167 entries, 3 checks, 3 reps
+design <- alpha_rc_stream(
+  check_treatments = c("CHK1", "CHK2", "CHK3"),
+  check_families   = c("CHECK", "CHECK", "CHECK"),
+  entry_treatments = paste0("G", 1:167),
+  entry_families   = rep(paste0("F", 1:7), length.out = 167),
+  n_reps           = 3,
+  n_rows           = 30,
+  n_cols           = 20,
+  min_block_size   = 19,
+  max_block_size   = 20
 )
+#> Fixed field = 30 x 20; used plots = 591; trailing NA plots = 9; replicate used sizes = {197, 197, 197}; blocks/rep = 10 (derived); block sizes in rep 1 = {20, 20, 20, 20, 20, 20, 20, 19, 19, 19}; min block size = 19; max block size = 20
 
-dim(out_alpha_family$layout_matrix)
-#> [1] 12 14
-head(out_alpha_family$field_book)
-#>   Treatment Family Gcluster Check PlotStream Rep IBlock BlockInRep Row Column
-#> 1      L140    F24     <NA> FALSE          1   1      1          1   1      1
-#> 2      L103    F14     <NA>  TRUE          2   1      1          1   1      2
-#> 3      L102    F17     <NA>  TRUE          3   1      1          1   1      3
-#> 4      L117    F06     <NA> FALSE          4   1      1          1   1      4
-#> 5      L101    F14     <NA>  TRUE          5   1      1          1   1      5
-#> 6      L133    F22     <NA> FALSE          6   1      1          1   1      6
-out_alpha_family$design_info$n_blocks_per_rep
-#> [1] 6
+dim(design$layout_matrix)             # 30 x 20
+#> [1] 30 20
+head(design$field_book)
+#>   Plot Row Column Rep IBlock BlockInRep Treatment Family Gcluster Check
+#> 1    1   1      1   1      1          1       G98     F7     <NA> FALSE
+#> 2    2   2      1   1      1          1       G90     F6     <NA> FALSE
+#> 3    3   3      1   1      1          1       G43     F1     <NA> FALSE
+#> 4    4   4      1   1      1          1       G93     F2     <NA> FALSE
+#> 5    5   5      1   1      1          1       G27     F6     <NA> FALSE
+#> 6    6   6      1   1      1          1      CHK1  CHECK     <NA>  TRUE
+design$design_info$n_blocks_per_rep
+#> [1] 10
+design$design_info$trailing_na_plots
+#> [1] 9
 
-if (FALSE) { # \dontrun{
-## GRM-based row-column stream design with dispersion
-out_alpha_grm <- do.call(
-  alpha_rc_stream,
-  c(
-    x$OptiDesign_alpha_example,
-    x$OptiDesign_alpha_args_grm
-  )
+## Evaluate separately
+eff <- evaluate_alpha_efficiency(
+  field_book         = design$field_book,
+  n_rows             = 30,
+  n_cols             = 20,
+  check_treatments   = c("CHK1", "CHK2", "CHK3"),
+  treatment_effect   = "fixed",
+  residual_structure = "AR1xAR1",
+  rho_row = 0.10, rho_col = 0.10
 )
-
-dim(out_alpha_grm$layout_matrix)
-head(out_alpha_grm$field_book)
-out_alpha_grm$efficiency
-} # }
+eff$A_criterion
+#> [1] 0.7471747
+eff$D_criterion
+#> [1] 0.3534045
 ```

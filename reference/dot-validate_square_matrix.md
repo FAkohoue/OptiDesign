@@ -1,6 +1,10 @@
-# Validate a square matrix
+# Internal square matrix validator
 
-Validate a square matrix
+Checks that an object is a base R matrix with the expected square
+dimensions. Stops with an informative error if either condition is not
+met. Used internally to validate relationship matrices (`GRM`, `A`, `K`)
+before they are used for clustering, dispersion optimisation, or
+efficiency evaluation.
 
 ## Usage
 
@@ -12,12 +16,18 @@ Validate a square matrix
 
 - M:
 
-  Matrix.
+  Object to validate. Must be a base R `matrix`.
 
 - p:
 
-  Expected dimension.
+  Expected dimension. The matrix must have `nrow(M) == p` and
+  `ncol(M) == p`.
 
 - nm:
 
-  Object name for messages.
+  Character scalar. Object name used in error messages to identify which
+  argument failed validation. Default `"matrix"`.
+
+## Value
+
+Invisibly returns `TRUE` if validation passes.

@@ -2,5 +2,5 @@
 
 ### Getting started
 
-- [OptiDesign: Advanced Experimental Design for Breeding
-  Trials](https://FAkohoue.github.io/OptiDesign/articles/OptiDesign-introduction.md):
+- [OptiDesign: Optimized Experimental Field Design for Plant
+  Breeding](https://FAkohoue.github.io/OptiDesign/articles/OptiDesign-introduction.md):

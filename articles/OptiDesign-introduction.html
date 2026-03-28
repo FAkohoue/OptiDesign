@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>OptiDesign: Advanced Experimental Design for Breeding Trials • OptiDesign</title>
+<title>OptiDesign: Optimized Experimental Field Design for Plant Breeding • OptiDesign</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -17,7 +17,7 @@
 <link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="OptiDesign: Advanced Experimental Design for Breeding Trials">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="OptiDesign: Optimized Experimental Field Design for Plant Breeding">
 </head>
 <body>
 <p>
@@ -68,7 +68,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.svg" class="logo" alt=""><h1>OptiDesign: Advanced Experimental Design for Breeding Trials</h1>
+      <img src="../logo.svg" class="logo" alt=""><h1>OptiDesign: Optimized Experimental Field Design for Plant Breeding</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/FAkohoue/OptiDesign/blob/main/vignettes/OptiDesign-introduction.Rmd" class="external-link"><code>vignettes/OptiDesign-introduction.Rmd</code></a></small>
@@ -77,182 +77,451 @@
 
     
     
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/FAkohoue/OptiDesign" class="external-link">OptiDesign</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>Experimental design is a fundamental component of plant breeding and
+<p>Experimental design is a foundational component of plant breeding and
 agronomic research. The ability to accurately estimate genetic effects,
-compare treatments, and predict field performance depends critically on
-how trials are constructed.</p>
-<p>Traditional designs such as randomized complete block designs (RCBD)
-and alpha-lattice designs typically assume regular block structures,
-balanced replication, and independence between spatial and genetic
-effects. Modern breeding programs face increasingly complex constraints
-that these classical frameworks do not address well: large numbers of
-genotypes, limited field capacity, heterogeneous environments, and the
-availability of genomic and pedigree information.</p>
-<p><code>OptiDesign</code> addresses these challenges by integrating
-flexible field layout construction, genetic structure (family, pedigree,
-genomic), spatial-aware arrangement, and optional mixed-model efficiency
-evaluation into a unified design framework.</p>
+compare treatments, and predict breeding values depends critically on
+how field trials are constructed.</p>
+<p>Classical designs — randomised complete block designs (RCBD),
+alpha-lattice designs, and augmented designs — provide well-understood
+statistical properties but make assumptions that modern breeding
+programs increasingly cannot meet: regular block structures, balanced
+replication across all entries, and no prior knowledge of genetic
+relationships. Contemporary trials involve large numbers of candidates,
+limited field capacity, spatial heterogeneity, and rich genomic
+information that classical frameworks treat as external to the design
+process.</p>
+<p><code>OptiDesign</code> addresses these challenges through a unified
+framework that integrates:</p>
+<ul>
+<li>flexible field layout construction for two design families</li>
+<li>genetic structure from family labels, pedigree matrices, or genomic
+relationship matrices</li>
+<li>optional spatial dispersion optimisation to reduce clustering of
+related entries</li>
+<li>mixed-model efficiency evaluation under A, D, and CDmean optimality
+criteria</li>
+<li>
+<strong>criterion-driven design search</strong> that returns the
+statistically best design across many randomisations</li>
+</ul>
+<p>The package follows a <strong>single-responsibility
+architecture</strong>: construction, evaluation, and optimisation are
+separated into distinct functions that can be called independently or
+chained, making each step transparent and reproducible.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="conceptual-framework">Conceptual Framework<a class="anchor" aria-label="anchor" href="#conceptual-framework"></a>
+<h2 id="package-architecture">Package Architecture<a class="anchor" aria-label="anchor" href="#package-architecture"></a>
+</h2>
+<p><code>OptiDesign</code> provides six exported functions organised
+into two design families:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Function</th>
+<th>Role</th>
+<th>Design family</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code></td>
+<td>Construction</td>
+<td>Repeated-check block</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency()</a></code></td>
+<td>Evaluation</td>
+<td>Repeated-check block</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/optimize_famoptg.html">optimize_famoptg()</a></code></td>
+<td>Optimisation (RS)</td>
+<td>Repeated-check block</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code></td>
+<td>Construction</td>
+<td>Alpha row-column stream</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency()</a></code></td>
+<td>Evaluation</td>
+<td>Alpha row-column stream</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/optimize_alpha_rc.html">optimize_alpha_rc()</a></code></td>
+<td>Optimisation (RS / SA / GA)</td>
+<td>Alpha row-column stream</td>
+</tr>
+</tbody>
+</table>
+<p>The two families differ in their blocking structure, replication
+model, and the depth of their optimisation capabilities:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Feature</th>
+<th>
+<code>prep_famoptg</code> family</th>
+<th>
+<code>alpha_rc_stream</code> family</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Blocking</td>
+<td>Flat blocks</td>
+<td>Replicates → incomplete blocks</td>
+</tr>
+<tr class="even">
+<td>Replication</td>
+<td>Flexible per-entry</td>
+<td>Uniform across entries</td>
+</tr>
+<tr class="odd">
+<td>Design types</td>
+<td>Augmented, p-rep, RCBD-type</td>
+<td>Alpha-lattice</td>
+</tr>
+<tr class="even">
+<td>Block variance</td>
+<td><code>sigma_b2</code></td>
+<td>
+<code>sigma_rep2</code> + <code>sigma_ib2</code>
+</td>
+</tr>
+<tr class="odd">
+<td>Optimisation</td>
+<td>RS only</td>
+<td>RS, SA, GA</td>
+</tr>
+<tr class="even">
+<td>P-rep constraint</td>
+<td>Enforced by construction</td>
+<td>Not applicable</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="statistical-framework">Statistical Framework<a class="anchor" aria-label="anchor" href="#statistical-framework"></a>
 </h2>
 <div class="section level3">
 <h3 id="the-mixed-model">The mixed model<a class="anchor" aria-label="anchor" href="#the-mixed-model"></a>
 </h3>
-<p>Let
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
-be the vector of observed phenotypes,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>
-the genetic effects, and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>
-the residuals. The general mixed model underlying design evaluation
-is:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>X</mi><mi>β</mi><mo>+</mo><mi>Z</mi><mi>g</mi><mo>+</mo><mi>e</mi></mrow><annotation encoding="application/x-tex">y = X\beta + Zg + e</annotation></semantics></math></p>
-<p>where:</p>
+<p>Both design families are evaluated under the same general mixed
+model:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>X</mi><mi>β</mi><mo>+</mo><mi>Z</mi><mi>u</mi><mo>+</mo><mi>e</mi></mrow><annotation encoding="application/x-tex">y = X\beta + Zu + e</annotation></semantics></math></p>
 <table class="table">
+<colgroup>
+<col width="38%">
+<col width="61%">
+</colgroup>
 <thead><tr class="header">
 <th>Symbol</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math></td>
+<td>Vector of observed phenotypes</td>
+</tr>
+<tr class="even">
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math></td>
-<td>Design matrix for fixed effects</td>
+<td>Fixed effects design matrix</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math></td>
-<td>Vector of fixed effects (e.g., block, check)</td>
-</tr>
-<tr class="odd">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math></td>
-<td>Incidence matrix linking genotypes to plots</td>
+<td>Fixed effects (intercept, checks, entry effects when fixed)</td>
 </tr>
 <tr class="even">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math></td>
-<td>Genetic effects,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.167em"></mspace><msubsup><mi>σ</mi><mi>g</mi><mn>2</mn></msubsup><mi>K</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">g \sim N(0,\, \sigma_g^2 K)</annotation></semantics></math>
-</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math></td>
+<td>Incidence matrix linking random effects to plots</td>
 </tr>
 <tr class="odd">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math></td>
-<td>Genetic relationship matrix (GRM or A)</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math></td>
+<td>Random effects (blocks, rows, columns, entries when random)</td>
 </tr>
 <tr class="even">
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math></td>
-<td>Residuals,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.167em"></mspace><mi>R</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">e \sim N(0,\, R)</annotation></semantics></math>
+<td>Residual vector</td>
+</tr>
+</tbody>
+</table>
+<p>Random effects:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.167em"></mspace><mi>G</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">u \sim N(0,\, G)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.167em"></mspace><mi>R</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">e \sim N(0,\, R)</annotation></semantics></math>.</p>
+<p>For the <strong>repeated-check block</strong> family:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>G</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mtext mathvariant="normal">blockdiag</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>σ</mi><mi>b</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>r</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>c</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>g</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><msup><mi>K</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">G^{-1} = \text{blockdiag}(\sigma_b^{-2}I,\; \sigma_r^{-2}I,\; \sigma_c^{-2}I,\; \sigma_g^{-2}K^{-1})</annotation></semantics></math></p>
+<p>For the <strong>alpha row-column stream</strong> family:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>G</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mtext mathvariant="normal">blockdiag</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>σ</mi><mtext mathvariant="normal">rep</mtext><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mtext mathvariant="normal">ib</mtext><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>r</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>c</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>g</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><msup><mi>K</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">G^{-1} = \text{blockdiag}(\sigma_\text{rep}^{-2}I,\; \sigma_\text{ib}^{-2}I,\; \sigma_r^{-2}I,\; \sigma_c^{-2}I,\; \sigma_g^{-2}K^{-1})</annotation></semantics></math></p>
+</div>
+<div class="section level3">
+<h3 id="mixed-model-coefficient-matrix">Mixed model coefficient matrix<a class="anchor" aria-label="anchor" href="#mixed-model-coefficient-matrix"></a>
+</h3>
+<p>Efficiency criteria are derived from the mixed model coefficient
+matrix:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msup><mi>X</mi><mi>⊤</mi></msup><mi>Q</mi><mi>X</mi></mtd><mtd columnalign="center" style="text-align: center"><msup><mi>X</mi><mi>⊤</mi></msup><mi>Q</mi><mi>Z</mi></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msup><mi>Z</mi><mi>⊤</mi></msup><mi>Q</mi><mi>X</mi></mtd><mtd columnalign="center" style="text-align: center"><msup><mi>Z</mi><mi>⊤</mi></msup><mi>Q</mi><mi>Z</mi><mo>+</mo><msup><mi>G</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">C = \begin{pmatrix} X^\top Q X &amp; X^\top Q Z \\ Z^\top Q X &amp; Z^\top Q Z + G^{-1} \end{pmatrix}</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><msup><mi>R</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">Q = R^{-1}</annotation></semantics></math>
+is the residual precision matrix.</p>
+</div>
+<div class="section level3">
+<h3 id="residual-structures">Residual structures<a class="anchor" aria-label="anchor" href="#residual-structures"></a>
+</h3>
+<p>Three residual structures are supported. For an AR1 process of length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+with autocorrelation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>,
+the precision matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><annotation encoding="application/x-tex">Q_\text{AR1}</annotation></semantics></math>
+is tridiagonal with interior diagonal entries
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">(1+\rho^2)/(1-\rho^2)</annotation></semantics></math>,
+edge diagonal entries
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">1/(1-\rho^2)</annotation></semantics></math>,
+and off-diagonal entries
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mi>ρ</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">-\rho/(1-\rho^2)</annotation></semantics></math>.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Structure</th>
+<th>Formula</th>
+<th>Parameters</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>IID</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><msubsup><mi>σ</mi><mi>e</mi><mn>2</mn></msubsup><mi>I</mi></mrow><annotation encoding="application/x-tex">R = \sigma_e^2 I</annotation></semantics></math></td>
+<td><code>sigma_e2</code></td>
+</tr>
+<tr class="even">
+<td>AR1</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><msubsup><mi>σ</mi><mi>e</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ρ</mi><mi>r</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>⊗</mo><msub><mi>I</mi><mi>c</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">R^{-1} = \sigma_e^{-2}(Q_\text{AR1}(\rho_r) \otimes I_c)</annotation></semantics></math></td>
+<td><code>rho_row</code></td>
+</tr>
+<tr class="odd">
+<td>AR1×AR1</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><msubsup><mi>σ</mi><mi>e</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ρ</mi><mi>c</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>⊗</mo><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ρ</mi><mi>r</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">R^{-1} = \sigma_e^{-2}(Q_\text{AR1}(\rho_c) \otimes Q_\text{AR1}(\rho_r))</annotation></semantics></math></td>
+<td>
+<code>rho_row</code>, <code>rho_col</code>
 </td>
 </tr>
 </tbody>
 </table>
-<p>The design problem is to choose
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
-— through field layout construction — to optimise the precision of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>β</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\beta}</annotation></semantics></math>
-(BLUEs) and the prediction accuracy of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>g</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{g}</annotation></semantics></math>
-(BLUPs).</p>
 </div>
 <div class="section level3">
-<h3 id="field-as-a-spatial-process">Field as a spatial process<a class="anchor" aria-label="anchor" href="#field-as-a-spatial-process"></a>
+<h3 id="optimality-criteria">Optimality criteria<a class="anchor" aria-label="anchor" href="#optimality-criteria"></a>
 </h3>
-<p>Field plots are spatially structured. Residuals are rarely
-independent owing to row and column effects, soil gradients, and
-management variation. Three residual structures are supported:</p>
-<ul>
-<li>
-<strong>IID</strong> — independent and identically distributed
-residuals (classical assumption)</li>
-<li>
-<strong>AR1</strong> — first-order autoregressive structure along
-one direction</li>
-<li>
-<strong>AR1×AR1</strong> — separable two-dimensional autoregressive
-structure (rows and columns)</li>
-</ul>
+<p><strong>A-criterion</strong> (lower is better): minimises the mean
+pairwise contrast variance under fixed treatment effects, or the mean
+prediction error variance (PEV) under random treatment effects.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mtext mathvariant="normal">criterion</mtext></msub><mo>=</mo><mfrac><mn>2</mn><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>&lt;</mo><mi>j</mi></mrow></munder><mtext mathvariant="normal">Var</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>τ</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo>−</mo><msub><mover><mi>τ</mi><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">A_\text{criterion} = \frac{2}{p(p-1)} \sum_{i&lt;j} \text{Var}(\hat{\tau}_i - \hat{\tau}_j)</annotation></semantics></math></p>
+<p><strong>D-criterion</strong> (lower is better): minimises the
+geometric mean of the contrast covariance eigenvalues (fixed effects
+only).</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mtext mathvariant="normal">criterion</mtext></msub><mo>=</mo><mo>exp</mo><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mo>log</mo><mo>det</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>H</mi><mi>V</mi><mi>H</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mi>p</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">D_\text{criterion} = \exp\!\left(\frac{\log\det(HVH)}{p-1}\right)</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><msub><mi>I</mi><mi>p</mi></msub><mo>−</mo><msup><mi>p</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><msub><mi>J</mi><mi>p</mi></msub></mrow><annotation encoding="application/x-tex">H = I_p - p^{-1}J_p</annotation></semantics></math>
+is the centering matrix and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>
+is the treatment variance-covariance submatrix of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>C</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><annotation encoding="application/x-tex">C^{-1}</annotation></semantics></math>.</p>
+<p><strong>CDmean</strong> (higher is better): the mean coefficient of
+determination for genomic breeding value (GEBV) prediction (Rincent et
+al. 2012). Measures the proportion of genetic variance explained by
+prediction on average across lines.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">CDmean</mtext><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mtext mathvariant="normal">mean PEV</mtext><msubsup><mi>σ</mi><mi>g</mi><mn>2</mn></msubsup></mfrac></mrow><annotation encoding="application/x-tex">\text{CDmean} = 1 - \frac{\text{mean PEV}}{\sigma_g^2}</annotation></semantics></math></p>
+<p>CDmean ranges from 0 (no information) to 1 (perfect prediction). It
+is the primary criterion for optimising training population designs in
+genomic selection.</p>
 </div>
 <div class="section level3">
-<h3 id="genetic-structure-in-design">Genetic structure in design<a class="anchor" aria-label="anchor" href="#genetic-structure-in-design"></a>
+<h3 id="large-design-approximation">Large-design approximation<a class="anchor" aria-label="anchor" href="#large-design-approximation"></a>
 </h3>
-<p>Entries can be grouped based on family labels, the pedigree
-relationship matrix
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>,
-or the genomic relationship matrix (GRM). Incorporating genetic
-structure at the design stage allows the layout to reduce clustering of
-related genotypes, improve diversity spread across blocks, and reduce
-confounding between spatial and genetic signals.</p>
+<p>When the number of treatments exceeds <code>eff_full_max</code>
+(default 400), exact inversion of the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>
+submatrix is replaced by the Hutchinson stochastic trace estimator
+(Hutchinson 1990), which approximates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">trace</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>C</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">[</mo><mtext mathvariant="normal">idx</mtext><mo>,</mo><mtext mathvariant="normal">idx</mtext><mo stretchy="true" form="postfix">]</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{trace}(C^{-1}[\text{idx},\text{idx}])</annotation></semantics></math>
+using
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
+Rademacher random vectors:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">trace</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>C</mi><mtext mathvariant="normal">idx</mtext><mrow><mo>−</mo><mn>1</mn></mrow></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>≈</mo><mfrac><mn>1</mn><mi>m</mi></mfrac><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover><msubsup><mi>z</mi><mi>k</mi><mi>⊤</mi></msubsup><msup><mi>C</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><msub><mi>z</mi><mi>k</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>z</mi><mi>k</mi></msub><mo>∼</mo><mtext mathvariant="normal">Rademacher</mtext></mrow><annotation encoding="application/x-tex">\text{trace}(C^{-1}_\text{idx}) \approx \frac{1}{m} \sum_{k=1}^{m} z_k^\top C^{-1} z_k, \quad z_k \sim \text{Rademacher}</annotation></semantics></math></p>
+<p>The result carries the <code>_APPROX</code> mode suffix and
+<code>D_criterion</code> is <code>NA</code>.</p>
 <hr>
 </div>
 </div>
 <div class="section level2">
-<h2 id="design-strategies">Design Strategies<a class="anchor" aria-label="anchor" href="#design-strategies"></a>
+<h2 id="design-family-1-repeated-check-block-designs">Design Family 1: Repeated-Check Block Designs<a class="anchor" aria-label="anchor" href="#design-family-1-repeated-check-block-designs"></a>
 </h2>
 <div class="section level3">
-<h3 id="block-based-designs-with-repeated-checks-prep_famoptg">Block-based designs with repeated checks —
-<code>prep_famoptg()</code><a class="anchor" aria-label="anchor" href="#block-based-designs-with-repeated-checks-prep_famoptg"></a>
+<h3 id="construction-with-prep_famoptg">Construction with <code>prep_famoptg()</code><a class="anchor" aria-label="anchor" href="#construction-with-prep_famoptg"></a>
 </h3>
-<p><code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> constructs a block-based design in which
-checks are repeated in every block, while non-check entries are
-allocated across blocks according to their specified replication levels.
-Depending on the replication pattern supplied, the same function
-generates:</p>
-<ul>
-<li>an <strong>augmented design</strong> — unreplicated test entries
-with checks in every block</li>
-<li>a <strong>partially replicated (p-rep) design</strong> — some
-entries replicated, others unreplicated</li>
-<li>an <strong>RCBD-type design</strong> — all non-check entries
-replicated equally, with <code>n_blocks</code> equal to the replication
-number</li>
-</ul>
-<p>The key design rule is that <strong>a treatment may appear at most
-once per block</strong>, regardless of its total replication. This
-ensures replicates are distributed across blocks rather than
-clustered.</p>
-<p><strong>Use <code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> when:</strong></p>
-<ul>
-<li>checks must appear in every block</li>
-<li>many entries must be screened with limited resources</li>
-<li>the design may be augmented, p-rep, or RCBD-type depending on
-replication</li>
-<li>early- to intermediate-stage breeding evaluation is the
-objective</li>
-</ul>
+<p><code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> builds a repeated-check block design in
+which checks appear in every block and non-check entries are allocated
+across blocks according to their specified replication levels.</p>
+<p><strong>Three design classes share the same function:</strong></p>
+<p><strong>Augmented design</strong> — all test entries unreplicated,
+checks repeated in every block. Suitable for very large entry sets where
+resources only allow a single observation per candidate.</p>
+<p><strong>P-rep design</strong> — some entries replicated across
+multiple distinct blocks, others unreplicated. The most general case: a
+mixture of candidate entries with different priority levels.</p>
+<p><strong>RCBD-type design</strong> — all non-check entries equally
+replicated. When the replication number equals <code>n_blocks</code>,
+every entry appears in every block — the closest repeated-check analogue
+of a classical RCBD.</p>
+<p><strong>The p-rep constraint</strong> — the core structural rule: no
+replicated treatment ever appears twice in the same block. Enforced by
+construction at every call, not by post-hoc checking.</p>
+<p>Total required plots:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">total</mtext><mo>=</mo><msub><mi>n</mi><mtext mathvariant="normal">blocks</mtext></msub><mo>×</mo><msub><mi>n</mi><mtext mathvariant="normal">checks</mtext></msub><mo>+</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>v</mi><mi>p</mi></msub></munderover><msub><mi>r</mi><mi>i</mi></msub><mo>+</mo><msub><mi>v</mi><mi>u</mi></msub></mrow><annotation encoding="application/x-tex">\text{total} = n_\text{blocks} \times n_\text{checks} + \sum_{i=1}^{v_p} r_i + v_u</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>i</mi></msub><annotation encoding="application/x-tex">r_i</annotation></semantics></math>
+is the replication count of p-rep entry
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>u</mi></msub><annotation encoding="application/x-tex">v_u</annotation></semantics></math>
+is the number of unreplicated entries.</p>
 </div>
 <div class="section level3">
-<h3 id="stream-based-alpha-designs-alpha_rc_stream">Stream-based alpha designs — <code>alpha_rc_stream()</code><a class="anchor" aria-label="anchor" href="#stream-based-alpha-designs-alpha_rc_stream"></a>
+<h3 id="evaluation-with-evaluate_famoptg_efficiency">Evaluation with <code>evaluate_famoptg_efficiency()</code><a class="anchor" aria-label="anchor" href="#evaluation-with-evaluate_famoptg_efficiency"></a>
 </h3>
-<p><code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code> constructs alpha row–column designs on
-a fixed grid using a stream-based layout. The field is converted into a
-single ordered stream of positions, split into contiguous replicate
-segments, and further divided into incomplete blocks.</p>
-<p>A key property of this approach is that <strong>unused cells are
-placed only at the end of the field stream</strong> — not scattered
-across the grid — which is critical for practical field
-implementation.</p>
-<p><strong>Use <code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code> when:</strong></p>
-<ul>
-<li>field dimensions are fixed and cannot change</li>
-<li>planting follows field-book (serpentine) order</li>
-<li>replicates are defined operationally as contiguous segments</li>
-<li>incomplete blocks may be unequal in size</li>
-<li>classical rectangular alpha designs are not feasible</li>
-</ul>
+<p>Takes the <code>field_book</code> returned by
+<code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> and computes A, D, and CDmean criteria.
+Fully decoupled from construction — the same field book can be evaluated
+multiple times under different model assumptions.</p>
+<p>The random effect model for this family uses <code>sigma_b2</code>
+for the flat block structure (no replicate or incomplete-block
+nesting).</p>
+</div>
+<div class="section level3">
+<h3 id="optimisation-with-optimize_famoptg">Optimisation with <code>optimize_famoptg()</code><a class="anchor" aria-label="anchor" href="#optimisation-with-optimize_famoptg"></a>
+</h3>
+<p>Runs <code>n_restarts</code> independent calls to
+<code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> with different seeds and returns the design
+with the best criterion value. <strong>Random Restart (RS) is the only
+method</strong> because the p-rep constraint is enforced by construction
+at every call — permutation-based methods (SA, GA) would require
+block-aware swap logic to preserve it.</p>
 <hr>
 </div>
+</div>
+<div class="section level2">
+<h2 id="design-family-2-alpha-row-column-stream-designs">Design Family 2: Alpha Row-Column Stream Designs<a class="anchor" aria-label="anchor" href="#design-family-2-alpha-row-column-stream-designs"></a>
+</h2>
+<div class="section level3">
+<h3 id="construction-with-alpha_rc_stream">Construction with <code>alpha_rc_stream()</code><a class="anchor" aria-label="anchor" href="#construction-with-alpha_rc_stream"></a>
+</h3>
+<p><code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code> builds a fixed-grid alpha row-column
+design using a stream-based layout. The field is converted to a
+one-dimensional planting stream, partitioned into
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mtext mathvariant="normal">reps</mtext></msub><annotation encoding="application/x-tex">n_\text{reps}</annotation></semantics></math>
+contiguous replicate segments, and each segment is divided into
+incomplete blocks. Checks appear in every incomplete block; each entry
+appears exactly once per replicate. Unused cells appear only at the end
+of the stream.</p>
+<p>Block-size constraints are expressed in total block size (checks +
+entries) via <code>min_block_size</code> and
+<code>max_block_size</code>. The number of incomplete blocks per
+replicate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
+must satisfy:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">⌈</mo><mfrac><mi>v</mi><mrow><mtext mathvariant="normal">max_block_size</mtext><mo>−</mo><mi>c</mi></mrow></mfrac><mo stretchy="true" form="postfix">⌉</mo></mrow><mo>≤</mo><mi>b</mi><mo>≤</mo><mrow><mo stretchy="true" form="prefix">⌊</mo><mfrac><mi>v</mi><mrow><mtext mathvariant="normal">min_block_size</mtext><mo>−</mo><mi>c</mi></mrow></mfrac><mo stretchy="true" form="postfix">⌋</mo></mrow></mrow><annotation encoding="application/x-tex">\left\lceil \frac{v}{\text{max\_block\_size} - c} \right\rceil \leq b \leq \left\lfloor \frac{v}{\text{min\_block\_size} - c} \right\rfloor</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+is the number of entries and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+is the number of checks.</p>
+</div>
+<div class="section level3">
+<h3 id="evaluation-with-evaluate_alpha_efficiency">Evaluation with <code>evaluate_alpha_efficiency()</code><a class="anchor" aria-label="anchor" href="#evaluation-with-evaluate_alpha_efficiency"></a>
+</h3>
+<p>Computes A, D, and CDmean criteria for a design produced by
+<code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code>. The model contains Rep + IBlock(Rep) +
+Row + Column random effects, using <code>sigma_rep2</code> and
+<code>sigma_ib2</code> — distinct from
+<code><a href="../reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency()</a></code> which uses
+<code>sigma_b2</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="optimisation-with-optimize_alpha_rc">Optimisation with <code>optimize_alpha_rc()</code><a class="anchor" aria-label="anchor" href="#optimisation-with-optimize_alpha_rc"></a>
+</h3>
+<p>Wraps <code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code> and
+<code><a href="../reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency()</a></code> in an optimisation loop with
+three search strategies:</p>
+<p><strong>RS (Random Restart)</strong> — generate
+<code>n_restarts</code> independent designs, return the best. Guaranteed
+validity, simple, easily parallelisable.</p>
+<p><strong>SA (Simulated Annealing)</strong> — iterative entry
+permutation swaps with Metropolis acceptance:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">accept worse</mtext><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>exp</mo><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mfrac><mi>Δ</mi><msub><mi>T</mi><mi>k</mi></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(\text{accept worse}) = \exp\!\left(-\frac{\Delta}{T_k}\right)</annotation></semantics></math>
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>k</mi></msub><annotation encoding="application/x-tex">T_k</annotation></semantics></math>
+cools from <code>sa_temp_start</code> to <code>sa_temp_end</code>.
+Better at escaping local optima than RS. Invalid swap proposals are
+treated as neutral events and do not affect the acceptance rate.</p>
+<p><strong>GA (Genetic Algorithm)</strong> — population of entry
+permutations evolved via Order Crossover (OX1), random swap mutation,
+tournament selection, and elitism. Most powerful for global search.</p>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="integrity-checking">Integrity Checking<a class="anchor" aria-label="anchor" href="#integrity-checking"></a>
+</h2>
+<p>Both optimisers implement a four-point integrity checking strategy
+that guarantees the returned design is structurally valid:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Post-construction</strong> — every candidate validated
+immediately after <code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> or
+<code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code> returns, before scoring.</li>
+<li>
+<strong>Pre-storage</strong> — candidate re-checked before updating
+the running best.</li>
+<li>
+<strong>Pre-return</strong> — stored best re-checked one final time
+before returning to the user.</li>
+<li>
+<strong>Emergency fallback</strong> — if no valid design is found
+after all iterations, up to 10 fresh random designs are attempted before
+stopping with an informative error.</li>
+</ol>
+<p>For the <code>prep_famoptg</code> family, five structural constraints
+are verified:</p>
+<ul>
+<li>No non-check entry appears more than once in a single block</li>
+<li>Each p-rep treatment appears in exactly <code>p_rep_reps[i]</code>
+blocks</li>
+<li>Each unreplicated treatment appears exactly once</li>
+<li>All checks appear in every block</li>
+<li>No p-rep treatment occupies the same block twice (the core p-rep
+guarantee)</li>
+</ul>
+<hr>
 </div>
 <div class="section level2">
 <h2 id="example-dataset">Example Dataset<a class="anchor" aria-label="anchor" href="#example-dataset"></a>
 </h2>
-<p>The package ships with a built-in example dataset containing inputs
-for both main functions:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<p>The package ships with a built-in example dataset for both design
+families:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"OptiDesign_example_data"</span>, package <span class="op">=</span> <span class="st">"OptiDesign"</span><span class="op">)</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">OptiDesign_example_data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -262,106 +531,391 @@ for both main functions:</p>
 <span><span class="co">#&gt;  [7] "OptiDesign_alpha_example"       "OptiDesign_famoptg_args_family"</span></span>
 <span><span class="co">#&gt;  [9] "OptiDesign_famoptg_args_grm"    "OptiDesign_alpha_args_family"  </span></span>
 <span><span class="co">#&gt; [11] "OptiDesign_alpha_args_grm"</span></span></code></pre></div>
+<p>The dataset contains treatment vectors, field dimensions,
+relationship matrices, and ready-to-use argument lists structured for
+<code><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call()</a></code> workflows.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="example-1-family-based-block-design-with-repeated-checks">Example 1 — Family-based block design with repeated checks<a class="anchor" aria-label="anchor" href="#example-1-family-based-block-design-with-repeated-checks"></a>
+<h2 id="workflow-1-repeated-check-block-design-family-based">Workflow 1: Repeated-Check Block Design (Family-Based)<a class="anchor" aria-label="anchor" href="#workflow-1-repeated-check-block-design-family-based"></a>
 </h2>
-<p>This example calls <code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> with family-based
-grouping. Depending on the replication pattern in the example inputs,
-the function acts as an augmented, p-rep, or RCBD-type constructor:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">out_fam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span></span>
-<span>  <span class="fu">OptiDesign</span><span class="fu">::</span><span class="va"><a href="../reference/prep_famoptg.html">prep_famoptg</a></span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span>,</span>
-<span>    <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_args_family</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">out_fam</span><span class="op">$</span><span class="va">layout_matrix</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 16  8</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">out_fam</span><span class="op">$</span><span class="va">field_book</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        Treatment Family Gcluster Block Plot Row Column</span></span>
-<span><span class="co">#&gt; plot_1      L076    F03     &lt;NA&gt;     1    1   1      1</span></span>
-<span><span class="co">#&gt; plot_2      L061    F16     &lt;NA&gt;     1    2   2      1</span></span>
-<span><span class="co">#&gt; plot_3      L028    F12     &lt;NA&gt;     1    3   3      1</span></span>
-<span><span class="co">#&gt; plot_4      L030    F10     &lt;NA&gt;     1    4   4      1</span></span>
-<span><span class="co">#&gt; plot_5      L027    F21     &lt;NA&gt;     1    5   5      1</span></span>
-<span><span class="co">#&gt; plot_6      L051    F09     &lt;NA&gt;     1    6   6      1</span></span></code></pre></div>
-<p>The result contains:</p>
-<ul>
-<li>
-<code>layout_matrix</code> — a spatial grid of plot assignments
-(<code>n_rows × n_cols</code>)</li>
-<li>
-<code>field_book</code> — a row-by-row record of plot, block,
-treatment, and grouping information suitable for field
-implementation</li>
-</ul>
-<p>In this design: checks are present in every block; non-check entries
-are allocated across blocks according to their replication levels; no
-non-check entry appears twice in the same block; and grouping is based
-on family labels.</p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="example-2-stream-based-alpha-rowcolumn-design">Example 2 — Stream-based alpha row–column design<a class="anchor" aria-label="anchor" href="#example-2-stream-based-alpha-rowcolumn-design"></a>
-</h2>
+<div class="section level3">
+<h3 id="step-1-construct">Step 1 — Construct<a class="anchor" aria-label="anchor" href="#step-1-construct"></a>
+</h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">out_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span></span>
-<span>  <span class="fu">OptiDesign</span><span class="fu">::</span><span class="va"><a href="../reference/alpha_rc_stream.html">alpha_rc_stream</a></span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span>,</span>
-<span>    <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_args_family</span></span>
-<span>  <span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">design_fam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span></span>
+<span>  <span class="va">prep_famoptg</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span>, <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_args_family</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">out_alpha</span><span class="op">$</span><span class="va">layout_matrix</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 12 14</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">out_alpha</span><span class="op">$</span><span class="va">field_book</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Treatment Family Gcluster Check PlotStream Rep IBlock BlockInRep Row Column</span></span>
-<span><span class="co">#&gt; 1      L140    F24     &lt;NA&gt; FALSE          1   1      1          1   1      1</span></span>
-<span><span class="co">#&gt; 2      L103    F14     &lt;NA&gt;  TRUE          2   1      1          1   1      2</span></span>
-<span><span class="co">#&gt; 3      L102    F17     &lt;NA&gt;  TRUE          3   1      1          1   1      3</span></span>
-<span><span class="co">#&gt; 4      L117    F06     &lt;NA&gt; FALSE          4   1      1          1   1      4</span></span>
-<span><span class="co">#&gt; 5      L101    F14     &lt;NA&gt;  TRUE          5   1      1          1   1      5</span></span>
-<span><span class="co">#&gt; 6      L133    F22     &lt;NA&gt; FALSE          6   1      1          1   1      6</span></span></code></pre></div>
-<p>In this design: the field is traversed as a single ordered stream;
-replicate segments are contiguous within that stream; checks are placed
-in every incomplete block; and any unused cells appear only at the end
-of the stream.</p>
-<hr>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">design_fam</span><span class="op">$</span><span class="va">layout_matrix</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 16  8</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">design_fam</span><span class="op">$</span><span class="va">field_book</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Treatment Family Gcluster Block Plot Row Column</span></span>
+<span><span class="co">#&gt; 1      L027    F21     &lt;NA&gt;     1    1   1      1</span></span>
+<span><span class="co">#&gt; 2      L016    F03     &lt;NA&gt;     1    2   2      1</span></span>
+<span><span class="co">#&gt; 3      L002    F19     &lt;NA&gt;     1    3   3      1</span></span>
+<span><span class="co">#&gt; 4      L006    F18     &lt;NA&gt;     1    4   4      1</span></span>
+<span><span class="co">#&gt; 5      L008    F11     &lt;NA&gt;     1    5   5      1</span></span>
+<span><span class="co">#&gt; 6      L001    F15     &lt;NA&gt;     1    6   6      1</span></span></code></pre></div>
+<p>The field book contains one row per assigned plot with treatment
+identity, family label, genomic cluster (if applicable), block, plot
+number, row, and column. There is no <code>efficiency</code> slot —
+evaluation is a separate step.</p>
 </div>
-<div class="section level2">
-<h2 id="example-3-grm-based-stream-design">Example 3 — GRM-based stream design<a class="anchor" aria-label="anchor" href="#example-3-grm-based-stream-design"></a>
-</h2>
-<p>When a genomic relationship matrix is available it can replace family
-labels as the grouping source, allowing the layout to reflect genomic
-similarity more precisely:</p>
+<div class="section level3">
+<h3 id="step-2-evaluate">Step 2 — Evaluate<a class="anchor" aria-label="anchor" href="#step-2-evaluate"></a>
+</h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">out_grm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span></span>
-<span>  <span class="fu">OptiDesign</span><span class="fu">::</span><span class="va"><a href="../reference/alpha_rc_stream.html">alpha_rc_stream</a></span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span>,</span>
-<span>    <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_args_grm</span></span>
-<span>  <span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">eff_fam</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency</a></span><span class="op">(</span></span>
+<span>  field_book         <span class="op">=</span> <span class="va">design_fam</span><span class="op">$</span><span class="va">field_book</span>,</span>
+<span>  n_rows             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">n_rows</span>,</span>
+<span>  n_cols             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">n_cols</span>,</span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">check_treatments</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"IID"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">out_grm</span><span class="op">$</span><span class="va">field_book</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Treatment Family Gcluster Check PlotStream Rep IBlock BlockInRep Row Column</span></span>
-<span><span class="co">#&gt; 1      L140    F24      G21 FALSE          1   1      1          1   1      1</span></span>
-<span><span class="co">#&gt; 2      L103    F14     &lt;NA&gt;  TRUE          2   1      1          1   1      2</span></span>
-<span><span class="co">#&gt; 3      L102    F17     &lt;NA&gt;  TRUE          3   1      1          1   1      3</span></span>
-<span><span class="co">#&gt; 4      L117    F06      G22 FALSE          4   1      1          1   1      4</span></span>
-<span><span class="co">#&gt; 5      L101    F14     &lt;NA&gt;  TRUE          5   1      1          1   1      5</span></span>
-<span><span class="co">#&gt; 6      L133    F22      G19 FALSE          6   1      1          1   1      6</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"A-criterion (lower is better):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_fam</span><span class="op">$</span><span class="va">A_criterion</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; A-criterion (lower is better): 2.4774</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"D-criterion (lower is better):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_fam</span><span class="op">$</span><span class="va">D_criterion</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; D-criterion (lower is better): 0.9643</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"A-efficiency (higher is better):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_fam</span><span class="op">$</span><span class="va">A_efficiency</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; A-efficiency (higher is better): 0.4036</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Mode:"</span>, <span class="va">eff_fam</span><span class="op">$</span><span class="va">mode</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Mode: FIXED_TREATMENT_BLUE_CONTRAST</span></span></code></pre></div>
+<p>The same field book can be re-evaluated under a spatial model without
+rebuilding the design:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">eff_fam_ar1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency</a></span><span class="op">(</span></span>
+<span>  field_book         <span class="op">=</span> <span class="va">design_fam</span><span class="op">$</span><span class="va">field_book</span>,</span>
+<span>  n_rows             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">n_rows</span>,</span>
+<span>  n_cols             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">n_cols</span>,</span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">check_treatments</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"AR1xAR1"</span>,</span>
+<span>  rho_row            <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  rho_col            <span class="op">=</span> <span class="fl">0.2</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"A-criterion under AR1xAR1:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_fam_ar1</span><span class="op">$</span><span class="va">A_criterion</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; A-criterion under AR1xAR1: 2.1032</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="step-3-optimise-optional">Step 3 — Optimise (optional)<a class="anchor" aria-label="anchor" href="#step-3-optimise-optional"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">opt_fam</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/optimize_famoptg.html">optimize_famoptg</a></span><span class="op">(</span></span>
+<span>  <span class="co"># Construction arguments</span></span>
+<span>  check_treatments        <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">check_treatments</span>,</span>
+<span>  check_families          <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">check_families</span>,</span>
+<span>  p_rep_treatments        <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">p_rep_treatments</span>,</span>
+<span>  p_rep_reps              <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">p_rep_reps</span>,</span>
+<span>  p_rep_families          <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">p_rep_families</span>,</span>
+<span>  unreplicated_treatments <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">unreplicated_treatments</span>,</span>
+<span>  unreplicated_families   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">unreplicated_families</span>,</span>
+<span>  n_blocks                <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">n_blocks</span>,</span>
+<span>  n_rows                  <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">n_rows</span>,</span>
+<span>  n_cols                  <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_famoptg_example</span><span class="op">$</span><span class="va">n_cols</span>,</span>
+<span>  <span class="co"># Evaluation arguments</span></span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"IID"</span>,</span>
+<span>  <span class="co"># Optimiser arguments</span></span>
+<span>  criterion   <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>  n_restarts  <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  verbose_opt <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Best A-criterion:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">opt_fam</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">best_score</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Valid restarts:"</span>, <span class="va">opt_fam</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">n_restarts</span> <span class="op">-</span></span>
+<span>                        <span class="va">opt_fam</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">n_failed</span>, <span class="st">"/"</span>,</span>
+<span>                        <span class="va">opt_fam</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">n_restarts</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="workflow-2-alpha-row-column-stream-design-family-based">Workflow 2: Alpha Row-Column Stream Design (Family-Based)<a class="anchor" aria-label="anchor" href="#workflow-2-alpha-row-column-stream-design-family-based"></a>
+</h2>
+<div class="section level3">
+<h3 id="step-1-construct-1">Step 1 — Construct<a class="anchor" aria-label="anchor" href="#step-1-construct-1"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">design_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span></span>
+<span>  <span class="va">alpha_rc_stream</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span>, <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_args_family</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">design_alpha</span><span class="op">$</span><span class="va">layout_matrix</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 12 14</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Blocks per rep:"</span>, <span class="va">design_alpha</span><span class="op">$</span><span class="va">design_info</span><span class="op">$</span><span class="va">n_blocks_per_rep</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Blocks per rep: 8</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Total used plots:"</span>, <span class="va">design_alpha</span><span class="op">$</span><span class="va">design_info</span><span class="op">$</span><span class="va">total_used_plots</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Total used plots: 168</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Trailing NA plots:"</span>, <span class="va">design_alpha</span><span class="op">$</span><span class="va">design_info</span><span class="op">$</span><span class="va">trailing_na_plots</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Trailing NA plots: 0</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">design_alpha</span><span class="op">$</span><span class="va">field_book</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Plot Row Column Rep IBlock BlockInRep Treatment Family Gcluster Check</span></span>
+<span><span class="co">#&gt; 1    1   1      1   1      1          1      L146    F08     &lt;NA&gt; FALSE</span></span>
+<span><span class="co">#&gt; 2    2   1      2   1      1          1      L118    F14     &lt;NA&gt; FALSE</span></span>
+<span><span class="co">#&gt; 3    3   1      3   1      1          1      L134    F09     &lt;NA&gt; FALSE</span></span>
+<span><span class="co">#&gt; 4    4   1      4   1      1          1      L153    F20     &lt;NA&gt; FALSE</span></span>
+<span><span class="co">#&gt; 5    5   1      5   1      1          1      L145    F01     &lt;NA&gt; FALSE</span></span>
+<span><span class="co">#&gt; 6    6   1      6   1      1          1      L117    F06     &lt;NA&gt; FALSE</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="step-2-evaluate-1">Step 2 — Evaluate<a class="anchor" aria-label="anchor" href="#step-2-evaluate-1"></a>
+</h3>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">eff_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency</a></span><span class="op">(</span></span>
+<span>  field_book         <span class="op">=</span> <span class="va">design_alpha</span><span class="op">$</span><span class="va">field_book</span>,</span>
+<span>  n_rows             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_rows</span>,</span>
+<span>  n_cols             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_cols</span>,</span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">check_treatments</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"IID"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"A-criterion (lower is better):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_alpha</span><span class="op">$</span><span class="va">A_criterion</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; A-criterion (lower is better): 1.3017</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"D-criterion (lower is better):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_alpha</span><span class="op">$</span><span class="va">D_criterion</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; D-criterion (lower is better): 0.5794</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Number of treatments evaluated:"</span>, <span class="va">eff_alpha</span><span class="op">$</span><span class="va">n_trt</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Number of treatments evaluated: 63</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="step-3-optimise-with-random-restart">Step 3 — Optimise with Random Restart<a class="anchor" aria-label="anchor" href="#step-3-optimise-with-random-restart"></a>
+</h3>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">opt_rs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/optimize_alpha_rc.html">optimize_alpha_rc</a></span><span class="op">(</span></span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">check_treatments</span>,</span>
+<span>  check_families     <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">check_families</span>,</span>
+<span>  entry_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">entry_treatments</span>,</span>
+<span>  entry_families     <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">entry_families</span>,</span>
+<span>  n_reps             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_reps</span>,</span>
+<span>  n_rows             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_rows</span>,</span>
+<span>  n_cols             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_cols</span>,</span>
+<span>  min_block_size     <span class="op">=</span> <span class="fl">10L</span>,</span>
+<span>  max_block_size     <span class="op">=</span> <span class="fl">12L</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"IID"</span>,</span>
+<span>  method             <span class="op">=</span> <span class="st">"RS"</span>,</span>
+<span>  criterion          <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>  n_restarts         <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  verbose_opt        <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Best A-criterion (RS):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">opt_rs</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">best_score</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">opt_rs</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">score_history</span>, type <span class="op">=</span> <span class="st">"b"</span>,</span>
+<span>     xlab <span class="op">=</span> <span class="st">"Restart"</span>, ylab <span class="op">=</span> <span class="st">"A-criterion"</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"RS: A-criterion across restarts"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="step-4-optimise-with-simulated-annealing">Step 4 — Optimise with Simulated Annealing<a class="anchor" aria-label="anchor" href="#step-4-optimise-with-simulated-annealing"></a>
+</h3>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">opt_sa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/optimize_alpha_rc.html">optimize_alpha_rc</a></span><span class="op">(</span></span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">check_treatments</span>,</span>
+<span>  check_families     <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">check_families</span>,</span>
+<span>  entry_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">entry_treatments</span>,</span>
+<span>  entry_families     <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">entry_families</span>,</span>
+<span>  n_reps             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_reps</span>,</span>
+<span>  n_rows             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_rows</span>,</span>
+<span>  n_cols             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_cols</span>,</span>
+<span>  min_block_size     <span class="op">=</span> <span class="fl">10L</span>,</span>
+<span>  max_block_size     <span class="op">=</span> <span class="fl">12L</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"IID"</span>,</span>
+<span>  method             <span class="op">=</span> <span class="st">"SA"</span>,</span>
+<span>  criterion          <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>  n_restarts         <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  sa_max_iter        <span class="op">=</span> <span class="fl">200</span>,</span>
+<span>  sa_temp_start      <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>  sa_temp_end        <span class="op">=</span> <span class="fl">0.001</span>,</span>
+<span>  sa_cooling         <span class="op">=</span> <span class="st">"exponential"</span>,</span>
+<span>  sa_swap_scope      <span class="op">=</span> <span class="st">"global"</span>,</span>
+<span>  verbose_opt        <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Best A-criterion (SA):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">opt_sa</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">best_score</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="workflow-3-grm-based-design-with-dispersion">Workflow 3: GRM-Based Design with Dispersion<a class="anchor" aria-label="anchor" href="#workflow-3-grm-based-design-with-dispersion"></a>
+</h2>
+<p>When a genomic relationship matrix is available it replaces family
+labels as the grouping source, and can also drive the optional
+dispersion optimisation:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">design_grm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span></span>
+<span>  <span class="va">alpha_rc_stream</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span>, <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_args_grm</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># GRM clustering populates the Gcluster column for non-check entries</span></span>
+<span><span class="va">non_check</span> <span class="op">&lt;-</span> <span class="va">design_grm</span><span class="op">$</span><span class="va">field_book</span><span class="op">[</span><span class="op">!</span><span class="va">design_grm</span><span class="op">$</span><span class="va">field_book</span><span class="op">$</span><span class="va">Check</span>, <span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Unique genomic clusters:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">non_check</span><span class="op">$</span><span class="va">Gcluster</span><span class="op">[</span></span>
+<span>  <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">non_check</span><span class="op">$</span><span class="va">Gcluster</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Unique genomic clusters: 23</span></span>
+<span><span class="co"># alpha_rc_stream field books use IBlock and Rep, not Block</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">non_check</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Treatment"</span>, <span class="st">"Family"</span>, <span class="st">"Gcluster"</span>, <span class="st">"Rep"</span>,</span>
+<span>                    <span class="st">"IBlock"</span>, <span class="st">"Row"</span>, <span class="st">"Column"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Treatment Family Gcluster Rep IBlock Row Column</span></span>
+<span><span class="co">#&gt; 1      L145    F01      G14   1      1   1      1</span></span>
+<span><span class="co">#&gt; 2      L146    F08       G7   1      1   1      2</span></span>
+<span><span class="co">#&gt; 3      L154    F08       G1   1      1   1      3</span></span>
+<span><span class="co">#&gt; 7      L134    F09       G2   1      1   1      7</span></span>
+<span><span class="co">#&gt; 8      L104    F22      G20   1      1   1      8</span></span>
+<span><span class="co">#&gt; 9      L117    F06      G22   1      1   1      9</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="grouping-options">Grouping Options<a class="anchor" aria-label="anchor" href="#grouping-options"></a>
+<h2 id="workflow-4-cdmean-optimisation-for-genomic-selection">Workflow 4: CDmean Optimisation for Genomic Selection<a class="anchor" aria-label="anchor" href="#workflow-4-cdmean-optimisation-for-genomic-selection"></a>
 </h2>
-<p>Both functions support three grouping strategies:</p>
+<p>CDmean is the primary criterion when the objective is maximising GEBV
+prediction reliability rather than contrast precision. It requires
+random treatment effects and a genomic prediction model.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># CDmean optimisation with GBLUP requires a K matrix.</span></span>
+<span><span class="co"># Here we use the example K from the shipped dataset.</span></span>
+<span><span class="va">opt_cdmean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/optimize_alpha_rc.html">optimize_alpha_rc</a></span><span class="op">(</span></span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">check_treatments</span>,</span>
+<span>  check_families     <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">check_families</span>,</span>
+<span>  entry_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">entry_treatments</span>,</span>
+<span>  entry_families     <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">entry_families</span>,</span>
+<span>  n_reps             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_reps</span>,</span>
+<span>  n_rows             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_rows</span>,</span>
+<span>  n_cols             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_cols</span>,</span>
+<span>  min_block_size     <span class="op">=</span> <span class="fl">10L</span>,</span>
+<span>  max_block_size     <span class="op">=</span> <span class="fl">12L</span>,</span>
+<span>  <span class="co"># Genomic prediction model</span></span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"random"</span>,</span>
+<span>  prediction_type    <span class="op">=</span> <span class="st">"GBLUP"</span>,</span>
+<span>  K                  <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_K</span>,</span>
+<span>  line_id_map        <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_id_map</span>,</span>
+<span>  varcomp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    sigma_g2   <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>    sigma_e2   <span class="op">=</span> <span class="fl">0.6</span>,</span>
+<span>    sigma_rep2 <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>    sigma_ib2  <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>    sigma_r2   <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>    sigma_c2   <span class="op">=</span> <span class="fl">0.02</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="co"># CDmean criterion</span></span>
+<span>  method      <span class="op">=</span> <span class="st">"RS"</span>,</span>
+<span>  criterion   <span class="op">=</span> <span class="st">"CDmean"</span>,</span>
+<span>  n_restarts  <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  verbose_opt <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Best CDmean:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">opt_cdmean</span><span class="op">$</span><span class="va">optimization</span><span class="op">$</span><span class="va">best_score</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>    <span class="st">"(higher is better)\n"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"CDmean from efficiency slot:"</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">opt_cdmean</span><span class="op">$</span><span class="va">efficiency</span><span class="op">$</span><span class="va">CDmean</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<p>CDmean and A-criterion can point in different directions because they
+measure different objectives — contrast precision versus prediction
+reliability. Choose based on your trial objective.</p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="comparing-optimality-criteria">Comparing Optimality Criteria<a class="anchor" aria-label="anchor" href="#comparing-optimality-criteria"></a>
+</h2>
+<p>Both criterion types can be computed on the same design to understand
+the trade-off:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Evaluate the same design under both fixed and random models</span></span>
+<span><span class="va">eff_fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency</a></span><span class="op">(</span></span>
+<span>  field_book         <span class="op">=</span> <span class="va">design_alpha</span><span class="op">$</span><span class="va">field_book</span>,</span>
+<span>  n_rows             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_rows</span>,</span>
+<span>  n_cols             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_cols</span>,</span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">check_treatments</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"fixed"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"IID"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">eff_random</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency</a></span><span class="op">(</span></span>
+<span>  field_book         <span class="op">=</span> <span class="va">design_alpha</span><span class="op">$</span><span class="va">field_book</span>,</span>
+<span>  n_rows             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_rows</span>,</span>
+<span>  n_cols             <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">n_cols</span>,</span>
+<span>  check_treatments   <span class="op">=</span> <span class="va">x</span><span class="op">$</span><span class="va">OptiDesign_alpha_example</span><span class="op">$</span><span class="va">check_treatments</span>,</span>
+<span>  treatment_effect   <span class="op">=</span> <span class="st">"random"</span>,</span>
+<span>  prediction_type    <span class="op">=</span> <span class="st">"IID"</span>,</span>
+<span>  residual_structure <span class="op">=</span> <span class="st">"IID"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Criterion  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A-criterion"</span>, <span class="st">"D-criterion"</span>,</span>
+<span>                 <span class="st">"A-efficiency"</span>, <span class="st">"D-efficiency"</span>,</span>
+<span>                 <span class="st">"Mean PEV"</span>, <span class="st">"CDmean"</span><span class="op">)</span>,</span>
+<span>  Value      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_fixed</span><span class="op">$</span><span class="va">A_criterion</span>,  <span class="fl">4</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_fixed</span><span class="op">$</span><span class="va">D_criterion</span>,  <span class="fl">4</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_fixed</span><span class="op">$</span><span class="va">A_efficiency</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_fixed</span><span class="op">$</span><span class="va">D_efficiency</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_random</span><span class="op">$</span><span class="va">mean_PEV</span>,    <span class="fl">4</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">eff_random</span><span class="op">$</span><span class="va">CDmean</span>,      <span class="fl">4</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  Direction  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lower=better"</span>, <span class="st">"lower=better"</span>,</span>
+<span>                 <span class="st">"higher=better"</span>, <span class="st">"higher=better"</span>,</span>
+<span>                 <span class="st">"lower=better"</span>, <span class="st">"higher=better"</span><span class="op">)</span>,</span>
+<span>  Model      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fixed"</span>, <span class="st">"fixed"</span>, <span class="st">"fixed"</span>, <span class="st">"fixed"</span>, <span class="st">"random"</span>, <span class="st">"random"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">results</span>, caption <span class="op">=</span> <span class="st">"Efficiency criteria for the example alpha design"</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Efficiency criteria for the example alpha design</caption>
+<thead><tr class="header">
+<th align="left">Criterion</th>
+<th align="right">Value</th>
+<th align="left">Direction</th>
+<th align="left">Model</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">A-criterion</td>
+<td align="right">1.3017</td>
+<td align="left">lower=better</td>
+<td align="left">fixed</td>
+</tr>
+<tr class="even">
+<td align="left">D-criterion</td>
+<td align="right">0.5794</td>
+<td align="left">lower=better</td>
+<td align="left">fixed</td>
+</tr>
+<tr class="odd">
+<td align="left">A-efficiency</td>
+<td align="right">0.7682</td>
+<td align="left">higher=better</td>
+<td align="left">fixed</td>
+</tr>
+<tr class="even">
+<td align="left">D-efficiency</td>
+<td align="right">1.7260</td>
+<td align="left">higher=better</td>
+<td align="left">fixed</td>
+</tr>
+<tr class="odd">
+<td align="left">Mean PEV</td>
+<td align="right">0.3883</td>
+<td align="left">lower=better</td>
+<td align="left">random</td>
+</tr>
+<tr class="even">
+<td align="left">CDmean</td>
+<td align="right">0.6117</td>
+<td align="left">higher=better</td>
+<td align="left">random</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="grouping-and-dispersion-options">Grouping and Dispersion Options<a class="anchor" aria-label="anchor" href="#grouping-and-dispersion-options"></a>
+</h2>
+<div class="section level3">
+<h3 id="when-to-use-each-grouping-strategy">When to use each grouping strategy<a class="anchor" aria-label="anchor" href="#when-to-use-each-grouping-strategy"></a>
+</h3>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -370,76 +924,118 @@ similarity more precisely:</p>
 </colgroup>
 <thead><tr class="header">
 <th>Strategy</th>
-<th>Source</th>
-<th>Best for</th>
+<th><code>cluster_source</code></th>
+<th>Use when</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Family-based</td>
-<td>User-defined labels</td>
-<td>Simple, interpretable grouping</td>
+<td>Family labels</td>
+<td><code>"Family"</code></td>
+<td>Family structure is meaningful and interpretable; no relationship
+matrix available</td>
 </tr>
 <tr class="even">
-<td>GRM-based</td>
-<td>Genomic similarity matrix</td>
-<td>Captures real genomic relationships</td>
+<td>Genomic (GRM)</td>
+<td><code>"GRM"</code></td>
+<td>Genomic data is available; relatedness precision matters more than
+family labels</td>
 </tr>
 <tr class="odd">
-<td>Pedigree-based</td>
-<td>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
-matrix</td>
-<td>When genomic data is unavailable</td>
+<td>Pedigree (A)</td>
+<td><code>"A"</code></td>
+<td>Only pedigree information is available</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="dispersion-optimisation">Dispersion optimisation<a class="anchor" aria-label="anchor" href="#dispersion-optimisation"></a>
+</h3>
+<p>The dispersion step minimises the total genomic relatedness among
+neighbouring plots:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><munder><mo>∑</mo><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>∈</mo><mi>𝒩</mi></mrow></munder><msub><mi>K</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">S = \sum_{(i,j)\in\mathcal{N}} K_{ij}</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝒩</mi><annotation encoding="application/x-tex">\mathcal{N}</annotation></semantics></math>
+is the set of plot pairs within Chebyshev distance
+<code>dispersion_radius</code>. The local swap search accepts a swap if
+and only if it reduces
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>.
+Key parameters:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Effect</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>dispersion_radius</code></td>
+<td>Neighbourhood size: 1 = 8-connected, 2 = 24-connected</td>
+</tr>
+<tr class="even">
+<td><code>dispersion_iters</code></td>
+<td>Number of swap proposals; more iterations = lower
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+at linear cost</td>
+</tr>
+<tr class="odd">
+<td><code>dispersion_source</code></td>
+<td>Which matrix to score against: <code>"K"</code>, <code>"GRM"</code>,
+or <code>"A"</code>
+</td>
 </tr>
 </tbody>
 </table>
 <hr>
 </div>
-<div class="section level2">
-<h2 id="dispersion-optimization">Dispersion Optimization<a class="anchor" aria-label="anchor" href="#dispersion-optimization"></a>
-</h2>
-<p>An optional step that improves the spatial distribution of
-genetically related entries. If
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">d(i,j)</annotation></semantics></math>
-denotes the similarity between plots
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,
-the optimizer seeks to reduce:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><mo>∑</mo><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>∈</mo><mi>𝒩</mi></mrow></munder><mi>d</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\sum_{(i,j)\in \mathcal{N}} d(i,j)</annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝒩</mi><annotation encoding="application/x-tex">\mathcal{N}</annotation></semantics></math>
-is the set of neighbouring plot pairs. This reduces local clustering of
-related materials, improves robustness to spatial confounding, and
-promotes better distribution of genetic diversity across the field.</p>
-<p>Use dispersion optimization when genomic or pedigree structure is
-important and strong local spatial correlation is expected.</p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="efficiency-evaluation">Efficiency Evaluation<a class="anchor" aria-label="anchor" href="#efficiency-evaluation"></a>
-</h2>
-<p>An optional diagnostic step that evaluates a candidate design under a
-mixed-model framework before field implementation.</p>
-<p><strong>Fixed-effect precision</strong> — the variance of BLUE
-estimates:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">r</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>X</mi><mi>⊤</mi></msup><msup><mi>V</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{Var}(\hat{\beta}) = (X^\top V^{-1} X)^{-1}</annotation></semantics></math></p>
-<p>Lower diagonal values indicate higher precision for the corresponding
-fixed effects.</p>
-<p><strong>Random-effect prediction</strong> — the prediction error
-variance (PEV):</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">P</mi><mi mathvariant="normal">E</mi><mi mathvariant="normal">V</mi></mrow><mo>=</mo><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">r</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>g</mi><mo accent="true">̂</mo></mover><mo>−</mo><mi>g</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathrm{PEV} = \mathrm{Var}(\hat{g} - g)</annotation></semantics></math></p>
-<p>Lower PEV values indicate higher prediction accuracy for genetic
-effects.</p>
-<p>Supported models include IID, AR1, and AR1×AR1 spatial structures,
-and prediction modes include BLUP, GBLUP, and PBLUP. Use efficiency
-evaluation when comparing alternative designs or studying the impact of
-block structure and replication on estimability.</p>
-<hr>
 </div>
 <div class="section level2">
 <h2 id="practical-guidelines">Practical Guidelines<a class="anchor" aria-label="anchor" href="#practical-guidelines"></a>
 </h2>
+<div class="section level3">
+<h3 id="choosing-between-design-families">Choosing between design families<a class="anchor" aria-label="anchor" href="#choosing-between-design-families"></a>
+</h3>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Situation</th>
+<th>Recommended function</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Many entries, not all need replication</td>
+<td><code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code></td>
+</tr>
+<tr class="even">
+<td>Some entries need priority replication</td>
+<td>
+<code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> (p-rep)</td>
+</tr>
+<tr class="odd">
+<td>All entries equally replicated, checks needed everywhere</td>
+<td>
+<code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> (RCBD-type)</td>
+</tr>
+<tr class="even">
+<td>Fixed field dimensions, operational field-book order</td>
+<td><code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Alpha-lattice structure needed</td>
+<td><code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="choosing-an-optimality-criterion">Choosing an optimality criterion<a class="anchor" aria-label="anchor" href="#choosing-an-optimality-criterion"></a>
+</h3>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -447,70 +1043,101 @@ block structure and replication on estimability.</p>
 <col width="33%">
 </colgroup>
 <thead><tr class="header">
+<th>Objective</th>
 <th>Criterion</th>
-<th><code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code></th>
-<th><code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code></th>
+<th>Function argument</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Checks in every block</td>
-<td>Yes — by design</td>
-<td>Yes — by design</td>
+<td>Maximise contrast precision</td>
+<td>A-criterion</td>
+<td><code>criterion = "A"</code></td>
 </tr>
 <tr class="even">
-<td>Field dimensions</td>
-<td>Flexible</td>
-<td>Fixed grid required</td>
+<td>Minimise overall estimation volume</td>
+<td>D-criterion</td>
+<td><code>criterion = "D"</code></td>
 </tr>
 <tr class="odd">
-<td>Replicate structure</td>
-<td>Block-based</td>
-<td>Contiguous stream segments</td>
+<td>Balance both</td>
+<td>Combined</td>
+<td><code>criterion = "both"</code></td>
 </tr>
 <tr class="even">
-<td>Unequal block sizes</td>
-<td>Not applicable</td>
-<td>Supported</td>
-</tr>
-<tr class="odd">
-<td>Unused cell placement</td>
-<td>Depends on layout</td>
-<td>End of stream only</td>
-</tr>
-<tr class="even">
-<td>Typical use</td>
-<td>Early/mid breeding stage</td>
-<td>Operational field-book trials</td>
+<td>Maximise GEBV prediction reliability</td>
+<td>CDmean</td>
+<td><code>criterion = "CDmean"</code></td>
 </tr>
 </tbody>
 </table>
-<p><strong>Grouping choice:</strong> use family labels for simple
-interpretability, GRM when genomic data is available and relatedness
-precision matters, and the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
-matrix when only pedigree information is available.</p>
+<p>CDmean requires <code>treatment_effect = "random"</code> and
+<code>prediction_type %in% c("IID", "GBLUP", "PBLUP")</code>. For
+genomic selection training population optimisation, GBLUP with a real
+kinship matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
+is strongly recommended.</p>
+</div>
+<div class="section level3">
+<h3 id="choosing-an-optimisation-method-optimize_alpha_rc-only">Choosing an optimisation method (<code>optimize_alpha_rc</code>
+only)<a class="anchor" aria-label="anchor" href="#choosing-an-optimisation-method-optimize_alpha_rc-only"></a>
+</h3>
+<table class="table">
+<thead><tr class="header">
+<th>Method</th>
+<th>Best for</th>
+<th>Cost</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>RS</td>
+<td>Quick exploration, guaranteed valid designs</td>
+<td>Low</td>
+</tr>
+<tr class="even">
+<td>SA</td>
+<td>Moderate search depth, escaping local optima</td>
+<td>Medium</td>
+</tr>
+<tr class="odd">
+<td>GA</td>
+<td>Thorough global search</td>
+<td>High</td>
+</tr>
+</tbody>
+</table>
+<p>For production use, SA or GA with 5–10 restarts and 500–1000
+iterations/ generations typically provides a good balance of quality and
+computation time.</p>
+</div>
+<div class="section level3">
+<h3 id="variance-component-specification">Variance component specification<a class="anchor" aria-label="anchor" href="#variance-component-specification"></a>
+</h3>
+<p>Variance components have a large effect on efficiency values but a
+small effect on the <em>ranking</em> of designs. For design comparison
+purposes, equal variance components (<code>sigma_* = 1</code>) are a
+reasonable default. For absolute criterion values that are meaningful on
+the scale of real data, use heritability-consistent components:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Example: h^2 = 0.5, moderate spatial correlation</span></span>
+<span><span class="va">varcomp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  sigma_g2   <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  sigma_e2   <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  sigma_rep2 <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  sigma_ib2  <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  sigma_r2   <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>  sigma_c2   <span class="op">=</span> <span class="fl">0.02</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
-<div class="section level2">
-<h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
-</h2>
-<p><code>OptiDesign</code> provides two complementary design strategies
-— block-based repeated-check layouts via <code><a href="../reference/prep_famoptg.html">prep_famoptg()</a></code> and
-stream-based alpha row–column layouts via <code><a href="../reference/alpha_rc_stream.html">alpha_rc_stream()</a></code>
-— together with optional dispersion optimization and mixed-model
-efficiency evaluation. Both functions support family, genomic, and
-pedigree-based grouping and are designed to be practically implementable
-in field trials with real-world constraints.</p>
-<hr>
 </div>
 <div class="section level2">
 <h2 id="session-information">Session Information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">#&gt; Running under: Ubuntu 24.04.3 LTS</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Matrix products: default</span></span>
 <span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -528,15 +1155,39 @@ in field trials with real-world constraints.</p>
 <span><span class="co">#&gt; attached base packages:</span></span>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] OptiDesign_0.1.0</span></span>
+<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
-<span><span class="co">#&gt;  [5] Matrix_1.7-4      xfun_0.57         lattice_0.22-9    OptiDesign_0.1.0 </span></span>
-<span><span class="co">#&gt;  [9] cachem_1.1.0      knitr_1.51        htmltools_0.5.9   rmarkdown_2.30   </span></span>
-<span><span class="co">#&gt; [13] lifecycle_1.0.5   cli_3.6.5         grid_4.5.3        sass_0.4.10      </span></span>
-<span><span class="co">#&gt; [17] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
-<span><span class="co">#&gt; [21] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        pracma_2.4.6     </span></span>
-<span><span class="co">#&gt; [25] evaluate_1.0.5    bslib_0.10.0      yaml_2.3.12       jsonlite_2.0.0   </span></span>
-<span><span class="co">#&gt; [29] rlang_1.1.7       fs_2.0.1</span></span></code></pre></div>
+<span><span class="co">#&gt;  [5] Matrix_1.7-4      xfun_0.57         lattice_0.22-9    cachem_1.1.0     </span></span>
+<span><span class="co">#&gt;  [9] knitr_1.51        htmltools_0.5.9   rmarkdown_2.31    lifecycle_1.0.5  </span></span>
+<span><span class="co">#&gt; [13] cli_3.6.5         grid_4.5.3        sass_0.4.10       pkgdown_2.2.0    </span></span>
+<span><span class="co">#&gt; [17] textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2 compiler_4.5.3   </span></span>
+<span><span class="co">#&gt; [21] tools_4.5.3       ragg_1.5.2        pracma_2.4.6      evaluate_1.0.5   </span></span>
+<span><span class="co">#&gt; [25] bslib_0.10.0      yaml_2.3.12       jsonlite_2.0.0    rlang_1.1.7      </span></span>
+<span><span class="co">#&gt; [29] fs_2.0.1</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Rincent, R., Laloë, D., Nicolas, S., Altmann, T., Brunel, D.,
+Revilla, P., …, &amp; Moreau, L. (2012). Maximizing the reliability of
+genomic selection by optimizing the calibration set of reference
+individuals: comparison of methods in two diverse groups of maize
+inbreds (<em>Zea mays</em> L.). <em>Genetics</em>, 192(2), 715–728. <a href="https://doi.org/10.1534/genetics.112.141473" class="external-link uri">https://doi.org/10.1534/genetics.112.141473</a></p>
+<p>Jones, B., Allen-Moyer, K., &amp; Goos, P. (2021). A-optimal versus
+D-optimal design of screening experiments. <em>Journal of Quality
+Technology</em>, 53(4), 369–382. <a href="https://doi.org/10.1080/00224065.2020.1757391" class="external-link uri">https://doi.org/10.1080/00224065.2020.1757391</a></p>
+<p>Hutchinson, M. F. (1990). A stochastic estimator of the trace of the
+influence matrix for Laplacian smoothing splines. <em>Communications in
+Statistics — Simulation and Computation</em>, 19(2), 433–450. <a href="https://doi.org/10.1080/03610919008812866" class="external-link uri">https://doi.org/10.1080/03610919008812866</a></p>
+<p>Kirkpatrick, S., Gelatt, C. D., &amp; Vecchi, M. P. (1983).
+Optimization by simulated annealing. <em>Science</em>, 220(4598),
+671–680. <a href="https://doi.org/10.1126/science.220.4598.671" class="external-link uri">https://doi.org/10.1126/science.220.4598.671</a></p>
+<p>Holland, J. H. (1992). <em>Adaptation in Natural and Artificial
+Systems</em>. MIT Press.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

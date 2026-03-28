@@ -2,7 +2,8 @@
 
 Synthetic example data shipped with `OptiDesign` for illustrating and
 testing the main design constructors, relationship-matrix workflows,
-optional dispersion optimization, and optional efficiency settings.
+optional dispersion optimisation, and efficiency evaluation across both
+design families.
 
 ## Format
 
@@ -11,73 +12,110 @@ A named list with the following components:
 - `OptiDesign_lines`:
 
   A data frame with columns `Treatment` and `Family` representing a
-  synthetic pool of line identifiers and their family labels.
+  synthetic pool of line identifiers and their family labels. Used as a
+  starting point for constructing both
+  [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md)
+  and
+  [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md)
+  treatment vectors.
 
 - `OptiDesign_id_map`:
 
   A data frame with columns `Treatment` and `LineID` used to map
-  treatment labels to row and column names of relationship matrices when
-  those names differ.
+  treatment labels to the rownames and colnames of relationship matrices
+  when those names differ from the treatment identifiers. Relevant for
+  `cluster_source %in% c("GRM", "A")` and for
+  `prediction_type %in% c("GBLUP", "PBLUP")`.
 
 - `OptiDesign_GRM`:
 
   A synthetic genomic relationship matrix with rownames and colnames
-  corresponding to line IDs. It can be used for matrix-based grouping or
-  genomic dispersion examples.
+  corresponding to line IDs. Can be used for matrix-based grouping
+  (`cluster_source = "GRM"`), dispersion optimisation
+  (`dispersion_source = "GRM"`), or as a `K` matrix for GBLUP efficiency
+  evaluation.
 
 - `OptiDesign_A`:
 
   A synthetic pedigree-style relationship matrix with rownames and
-  colnames corresponding to line IDs. It can be used for pedigree-based
-  grouping or dispersion examples.
+  colnames corresponding to line IDs. Can be used for pedigree-based
+  grouping (`cluster_source = "A"`), dispersion optimisation
+  (`dispersion_source = "A"`), or as a `K` matrix for PBLUP efficiency
+  evaluation.
 
 - `OptiDesign_K`:
 
-  A synthetic relationship or kernel matrix with rownames and colnames
-  corresponding to line IDs. It is intended for workflows that require a
-  `K` matrix, such as BLUP-style prediction settings or dispersion
-  optimization using `dispersion_source = "K"`.
+  A synthetic genomic kernel matrix with rownames and colnames
+  corresponding to line IDs. Intended for workflows that supply a `K`
+  matrix directly, such as `prediction_type = "GBLUP"` in
+  [`evaluate_famoptg_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_famoptg_efficiency.md)
+  or
+  [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md),
+  CDmean computation in
+  [`optimize_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_famoptg.md)
+  or
+  [`optimize_alpha_rc()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_alpha_rc.md),
+  and dispersion optimisation with `dispersion_source = "K"`.
 
 - `OptiDesign_famoptg_example`:
 
   A named list containing the core treatment vectors and field
-  dimensions needed to run
+  dimensions needed to call
   [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md).
-  This includes checks, p-rep treatments, unreplicated treatments, and
-  basic field dimensions.
+  Includes check treatments, p-rep treatments with replication counts,
+  unreplicated treatments, family labels for all treatment classes,
+  number of blocks, and field dimensions (`n_rows`, `n_cols`). Combine
+  with one of `OptiDesign_famoptg_args_family` or
+  `OptiDesign_famoptg_args_grm` to form a complete argument list.
 
 - `OptiDesign_alpha_example`:
 
   A named list containing the core treatment vectors and field
-  dimensions needed to run
+  dimensions needed to call
   [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md).
-  This includes checks, entries, number of replicates, and fixed field
-  dimensions.
+  Includes check treatments, entry treatments, family labels, number of
+  replicates, and field dimensions (`n_rows`, `n_cols`). Combine with
+  one of `OptiDesign_alpha_args_family` or `OptiDesign_alpha_args_grm`
+  to form a complete argument list.
 
 - `OptiDesign_famoptg_args_family`:
 
-  A named list of additional arguments for a family-based call to
+  A named list of supplementary arguments for a family-based call to
   [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md).
-  It illustrates a simple design setup without efficiency evaluation.
+  Specifies `cluster_source = "Family"`, field traversal settings, block
+  placement options, and does not include efficiency evaluation
+  arguments (those are now passed to
+  [`evaluate_famoptg_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_famoptg_efficiency.md)
+  separately).
 
 - `OptiDesign_famoptg_args_grm`:
 
-  A named list of additional arguments for a GRM-based call to
+  A named list of supplementary arguments for a GRM-based call to
   [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md).
-  It illustrates matrix-based grouping and optional dispersion settings.
+  Specifies `cluster_source = "GRM"`, includes `GRM` and `id_map`
+  references, and illustrates matrix-based grouping and optional
+  dispersion settings. Efficiency evaluation arguments are passed to
+  [`evaluate_famoptg_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_famoptg_efficiency.md)
+  separately.
 
 - `OptiDesign_alpha_args_family`:
 
-  A named list of additional arguments for a family-based call to
+  A named list of supplementary arguments for a family-based call to
   [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md).
-  It illustrates a stream-based row-column design without efficiency
-  evaluation.
+  Specifies `cluster_source = "Family"`, field traversal settings, and
+  block size constraints. Efficiency evaluation arguments are passed to
+  [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md)
+  separately.
 
 - `OptiDesign_alpha_args_grm`:
 
-  A named list of additional arguments for a GRM-based call to
+  A named list of supplementary arguments for a GRM-based call to
   [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md).
-  It illustrates matrix-based grouping and optional dispersion settings.
+  Specifies `cluster_source = "GRM"`, includes `GRM` and `id_map`
+  references, and illustrates matrix-based grouping and optional
+  dispersion settings. Efficiency evaluation arguments are passed to
+  [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md)
+  separately.
 
 ## Source
 
@@ -85,41 +123,87 @@ Generated internally by `data-raw/generate_example_data.R`.
 
 ## Details
 
-The objects in this dataset are synthetic and are intended for:
+The objects in this dataset are fully synthetic and are intended for:
 
-- package examples,
+- package examples and vignettes,
 
-- tests,
+- unit tests,
 
 - workflow demonstrations,
 
 - and user exploration of argument combinations.
 
-The dataset is especially useful for understanding how the package
-handles:
+The dataset covers both design families in the package and is structured
+so that `OptiDesign_famoptg_example` and `OptiDesign_alpha_example`
+provide the treatment and field inputs, while the `*_args_*` lists
+provide the algorithmic and model settings. This separation mirrors the
+construct-then-evaluate architecture of the package.
 
-- repeated checks,
+### Illustrative workflows
 
-- p-rep and unreplicated materials,
+**Repeated-check block design (family-based):**
 
-- fixed-grid stream designs,
+    x <- OptiDesign_example_data
 
-- family-based grouping,
+    design <- do.call(prep_famoptg,
+      c(x$OptiDesign_famoptg_example, x$OptiDesign_famoptg_args_family)
+    )
 
-- GRM- or pedigree-based grouping,
+    eff <- evaluate_famoptg_efficiency(
+      field_book       = design$field_book,
+      n_rows           = x$OptiDesign_famoptg_example$n_rows,
+      n_cols           = x$OptiDesign_famoptg_example$n_cols,
+      check_treatments = x$OptiDesign_famoptg_example$check_treatments,
+      treatment_effect = "fixed"
+    )
 
-- and matrix-based dispersion settings.
+**Alpha row-column stream design (GRM-based):**
 
-Load the dataset with:
+    x <- OptiDesign_example_data
 
-`data("OptiDesign_example_data", package = "OptiDesign")`
+    design <- do.call(alpha_rc_stream,
+      c(x$OptiDesign_alpha_example, x$OptiDesign_alpha_args_grm)
+    )
 
-Then extract individual components as needed, for example:
+    eff <- evaluate_alpha_efficiency(
+      field_book       = design$field_book,
+      n_rows           = x$OptiDesign_alpha_example$n_rows,
+      n_cols           = x$OptiDesign_alpha_example$n_cols,
+      check_treatments = x$OptiDesign_alpha_example$check_treatments,
+      treatment_effect = "fixed"
+    )
 
-`x <- OptiDesign_example_data`
+**Optimised repeated-check block design:**
 
-`x$OptiDesign_famoptg_example`
+    x <- OptiDesign_example_data
 
-`x$OptiDesign_GRM`
+    opt <- do.call(optimize_famoptg,
+      c(
+        x$OptiDesign_famoptg_example,
+        x$OptiDesign_famoptg_args_family,
+        list(
+          treatment_effect = "fixed",
+          criterion        = "A",
+          n_restarts       = 20
+        )
+      )
+    )
+    opt$optimization$best_score
 
-`x$OptiDesign_alpha_args_family`
+**Optimised alpha row-column stream design:**
+
+    x <- OptiDesign_example_data
+
+    opt <- do.call(optimize_alpha_rc,
+      c(
+        x$OptiDesign_alpha_example,
+        x$OptiDesign_alpha_args_family,
+        list(
+          treatment_effect = "fixed",
+          method           = "RS",
+          criterion        = "A",
+          n_restarts       = 20
+        )
+      )
+    )
+    opt$optimization$best_score
