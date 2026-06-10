@@ -82,14 +82,14 @@ before field implementation:
 construction, evaluation, and optimisation are separated into distinct
 functions that can be called independently or chained together.
 
-| Function                                                                                                          | Role                        | Design family           |
-|-------------------------------------------------------------------------------------------------------------------|-----------------------------|-------------------------|
-| [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md)                               | Construction                | Repeated-check block    |
-| [`evaluate_famoptg_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_famoptg_efficiency.md) | Evaluation                  | Repeated-check block    |
-| [`optimize_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_famoptg.md)                       | Optimisation (RS)           | Repeated-check block    |
-| [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md)                         | Construction                | Alpha row-column stream |
-| [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md)     | Evaluation                  | Alpha row-column stream |
-| [`optimize_alpha_rc()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_alpha_rc.md)                     | Optimisation (RS / SA / GA) | Alpha row-column stream |
+| Function | Role | Design family |
+|----|----|----|
+| [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md) | Construction | Repeated-check block |
+| [`evaluate_famoptg_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_famoptg_efficiency.md) | Evaluation | Repeated-check block |
+| [`optimize_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_famoptg.md) | Optimisation (RS) | Repeated-check block |
+| [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md) | Construction | Alpha row-column stream |
+| [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md) | Evaluation | Alpha row-column stream |
+| [`optimize_alpha_rc()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_alpha_rc.md) | Optimisation (RS / SA / GA) | Alpha row-column stream |
 
 ------------------------------------------------------------------------
 
@@ -112,13 +112,13 @@ may be replicated, partially replicated, or unreplicated.
 
 **Key capabilities:**
 
-| Feature                 | Details                                                        |
-|-------------------------|----------------------------------------------------------------|
-| Replication             | Flexible per-entry replication                                 |
-| Block allocation        | P-rep constraint: no treatment appears twice in the same block |
-| Design types            | Augmented, p-rep, RCBD-type repeated-check                     |
-| Grouping                | Family labels, GRM, or pedigree (A) matrix                     |
-| Dispersion optimization | Optional; reduces clustering of related entries                |
+| Feature | Details |
+|----|----|
+| Replication | Flexible per-entry replication |
+| Block allocation | P-rep constraint: no treatment appears twice in the same block |
+| Design types | Augmented, p-rep, RCBD-type repeated-check |
+| Grouping | Family labels, GRM, or pedigree (A) matrix |
+| Dispersion optimization | Optional; reduces clustering of related entries |
 
 > **Key design rule:** a treatment can appear multiple times overall,
 > but always in distinct blocks — never twice in the same block.
@@ -184,15 +184,15 @@ validates the number of incomplete blocks per replicate accordingly.
 
 **Key capabilities:**
 
-| Feature                 | Details                                                                      |
-|-------------------------|------------------------------------------------------------------------------|
-| Grid                    | Fixed `n_rows × n_cols`                                                      |
-| Replicates              | Contiguous field segments                                                    |
-| Block sizes             | Controlled via `min_block_size` / `max_block_size` (total: checks + entries) |
-| Checks                  | Present in every incomplete block                                            |
-| Block count             | User-fixed or automatically derived as the largest feasible value            |
-| Grouping                | Family labels, GRM, or pedigree (A) matrix                                   |
-| Dispersion optimization | Optional                                                                     |
+| Feature | Details |
+|----|----|
+| Grid | Fixed `n_rows × n_cols` |
+| Replicates | Contiguous field segments |
+| Block sizes | Controlled via `min_block_size` / `max_block_size` (total: checks + entries) |
+| Checks | Present in every incomplete block |
+| Block count | User-fixed or automatically derived as the largest feasible value |
+| Grouping | Family labels, GRM, or pedigree (A) matrix |
+| Dispersion optimization | Optional |
 
 > **Important:** unused cells are placed only at the end of the field
 > stream, not scattered — which is critical for practical field
@@ -220,11 +220,11 @@ and
 [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md)
 in an optimisation loop with three search strategies:
 
-| Method                       | Description                                                                      | Best for                               |
-|------------------------------|----------------------------------------------------------------------------------|----------------------------------------|
-| **RS** (Random Restart)      | Generate `n_restarts` independent designs, return the best                       | Quick exploration, guaranteed validity |
-| **SA** (Simulated Annealing) | Iterative entry-permutation swaps with temperature-governed acceptance           | Escaping local optima                  |
-| **GA** (Genetic Algorithm)   | Population of permutations evolved via OX1 crossover, swap mutation, and elitism | Thorough global search                 |
+| Method | Description | Best for |
+|----|----|----|
+| **RS** (Random Restart) | Generate `n_restarts` independent designs, return the best | Quick exploration, guaranteed validity |
+| **SA** (Simulated Annealing) | Iterative entry-permutation swaps with temperature-governed acceptance | Escaping local optima |
+| **GA** (Genetic Algorithm) | Population of permutations evolved via OX1 crossover, swap mutation, and elitism | Thorough global search |
 
 All three methods preserve all structural constraints by construction.
 Supports A, D, both, and CDmean criteria.
@@ -233,14 +233,14 @@ Supports A, D, both, and CDmean criteria.
 
 ## Key Differences Between Design Families
 
-| Feature              | `prep_famoptg` family       | `alpha_rc_stream` family       |
-|----------------------|-----------------------------|--------------------------------|
-| Blocking structure   | Flat blocks                 | Replicates → incomplete blocks |
-| Replication          | Flexible per-entry          | Uniform across entries         |
-| Design types         | Augmented, p-rep, RCBD-type | Alpha-lattice                  |
-| Block variance       | `sigma_b2`                  | `sigma_rep2` + `sigma_ib2`     |
-| Optimisation methods | RS only                     | RS, SA, GA                     |
-| P-rep constraint     | Enforced                    | Not applicable                 |
+| Feature | `prep_famoptg` family | `alpha_rc_stream` family |
+|----|----|----|
+| Blocking structure | Flat blocks | Replicates → incomplete blocks |
+| Replication | Flexible per-entry | Uniform across entries |
+| Design types | Augmented, p-rep, RCBD-type | Alpha-lattice |
+| Block variance | `sigma_b2` | `sigma_rep2` + `sigma_ib2` |
+| Optimisation methods | RS only | RS, SA, GA |
+| P-rep constraint | Enforced | Not applicable |
 
 ------------------------------------------------------------------------
 
@@ -249,25 +249,27 @@ Supports A, D, both, and CDmean criteria.
 Both families support three grouping strategies for adjacency scoring
 within blocks and genomic dispersion:
 
-| Strategy       | Source                    | Best for                            |
-|----------------|---------------------------|-------------------------------------|
-| Family-based   | User-defined labels       | Simple, interpretable grouping      |
-| GRM-based      | Genomic similarity matrix | Captures real genomic relationships |
-| Pedigree-based | A matrix                  | When genomic data is unavailable    |
+| Strategy | Source | Best for |
+|----|----|----|
+| Family-based | User-defined labels | Simple, interpretable grouping |
+| GRM-based | Genomic similarity matrix | Captures real genomic relationships |
+| Pedigree-based | A matrix | When genomic data is unavailable |
 
 ------------------------------------------------------------------------
 
 ## Efficiency Criteria
 
-| Criterion   | Meaning                                                      | Direction        | Available for                |
-|-------------|--------------------------------------------------------------|------------------|------------------------------|
-| A-criterion | Mean pairwise contrast variance (fixed) or mean PEV (random) | Lower is better  | Both families                |
-| D-criterion | Geometric mean of contrast covariance eigenvalues            | Lower is better  | Fixed effects only           |
-| CDmean      | Mean coefficient of determination for GEBV prediction        | Higher is better | Random effects + GBLUP/PBLUP |
+| Criterion | Meaning | Direction | Available for |
+|----|----|----|----|
+| A-criterion | Mean pairwise contrast variance (fixed) or mean PEV (random) | Lower is better | Both families |
+| D-criterion | Geometric mean of contrast covariance eigenvalues | Lower is better | Fixed effects only |
+| CDmean | Mean coefficient of determination for GEBV prediction | Higher is better | Random effects + GBLUP/PBLUP |
 
 CDmean is defined as:
 
-$$\text{CDmean} = 1 - \frac{\text{mean PEV}}{\sigma_{g}^{2}}$$
+``` math
+\text{CDmean} = 1 - \frac{\text{mean PEV}}{\sigma_g^2}
+```
 
 and directly measures the expected reliability of genomic prediction. It
 is particularly useful for optimising training population designs in
@@ -280,6 +282,7 @@ genomic selection (Rincent et al. 2012).
 ### Repeated-check block design
 
 ``` r
+
 library(OptiDesign)
 
 # 1. Construct
@@ -328,6 +331,7 @@ opt$optimization$score_history
 ### Alpha row-column stream design
 
 ``` r
+
 library(OptiDesign)
 
 # 1. Construct
@@ -372,6 +376,7 @@ opt$optimization$best_score
 ### Genomic prediction optimisation (CDmean)
 
 ``` r
+
 library(OptiDesign)
 
 # Maximise CDmean for genomic selection training population
@@ -405,6 +410,7 @@ opt_cdmean$optimization$best_score  # positive CDmean, higher is better
 Install from GitHub with vignettes (recommended):
 
 ``` r
+
 install.packages("remotes")
 remotes::install_github("FAkohoue/OptiDesign",
   build_vignettes = TRUE,
@@ -415,6 +421,7 @@ remotes::install_github("FAkohoue/OptiDesign",
 Install without vignettes for a faster install:
 
 ``` r
+
 remotes::install_github("FAkohoue/OptiDesign",
   build_vignettes = FALSE,
   dependencies    = TRUE
@@ -432,6 +439,7 @@ Full documentation, function reference, and tutorials are available at:
 To read the vignette after installation:
 
 ``` r
+
 vignette("OptiDesign-introduction", package = "OptiDesign")
 ```
 

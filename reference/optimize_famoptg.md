@@ -235,13 +235,13 @@ function stops with a diagnostic error pointing to the likely cause.
 
 All restarts minimise an internal score (lower = better internally):
 
-|             |                                         |                            |
-|-------------|-----------------------------------------|----------------------------|
-| `criterion` | Internal score                          | Direction reported to user |
-| `"A"`       | `A_criterion`                           | Lower is better            |
-| `"D"`       | `D_criterion`                           | Lower is better            |
-| `"both"`    | Mean of `A_criterion` and `D_criterion` | Lower is better            |
-| `"CDmean"`  | Negated CDmean                          | Higher CDmean is better    |
+|  |  |  |
+|----|----|----|
+| `criterion` | Internal score | Direction reported to user |
+| `"A"` | `A_criterion` | Lower is better |
+| `"D"` | `D_criterion` | Lower is better |
+| `"both"` | Mean of `A_criterion` and `D_criterion` | Lower is better |
+| `"CDmean"` | Negated CDmean | Higher CDmean is better |
 
 For `"CDmean"` the internal negation is transparent to the user:
 `best_score` and `score_history` are always reported as positive CDmean

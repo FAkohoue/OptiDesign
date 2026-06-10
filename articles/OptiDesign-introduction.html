@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -257,22 +257,22 @@ model:</p>
 </tbody>
 </table>
 <p>Random effects:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.167em"></mspace><mi>G</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">u \sim N(0,\, G)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.167em"></mspace><mi>G</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">u \sim N(0,\, G)</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.167em"></mspace><mi>R</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">e \sim N(0,\, R)</annotation></semantics></math>.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.167em"></mspace><mi>R</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">e \sim N(0,\, R)</annotation></semantics></math>.</p>
 <p>For the <strong>repeated-check block</strong> family:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>G</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mtext mathvariant="normal">blockdiag</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>σ</mi><mi>b</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>r</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>c</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>g</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><msup><mi>K</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">G^{-1} = \text{blockdiag}(\sigma_b^{-2}I,\; \sigma_r^{-2}I,\; \sigma_c^{-2}I,\; \sigma_g^{-2}K^{-1})</annotation></semantics></math></p>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>G</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mtext mathvariant="normal">blockdiag</mtext><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><mi>b</mi><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>r</mi><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>c</mi><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>g</mi><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><msup><mi>K</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G^{-1} = \text{blockdiag}(\sigma_b^{-2}I,\; \sigma_r^{-2}I,\; \sigma_c^{-2}I,\; \sigma_g^{-2}K^{-1})</annotation></semantics></math></p>
 <p>For the <strong>alpha row-column stream</strong> family:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>G</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mtext mathvariant="normal">blockdiag</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>σ</mi><mtext mathvariant="normal">rep</mtext><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mtext mathvariant="normal">ib</mtext><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>r</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>c</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>g</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><msup><mi>K</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">G^{-1} = \text{blockdiag}(\sigma_\text{rep}^{-2}I,\; \sigma_\text{ib}^{-2}I,\; \sigma_r^{-2}I,\; \sigma_c^{-2}I,\; \sigma_g^{-2}K^{-1})</annotation></semantics></math></p>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>G</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mtext mathvariant="normal">blockdiag</mtext><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><mtext mathvariant="normal">rep</mtext><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mtext mathvariant="normal">ib</mtext><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>r</mi><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>c</mi><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><mi>I</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>g</mi><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><msup><mi>K</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G^{-1} = \text{blockdiag}(\sigma_\text{rep}^{-2}I,\; \sigma_\text{ib}^{-2}I,\; \sigma_r^{-2}I,\; \sigma_c^{-2}I,\; \sigma_g^{-2}K^{-1})</annotation></semantics></math></p>
 </div>
 <div class="section level3">
 <h3 id="mixed-model-coefficient-matrix">Mixed model coefficient matrix<a class="anchor" aria-label="anchor" href="#mixed-model-coefficient-matrix"></a>
 </h3>
 <p>Efficiency criteria are derived from the mixed model coefficient
 matrix:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msup><mi>X</mi><mi>⊤</mi></msup><mi>Q</mi><mi>X</mi></mtd><mtd columnalign="center" style="text-align: center"><msup><mi>X</mi><mi>⊤</mi></msup><mi>Q</mi><mi>Z</mi></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msup><mi>Z</mi><mi>⊤</mi></msup><mi>Q</mi><mi>X</mi></mtd><mtd columnalign="center" style="text-align: center"><msup><mi>Z</mi><mi>⊤</mi></msup><mi>Q</mi><mi>Z</mi><mo>+</mo><msup><mi>G</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">C = \begin{pmatrix} X^\top Q X &amp; X^\top Q Z \\ Z^\top Q X &amp; Z^\top Q Z + G^{-1} \end{pmatrix}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msup><mi>X</mi><mi>⊤</mi></msup><mi>Q</mi><mi>X</mi></mtd><mtd columnalign="center" style="text-align: center"><msup><mi>X</mi><mi>⊤</mi></msup><mi>Q</mi><mi>Z</mi></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msup><mi>Z</mi><mi>⊤</mi></msup><mi>Q</mi><mi>X</mi></mtd><mtd columnalign="center" style="text-align: center"><msup><mi>Z</mi><mi>⊤</mi></msup><mi>Q</mi><mi>Z</mi><mo>+</mo><msup><mi>G</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">C = \begin{pmatrix} X^\top Q X &amp; X^\top Q Z \\ Z^\top Q X &amp; Z^\top Q Z + G^{-1} \end{pmatrix}</annotation></semantics></math></p>
 <p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><msup><mi>R</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">Q = R^{-1}</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><msup><mi>R</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">Q = R^{-1}</annotation></semantics></math>
 is the residual precision matrix.</p>
 </div>
 <div class="section level3">
@@ -285,11 +285,11 @@ with autocorrelation
 the precision matrix
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><annotation encoding="application/x-tex">Q_\text{AR1}</annotation></semantics></math>
 is tridiagonal with interior diagonal entries
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">(1+\rho^2)/(1-\rho^2)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(1+\rho^2)/(1-\rho^2)</annotation></semantics></math>,
 edge diagonal entries
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">1/(1-\rho^2)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1/(1-\rho^2)</annotation></semantics></math>,
 and off-diagonal entries
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mi>ρ</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">-\rho/(1-\rho^2)</annotation></semantics></math>.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>ρ</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-\rho/(1-\rho^2)</annotation></semantics></math>.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -309,12 +309,12 @@ and off-diagonal entries
 </tr>
 <tr class="even">
 <td>AR1</td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><msubsup><mi>σ</mi><mi>e</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ρ</mi><mi>r</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>⊗</mo><msub><mi>I</mi><mi>c</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">R^{-1} = \sigma_e^{-2}(Q_\text{AR1}(\rho_r) \otimes I_c)</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><msubsup><mi>σ</mi><mi>e</mi><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><mo stretchy="false" form="prefix">(</mo><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>ρ</mi><mi>r</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>⊗</mo><msub><mi>I</mi><mi>c</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">R^{-1} = \sigma_e^{-2}(Q_\text{AR1}(\rho_r) \otimes I_c)</annotation></semantics></math></td>
 <td><code>rho_row</code></td>
 </tr>
 <tr class="odd">
 <td>AR1×AR1</td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><msubsup><mi>σ</mi><mi>e</mi><mrow><mo>−</mo><mn>2</mn></mrow></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ρ</mi><mi>c</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>⊗</mo><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ρ</mi><mi>r</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">R^{-1} = \sigma_e^{-2}(Q_\text{AR1}(\rho_c) \otimes Q_\text{AR1}(\rho_r))</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><msubsup><mi>σ</mi><mi>e</mi><mrow><mi>−</mi><mn>2</mn></mrow></msubsup><mo stretchy="false" form="prefix">(</mo><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>ρ</mi><mi>c</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>⊗</mo><msub><mi>Q</mi><mtext mathvariant="normal">AR1</mtext></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>ρ</mi><mi>r</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">R^{-1} = \sigma_e^{-2}(Q_\text{AR1}(\rho_c) \otimes Q_\text{AR1}(\rho_r))</annotation></semantics></math></td>
 <td>
 <code>rho_row</code>, <code>rho_col</code>
 </td>
@@ -328,17 +328,17 @@ and off-diagonal entries
 <p><strong>A-criterion</strong> (lower is better): minimises the mean
 pairwise contrast variance under fixed treatment effects, or the mean
 prediction error variance (PEV) under random treatment effects.</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mtext mathvariant="normal">criterion</mtext></msub><mo>=</mo><mfrac><mn>2</mn><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>&lt;</mo><mi>j</mi></mrow></munder><mtext mathvariant="normal">Var</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>τ</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo>−</mo><msub><mover><mi>τ</mi><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">A_\text{criterion} = \frac{2}{p(p-1)} \sum_{i&lt;j} \text{Var}(\hat{\tau}_i - \hat{\tau}_j)</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mtext mathvariant="normal">criterion</mtext></msub><mo>=</mo><mfrac><mn>2</mn><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>&lt;</mo><mi>j</mi></mrow></munder><mtext mathvariant="normal">Var</mtext><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>τ</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo>−</mo><msub><mover><mi>τ</mi><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">A_\text{criterion} = \frac{2}{p(p-1)} \sum_{i&lt;j} \text{Var}(\hat{\tau}_i - \hat{\tau}_j)</annotation></semantics></math></p>
 <p><strong>D-criterion</strong> (lower is better): minimises the
 geometric mean of the contrast covariance eigenvalues (fixed effects
 only).</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mtext mathvariant="normal">criterion</mtext></msub><mo>=</mo><mo>exp</mo><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mo>log</mo><mo>det</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>H</mi><mi>V</mi><mi>H</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mi>p</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">D_\text{criterion} = \exp\!\left(\frac{\log\det(HVH)}{p-1}\right)</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mtext mathvariant="normal">criterion</mtext></msub><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mi mathvariant="normal">det</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>H</mi><mi>V</mi><mi>H</mi><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>p</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">D_\text{criterion} = \exp\!\left(\frac{\log\det(HVH)}{p-1}\right)</annotation></semantics></math></p>
 <p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><msub><mi>I</mi><mi>p</mi></msub><mo>−</mo><msup><mi>p</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><msub><mi>J</mi><mi>p</mi></msub></mrow><annotation encoding="application/x-tex">H = I_p - p^{-1}J_p</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><msub><mi>I</mi><mi>p</mi></msub><mo>−</mo><msup><mi>p</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><msub><mi>J</mi><mi>p</mi></msub></mrow><annotation encoding="application/x-tex">H = I_p - p^{-1}J_p</annotation></semantics></math>
 is the centering matrix and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>
 is the treatment variance-covariance submatrix of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>C</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><annotation encoding="application/x-tex">C^{-1}</annotation></semantics></math>.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>C</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><annotation encoding="application/x-tex">C^{-1}</annotation></semantics></math>.</p>
 <p><strong>CDmean</strong> (higher is better): the mean coefficient of
 determination for genomic breeding value (GEBV) prediction (Rincent et
 al. 2012). Measures the proportion of genetic variance explained by
@@ -356,11 +356,11 @@ genomic selection.</p>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>
 submatrix is replaced by the Hutchinson stochastic trace estimator
 (Hutchinson 1990), which approximates
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">trace</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>C</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">[</mo><mtext mathvariant="normal">idx</mtext><mo>,</mo><mtext mathvariant="normal">idx</mtext><mo stretchy="true" form="postfix">]</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{trace}(C^{-1}[\text{idx},\text{idx}])</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">trace</mtext><mo stretchy="false" form="prefix">(</mo><msup><mi>C</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">[</mo><mtext mathvariant="normal">idx</mtext><mo>,</mo><mtext mathvariant="normal">idx</mtext><mo stretchy="false" form="postfix">]</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{trace}(C^{-1}[\text{idx},\text{idx}])</annotation></semantics></math>
 using
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
 Rademacher random vectors:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">trace</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>C</mi><mtext mathvariant="normal">idx</mtext><mrow><mo>−</mo><mn>1</mn></mrow></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>≈</mo><mfrac><mn>1</mn><mi>m</mi></mfrac><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover><msubsup><mi>z</mi><mi>k</mi><mi>⊤</mi></msubsup><msup><mi>C</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><msub><mi>z</mi><mi>k</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>z</mi><mi>k</mi></msub><mo>∼</mo><mtext mathvariant="normal">Rademacher</mtext></mrow><annotation encoding="application/x-tex">\text{trace}(C^{-1}_\text{idx}) \approx \frac{1}{m} \sum_{k=1}^{m} z_k^\top C^{-1} z_k, \quad z_k \sim \text{Rademacher}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">trace</mtext><mo stretchy="false" form="prefix">(</mo><msubsup><mi>C</mi><mtext mathvariant="normal">idx</mtext><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mfrac><mn>1</mn><mi>m</mi></mfrac><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover><msubsup><mi>z</mi><mi>k</mi><mi>⊤</mi></msubsup><msup><mi>C</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><msub><mi>z</mi><mi>k</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>z</mi><mi>k</mi></msub><mo>∼</mo><mtext mathvariant="normal">Rademacher</mtext></mrow><annotation encoding="application/x-tex">\text{trace}(C^{-1}_\text{idx}) \approx \frac{1}{m} \sum_{k=1}^{m} z_k^\top C^{-1} z_k, \quad z_k \sim \text{Rademacher}</annotation></semantics></math></p>
 <p>The result carries the <code>_APPROX</code> mode suffix and
 <code>D_criterion</code> is <code>NA</code>.</p>
 <hr>
@@ -470,7 +470,7 @@ three search strategies:</p>
 validity, simple, easily parallelisable.</p>
 <p><strong>SA (Simulated Annealing)</strong> — iterative entry
 permutation swaps with Metropolis acceptance:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">accept worse</mtext><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>exp</mo><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mfrac><mi>Δ</mi><msub><mi>T</mi><mi>k</mi></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(\text{accept worse}) = \exp\!\left(-\frac{\Delta}{T_k}\right)</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">accept worse</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mfrac><mi mathvariant="normal">Δ</mi><msub><mi>T</mi><mi>k</mi></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(\text{accept worse}) = \exp\!\left(-\frac{\Delta}{T_k}\right)</annotation></semantics></math>
 where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>k</mi></msub><annotation encoding="application/x-tex">T_k</annotation></semantics></math>
 cools from <code>sa_temp_start</code> to <code>sa_temp_end</code>.
@@ -953,7 +953,7 @@ family labels</td>
 </h3>
 <p>The dispersion step minimises the total genomic relatedness among
 neighbouring plots:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><munder><mo>∑</mo><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>∈</mo><mi>𝒩</mi></mrow></munder><msub><mi>K</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">S = \sum_{(i,j)\in\mathcal{N}} K_{ij}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><munder><mo>∑</mo><mrow><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><mi>𝒩</mi></mrow></munder><msub><mi>K</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">S = \sum_{(i,j)\in\mathcal{N}} K_{ij}</annotation></semantics></math></p>
 <p>where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝒩</mi><annotation encoding="application/x-tex">\mathcal{N}</annotation></semantics></math>
 is the set of plot pairs within Chebyshev distance
@@ -1135,7 +1135,7 @@ the scale of real data, use heritability-consistent components:</p>
 </h2>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; R version 4.5.3 (2026-03-11)</span></span>
+<span><span class="co">#&gt; R version 4.6.0 (2026-04-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
 <span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -1159,14 +1159,14 @@ the scale of real data, use heritability-consistent components:</p>
 <span><span class="co">#&gt; [1] OptiDesign_0.1.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
-<span><span class="co">#&gt;  [5] Matrix_1.7-4      xfun_0.57         lattice_0.22-9    cachem_1.1.0     </span></span>
-<span><span class="co">#&gt;  [9] knitr_1.51        htmltools_0.5.9   rmarkdown_2.31    lifecycle_1.0.5  </span></span>
-<span><span class="co">#&gt; [13] cli_3.6.5         grid_4.5.3        sass_0.4.10       pkgdown_2.2.0    </span></span>
-<span><span class="co">#&gt; [17] textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2 compiler_4.5.3   </span></span>
-<span><span class="co">#&gt; [21] tools_4.5.3       ragg_1.5.2        pracma_2.4.6      evaluate_1.0.5   </span></span>
-<span><span class="co">#&gt; [25] bslib_0.10.0      yaml_2.3.12       jsonlite_2.0.0    rlang_1.1.7      </span></span>
-<span><span class="co">#&gt; [29] fs_2.0.1</span></span></code></pre></div>
+<span><span class="co">#&gt;  [1] cli_3.6.6         knitr_1.51        rlang_1.2.0       xfun_0.58        </span></span>
+<span><span class="co">#&gt;  [5] otel_0.2.0        textshaping_1.0.5 jsonlite_2.0.0    htmltools_0.5.9  </span></span>
+<span><span class="co">#&gt;  [9] pracma_2.4.6      ragg_1.5.2        sass_0.4.10       rmarkdown_2.31   </span></span>
+<span><span class="co">#&gt; [13] grid_4.6.0        evaluate_1.0.5    jquerylib_0.1.4   fastmap_1.2.0    </span></span>
+<span><span class="co">#&gt; [17] yaml_2.3.12       lifecycle_1.0.5   compiler_4.6.0    fs_2.1.0         </span></span>
+<span><span class="co">#&gt; [21] systemfonts_1.3.2 lattice_0.22-9    digest_0.6.39     R6_2.6.1         </span></span>
+<span><span class="co">#&gt; [25] bslib_0.11.0      Matrix_1.7-5      tools_4.6.0       pkgdown_2.2.0    </span></span>
+<span><span class="co">#&gt; [29] cachem_1.1.0      desc_1.4.3</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">

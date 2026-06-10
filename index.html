@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="favicon.ico">
 <link rel="manifest" href="site.webmanifest">
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet">
 <link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -155,38 +155,38 @@
 <col width="33%">
 <col width="33%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Function</th>
 <th>Role</th>
 <th>Design family</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/prep_famoptg.html">prep_famoptg()</a></code></td>
 <td>Construction</td>
 <td>Repeated-check block</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/evaluate_famoptg_efficiency.html">evaluate_famoptg_efficiency()</a></code></td>
 <td>Evaluation</td>
 <td>Repeated-check block</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/optimize_famoptg.html">optimize_famoptg()</a></code></td>
 <td>Optimisation (RS)</td>
 <td>Repeated-check block</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/alpha_rc_stream.html">alpha_rc_stream()</a></code></td>
 <td>Construction</td>
 <td>Alpha row-column stream</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/evaluate_alpha_efficiency.html">evaluate_alpha_efficiency()</a></code></td>
 <td>Evaluation</td>
 <td>Alpha row-column stream</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/optimize_alpha_rc.html">optimize_alpha_rc()</a></code></td>
 <td>Optimisation (RS / SA / GA)</td>
 <td>Alpha row-column stream</td>
@@ -216,28 +216,28 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Feature</th>
 <th>Details</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Replication</td>
 <td>Flexible per-entry replication</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Block allocation</td>
 <td>P-rep constraint: no treatment appears twice in the same block</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Design types</td>
 <td>Augmented, p-rep, RCBD-type repeated-check</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Grouping</td>
 <td>Family labels, GRM, or pedigree (A) matrix</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Dispersion optimization</td>
 <td>Optional; reduces clustering of related entries</td>
 </tr>
@@ -255,23 +255,23 @@
 <p>Evaluates the statistical efficiency of a design produced by <code><a href="reference/prep_famoptg.html">prep_famoptg()</a></code>. The mixed model contains <strong>Block + Row + Column</strong> random effects (no replicate or incomplete-block nesting). Uses variance component <code>sigma_b2</code> for the flat block structure. Fully decoupled from construction — the same field book can be evaluated multiple times under different model assumptions without rebuilding the layout.</p>
 <p><strong>Supported criteria:</strong></p>
 <table class="table">
-<thead><tr class="header">
+<thead><tr>
 <th>Criterion</th>
 <th>Effect type</th>
 <th>Direction</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>A-criterion</td>
 <td>Fixed or random</td>
 <td>Lower is better</td>
 </tr>
-<tr class="even">
+<tr>
 <td>D-criterion</td>
 <td>Fixed only</td>
 <td>Lower is better</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>CDmean</td>
 <td>Random only</td>
 <td>Higher is better</td>
@@ -311,37 +311,37 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Feature</th>
 <th>Details</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Grid</td>
 <td>Fixed <code>n_rows × n_cols</code>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td>Replicates</td>
 <td>Contiguous field segments</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Block sizes</td>
 <td>Controlled via <code>min_block_size</code> / <code>max_block_size</code> (total: checks + entries)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Checks</td>
 <td>Present in every incomplete block</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Block count</td>
 <td>User-fixed or automatically derived as the largest feasible value</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Grouping</td>
 <td>Family labels, GRM, or pedigree (A) matrix</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Dispersion optimization</td>
 <td>Optional</td>
 </tr>
@@ -370,25 +370,25 @@
 <col width="33%">
 <col width="33%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Method</th>
 <th>Description</th>
 <th>Best for</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>
 <strong>RS</strong> (Random Restart)</td>
 <td>Generate <code>n_restarts</code> independent designs, return the best</td>
 <td>Quick exploration, guaranteed validity</td>
 </tr>
-<tr class="even">
+<tr>
 <td>
 <strong>SA</strong> (Simulated Annealing)</td>
 <td>Iterative entry-permutation swaps with temperature-governed acceptance</td>
 <td>Escaping local optima</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>
 <strong>GA</strong> (Genetic Algorithm)</td>
 <td>Population of permutations evolved via OX1 crossover, swap mutation, and elitism</td>
@@ -404,7 +404,7 @@
 <h2 id="key-differences-between-design-families">Key Differences Between Design Families<a class="anchor" aria-label="anchor" href="#key-differences-between-design-families"></a>
 </h2>
 <table class="table">
-<thead><tr class="header">
+<thead><tr>
 <th>Feature</th>
 <th>
 <code>prep_famoptg</code> family</th>
@@ -412,34 +412,34 @@
 <code>alpha_rc_stream</code> family</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Blocking structure</td>
 <td>Flat blocks</td>
 <td>Replicates → incomplete blocks</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Replication</td>
 <td>Flexible per-entry</td>
 <td>Uniform across entries</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Design types</td>
 <td>Augmented, p-rep, RCBD-type</td>
 <td>Alpha-lattice</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Block variance</td>
 <td><code>sigma_b2</code></td>
 <td>
 <code>sigma_rep2</code> + <code>sigma_ib2</code>
 </td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Optimisation methods</td>
 <td>RS only</td>
 <td>RS, SA, GA</td>
 </tr>
-<tr class="even">
+<tr>
 <td>P-rep constraint</td>
 <td>Enforced</td>
 <td>Not applicable</td>
@@ -458,23 +458,23 @@
 <col width="33%">
 <col width="33%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Strategy</th>
 <th>Source</th>
 <th>Best for</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Family-based</td>
 <td>User-defined labels</td>
 <td>Simple, interpretable grouping</td>
 </tr>
-<tr class="even">
+<tr>
 <td>GRM-based</td>
 <td>Genomic similarity matrix</td>
 <td>Captures real genomic relationships</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Pedigree-based</td>
 <td>A matrix</td>
 <td>When genomic data is unavailable</td>
@@ -493,26 +493,26 @@
 <col width="25%">
 <col width="25%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Criterion</th>
 <th>Meaning</th>
 <th>Direction</th>
 <th>Available for</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>A-criterion</td>
 <td>Mean pairwise contrast variance (fixed) or mean PEV (random)</td>
 <td>Lower is better</td>
 <td>Both families</td>
 </tr>
-<tr class="even">
+<tr>
 <td>D-criterion</td>
 <td>Geometric mean of contrast covariance eigenvalues</td>
 <td>Lower is better</td>
 <td>Fixed effects only</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>CDmean</td>
 <td>Mean coefficient of determination for GEBV prediction</td>
 <td>Higher is better</td>

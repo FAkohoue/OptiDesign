@@ -119,15 +119,15 @@ are not exported.
 
 ## Function overview
 
-|                                                                                                                   |                         |                         |
-|-------------------------------------------------------------------------------------------------------------------|-------------------------|-------------------------|
-| Function                                                                                                          | Role                    | Design family           |
-| [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md)                               | Construction            | Repeated-check block    |
-| [`evaluate_famoptg_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_famoptg_efficiency.md) | Evaluation              | Repeated-check block    |
-| [`optimize_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_famoptg.md)                       | Optimisation (RS)       | Repeated-check block    |
-| [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md)                         | Construction            | Alpha row-column stream |
-| [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md)     | Evaluation              | Alpha row-column stream |
-| [`optimize_alpha_rc()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_alpha_rc.md)                     | Optimisation (RS/SA/GA) | Alpha row-column stream |
+|  |  |  |
+|----|----|----|
+| Function | Role | Design family |
+| [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md) | Construction | Repeated-check block |
+| [`evaluate_famoptg_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_famoptg_efficiency.md) | Evaluation | Repeated-check block |
+| [`optimize_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_famoptg.md) | Optimisation (RS) | Repeated-check block |
+| [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md) | Construction | Alpha row-column stream |
+| [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md) | Evaluation | Alpha row-column stream |
+| [`optimize_alpha_rc()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_alpha_rc.md) | Optimisation (RS/SA/GA) | Alpha row-column stream |
 
 ## Typical workflow - repeated-check block design
 
@@ -224,15 +224,15 @@ are not exported.
 
 ## Key differences between the two design families
 
-|                           |                             |                                  |
-|---------------------------|-----------------------------|----------------------------------|
-| Feature                   | `prep_famoptg` family       | `alpha_rc_stream` family         |
-| Blocking structure        | Flat blocks                 | Replicates -\> incomplete blocks |
-| Replication               | Flexible per-entry          | Uniform across entries           |
-| Design types              | Augmented, p-rep, RCBD-type | Alpha-lattice                    |
-| Block variance component  | `sigma_b2`                  | `sigma_rep2` + `sigma_ib2`       |
-| Optimisation methods      | RS only                     | RS, SA, GA                       |
-| P-rep constraint enforced | Yes                         | Not applicable                   |
+|  |  |  |
+|----|----|----|
+| Feature | `prep_famoptg` family | `alpha_rc_stream` family |
+| Blocking structure | Flat blocks | Replicates -\> incomplete blocks |
+| Replication | Flexible per-entry | Uniform across entries |
+| Design types | Augmented, p-rep, RCBD-type | Alpha-lattice |
+| Block variance component | `sigma_b2` | `sigma_rep2` + `sigma_ib2` |
+| Optimisation methods | RS only | RS, SA, GA |
+| P-rep constraint enforced | Yes | Not applicable |
 
 ## Relationship matrices and grouping
 
@@ -312,3 +312,8 @@ Useful links:
 
 **Maintainer**: Félicien Akohoue <akohoue.f@gmail.com>
 ([ORCID](https://orcid.org/0000-0002-2160-0182))
+
+Authors:
+
+- Félicien Akohoue <akohoue.f@gmail.com>
+  ([ORCID](https://orcid.org/0000-0002-2160-0182))

@@ -389,13 +389,13 @@ function stops with an informative error message.
 
 All methods minimise an internal score (lower = better internally):
 
-|             |                                         |                         |
-|-------------|-----------------------------------------|-------------------------|
-| `criterion` | Internal score                          | Direction               |
-| `"A"`       | `A_criterion`                           | Lower is better         |
-| `"D"`       | `D_criterion`                           | Lower is better         |
-| `"both"`    | Mean of `A_criterion` and `D_criterion` | Lower is better         |
-| `"CDmean"`  | Negated CDmean                          | Higher CDmean is better |
+|  |  |  |
+|----|----|----|
+| `criterion` | Internal score | Direction |
+| `"A"` | `A_criterion` | Lower is better |
+| `"D"` | `D_criterion` | Lower is better |
+| `"both"` | Mean of `A_criterion` and `D_criterion` | Lower is better |
+| `"CDmean"` | Negated CDmean | Higher CDmean is better |
 
 For `"CDmean"`, the internal negation is transparent to the user:
 `best_score` and `score_history` in the output are always reported as

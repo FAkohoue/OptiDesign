@@ -1,6 +1,7 @@
 # OptiDesign: Optimized Experimental Field Design for Plant Breeding
 
 ``` r
+
 library(OptiDesign)
 ```
 
@@ -46,26 +47,26 @@ transparent and reproducible.
 `OptiDesign` provides six exported functions organised into two design
 families:
 
-| Function                                                                                                          | Role                        | Design family           |
-|-------------------------------------------------------------------------------------------------------------------|-----------------------------|-------------------------|
-| [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md)                               | Construction                | Repeated-check block    |
-| [`evaluate_famoptg_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_famoptg_efficiency.md) | Evaluation                  | Repeated-check block    |
-| [`optimize_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_famoptg.md)                       | Optimisation (RS)           | Repeated-check block    |
-| [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md)                         | Construction                | Alpha row-column stream |
-| [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md)     | Evaluation                  | Alpha row-column stream |
-| [`optimize_alpha_rc()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_alpha_rc.md)                     | Optimisation (RS / SA / GA) | Alpha row-column stream |
+| Function | Role | Design family |
+|----|----|----|
+| [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md) | Construction | Repeated-check block |
+| [`evaluate_famoptg_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_famoptg_efficiency.md) | Evaluation | Repeated-check block |
+| [`optimize_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_famoptg.md) | Optimisation (RS) | Repeated-check block |
+| [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md) | Construction | Alpha row-column stream |
+| [`evaluate_alpha_efficiency()`](https://FAkohoue.github.io/OptiDesign/reference/evaluate_alpha_efficiency.md) | Evaluation | Alpha row-column stream |
+| [`optimize_alpha_rc()`](https://FAkohoue.github.io/OptiDesign/reference/optimize_alpha_rc.md) | Optimisation (RS / SA / GA) | Alpha row-column stream |
 
 The two families differ in their blocking structure, replication model,
 and the depth of their optimisation capabilities:
 
-| Feature          | `prep_famoptg` family       | `alpha_rc_stream` family       |
-|------------------|-----------------------------|--------------------------------|
-| Blocking         | Flat blocks                 | Replicates → incomplete blocks |
-| Replication      | Flexible per-entry          | Uniform across entries         |
-| Design types     | Augmented, p-rep, RCBD-type | Alpha-lattice                  |
-| Block variance   | `sigma_b2`                  | `sigma_rep2` + `sigma_ib2`     |
-| Optimisation     | RS only                     | RS, SA, GA                     |
-| P-rep constraint | Enforced by construction    | Not applicable                 |
+| Feature | `prep_famoptg` family | `alpha_rc_stream` family |
+|----|----|----|
+| Blocking | Flat blocks | Replicates → incomplete blocks |
+| Replication | Flexible per-entry | Uniform across entries |
+| Design types | Augmented, p-rep, RCBD-type | Alpha-lattice |
+| Block variance | `sigma_b2` | `sigma_rep2` + `sigma_ib2` |
+| Optimisation | RS only | RS, SA, GA |
+| P-rep constraint | Enforced by construction | Not applicable |
 
 ------------------------------------------------------------------------
 
@@ -75,50 +76,54 @@ and the depth of their optimisation capabilities:
 
 Both design families are evaluated under the same general mixed model:
 
-$$y = X\beta + Zu + e$$
+``` math
+y = X\beta + Zu + e
+```
 
-| Symbol  | Description                                                 |
-|---------|-------------------------------------------------------------|
-| $y$     | Vector of observed phenotypes                               |
-| $X$     | Fixed effects design matrix                                 |
-| $\beta$ | Fixed effects (intercept, checks, entry effects when fixed) |
-| $Z$     | Incidence matrix linking random effects to plots            |
-| $u$     | Random effects (blocks, rows, columns, entries when random) |
-| $e$     | Residual vector                                             |
+| Symbol    | Description                                                 |
+|-----------|-------------------------------------------------------------|
+| $`y`$     | Vector of observed phenotypes                               |
+| $`X`$     | Fixed effects design matrix                                 |
+| $`\beta`$ | Fixed effects (intercept, checks, entry effects when fixed) |
+| $`Z`$     | Incidence matrix linking random effects to plots            |
+| $`u`$     | Random effects (blocks, rows, columns, entries when random) |
+| $`e`$     | Residual vector                                             |
 
-Random effects: $u \sim N(0,\, G)$ and $e \sim N(0,\, R)$.
+Random effects: $`u \sim N(0,\, G)`$ and $`e \sim N(0,\, R)`$.
 
 For the **repeated-check block** family:
-$$G^{- 1} = \text{blockdiag}\left( \sigma_{b}^{- 2}I,\;\sigma_{r}^{- 2}I,\;\sigma_{c}^{- 2}I,\;\sigma_{g}^{- 2}K^{- 1} \right)$$
+``` math
+G^{-1} = \text{blockdiag}(\sigma_b^{-2}I,\; \sigma_r^{-2}I,\; \sigma_c^{-2}I,\; \sigma_g^{-2}K^{-1})
+```
 
 For the **alpha row-column stream** family:
-$$G^{- 1} = \text{blockdiag}\left( \sigma_{\text{rep}}^{- 2}I,\;\sigma_{\text{ib}}^{- 2}I,\;\sigma_{r}^{- 2}I,\;\sigma_{c}^{- 2}I,\;\sigma_{g}^{- 2}K^{- 1} \right)$$
+``` math
+G^{-1} = \text{blockdiag}(\sigma_\text{rep}^{-2}I,\; \sigma_\text{ib}^{-2}I,\; \sigma_r^{-2}I,\; \sigma_c^{-2}I,\; \sigma_g^{-2}K^{-1})
+```
 
 ### Mixed model coefficient matrix
 
 Efficiency criteria are derived from the mixed model coefficient matrix:
 
-$$C = \begin{pmatrix}
-{X^{\top}QX} & {X^{\top}QZ} \\
-{Z^{\top}QX} & {Z^{\top}QZ + G^{- 1}}
-\end{pmatrix}$$
+``` math
+C = \begin{pmatrix} X^\top Q X & X^\top Q Z \\ Z^\top Q X & Z^\top Q Z + G^{-1} \end{pmatrix}
+```
 
-where $Q = R^{- 1}$ is the residual precision matrix.
+where $`Q = R^{-1}`$ is the residual precision matrix.
 
 ### Residual structures
 
 Three residual structures are supported. For an AR1 process of length
-$n$ with autocorrelation $\rho$, the precision matrix $Q_{\text{AR1}}$
-is tridiagonal with interior diagonal entries
-$\left( 1 + \rho^{2} \right)/\left( 1 - \rho^{2} \right)$, edge diagonal
-entries $1/\left( 1 - \rho^{2} \right)$, and off-diagonal entries
-$- \rho/\left( 1 - \rho^{2} \right)$.
+$`n`$ with autocorrelation $`\rho`$, the precision matrix
+$`Q_\text{AR1}`$ is tridiagonal with interior diagonal entries
+$`(1+\rho^2)/(1-\rho^2)`$, edge diagonal entries $`1/(1-\rho^2)`$, and
+off-diagonal entries $`-\rho/(1-\rho^2)`$.
 
-| Structure | Formula                                                                                                                        | Parameters           |
-|-----------|--------------------------------------------------------------------------------------------------------------------------------|----------------------|
-| IID       | $R = \sigma_{e}^{2}I$                                                                                                          | `sigma_e2`           |
-| AR1       | $R^{- 1} = \sigma_{e}^{- 2}\left( Q_{\text{AR1}}\left( \rho_{r} \right) \otimes I_{c} \right)$                                 | `rho_row`            |
-| AR1×AR1   | $R^{- 1} = \sigma_{e}^{- 2}\left( Q_{\text{AR1}}\left( \rho_{c} \right) \otimes Q_{\text{AR1}}\left( \rho_{r} \right) \right)$ | `rho_row`, `rho_col` |
+| Structure | Formula | Parameters |
+|----|----|----|
+| IID | $`R = \sigma_e^2 I`$ | `sigma_e2` |
+| AR1 | $`R^{-1} = \sigma_e^{-2}(Q_\text{AR1}(\rho_r) \otimes I_c)`$ | `rho_row` |
+| AR1×AR1 | $`R^{-1} = \sigma_e^{-2}(Q_\text{AR1}(\rho_c) \otimes Q_\text{AR1}(\rho_r))`$ | `rho_row`, `rho_col` |
 
 ### Optimality criteria
 
@@ -126,22 +131,28 @@ $- \rho/\left( 1 - \rho^{2} \right)$.
 variance under fixed treatment effects, or the mean prediction error
 variance (PEV) under random treatment effects.
 
-$$A_{\text{criterion}} = \frac{2}{p(p - 1)}\sum\limits_{i < j}\text{Var}\left( {\widehat{\tau}}_{i} - {\widehat{\tau}}_{j} \right)$$
+``` math
+A_\text{criterion} = \frac{2}{p(p-1)} \sum_{i<j} \text{Var}(\hat{\tau}_i - \hat{\tau}_j)
+```
 
 **D-criterion** (lower is better): minimises the geometric mean of the
 contrast covariance eigenvalues (fixed effects only).
 
-$$D_{\text{criterion}} = \exp\!\left( \frac{\log\det(HVH)}{p - 1} \right)$$
+``` math
+D_\text{criterion} = \exp\!\left(\frac{\log\det(HVH)}{p-1}\right)
+```
 
-where $H = I_{p} - p^{- 1}J_{p}$ is the centering matrix and $V$ is the
-treatment variance-covariance submatrix of $C^{- 1}$.
+where $`H = I_p - p^{-1}J_p`$ is the centering matrix and $`V`$ is the
+treatment variance-covariance submatrix of $`C^{-1}`$.
 
 **CDmean** (higher is better): the mean coefficient of determination for
 genomic breeding value (GEBV) prediction (Rincent et al. 2012). Measures
 the proportion of genetic variance explained by prediction on average
 across lines.
 
-$$\text{CDmean} = 1 - \frac{\text{mean PEV}}{\sigma_{g}^{2}}$$
+``` math
+\text{CDmean} = 1 - \frac{\text{mean PEV}}{\sigma_g^2}
+```
 
 CDmean ranges from 0 (no information) to 1 (perfect prediction). It is
 the primary criterion for optimising training population designs in
@@ -150,12 +161,14 @@ genomic selection.
 ### Large-design approximation
 
 When the number of treatments exceeds `eff_full_max` (default 400),
-exact inversion of the $C$ submatrix is replaced by the Hutchinson
+exact inversion of the $`C`$ submatrix is replaced by the Hutchinson
 stochastic trace estimator (Hutchinson 1990), which approximates
-$\text{trace}\left( C^{- 1}\left\lbrack \text{idx},\text{idx} \right\rbrack \right)$
-using $m$ Rademacher random vectors:
+$`\text{trace}(C^{-1}[\text{idx},\text{idx}])`$ using $`m`$ Rademacher
+random vectors:
 
-$$\text{trace}\left( C_{\text{idx}}^{- 1} \right) \approx \frac{1}{m}\sum\limits_{k = 1}^{m}z_{k}^{\top}C^{- 1}z_{k},\quad z_{k} \sim \text{Rademacher}$$
+``` math
+\text{trace}(C^{-1}_\text{idx}) \approx \frac{1}{m} \sum_{k=1}^{m} z_k^\top C^{-1} z_k, \quad z_k \sim \text{Rademacher}
+```
 
 The result carries the `_APPROX` mode suffix and `D_criterion` is `NA`.
 
@@ -189,10 +202,12 @@ treatment ever appears twice in the same block. Enforced by construction
 at every call, not by post-hoc checking.
 
 Total required plots:
-$$\text{total} = n_{\text{blocks}} \times n_{\text{checks}} + \sum\limits_{i = 1}^{v_{p}}r_{i} + v_{u}$$
+``` math
+\text{total} = n_\text{blocks} \times n_\text{checks} + \sum_{i=1}^{v_p} r_i + v_u
+```
 
-where $r_{i}$ is the replication count of p-rep entry $i$ and $v_{u}$ is
-the number of unreplicated entries.
+where $`r_i`$ is the replication count of p-rep entry $`i`$ and $`v_u`$
+is the number of unreplicated entries.
 
 ### Evaluation with `evaluate_famoptg_efficiency()`
 
@@ -223,18 +238,20 @@ methods (SA, GA) would require block-aware swap logic to preserve it.
 [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md)
 builds a fixed-grid alpha row-column design using a stream-based layout.
 The field is converted to a one-dimensional planting stream, partitioned
-into $n_{\text{reps}}$ contiguous replicate segments, and each segment
+into $`n_\text{reps}`$ contiguous replicate segments, and each segment
 is divided into incomplete blocks. Checks appear in every incomplete
 block; each entry appears exactly once per replicate. Unused cells
 appear only at the end of the stream.
 
 Block-size constraints are expressed in total block size (checks +
 entries) via `min_block_size` and `max_block_size`. The number of
-incomplete blocks per replicate $b$ must satisfy:
+incomplete blocks per replicate $`b`$ must satisfy:
 
-$$\left\lceil \frac{v}{\text{max\_block\_size} - c} \right\rceil \leq b \leq \left\lfloor \frac{v}{\text{min\_block\_size} - c} \right\rfloor$$
+``` math
+\left\lceil \frac{v}{\text{max\_block\_size} - c} \right\rceil \leq b \leq \left\lfloor \frac{v}{\text{min\_block\_size} - c} \right\rfloor
+```
 
-where $v$ is the number of entries and $c$ is the number of checks.
+where $`v`$ is the number of entries and $`c`$ is the number of checks.
 
 ### Evaluation with `evaluate_alpha_efficiency()`
 
@@ -258,8 +275,10 @@ return the best. Guaranteed validity, simple, easily parallelisable.
 
 **SA (Simulated Annealing)** — iterative entry permutation swaps with
 Metropolis acceptance:
-$$P\left( \text{accept worse} \right) = \exp\!\left( - \frac{\Delta}{T_{k}} \right)$$
-where $T_{k}$ cools from `sa_temp_start` to `sa_temp_end`. Better at
+``` math
+P(\text{accept worse}) = \exp\!\left(-\frac{\Delta}{T_k}\right)
+```
+where $`T_k`$ cools from `sa_temp_start` to `sa_temp_end`. Better at
 escaping local optima than RS. Invalid swap proposals are treated as
 neutral events and do not affect the acceptance rate.
 
@@ -304,6 +323,7 @@ The package ships with a built-in example dataset for both design
 families:
 
 ``` r
+
 data("OptiDesign_example_data", package = "OptiDesign")
 x <- OptiDesign_example_data
 names(x)
@@ -326,6 +346,7 @@ matrices, and ready-to-use argument lists structured for
 ### Step 1 — Construct
 
 ``` r
+
 design_fam <- do.call(
   prep_famoptg,
   c(x$OptiDesign_famoptg_example, x$OptiDesign_famoptg_args_family)
@@ -351,6 +372,7 @@ separate step.
 ### Step 2 — Evaluate
 
 ``` r
+
 eff_fam <- evaluate_famoptg_efficiency(
   field_book         = design_fam$field_book,
   n_rows             = x$OptiDesign_famoptg_example$n_rows,
@@ -374,6 +396,7 @@ The same field book can be re-evaluated under a spatial model without
 rebuilding the design:
 
 ``` r
+
 eff_fam_ar1 <- evaluate_famoptg_efficiency(
   field_book         = design_fam$field_book,
   n_rows             = x$OptiDesign_famoptg_example$n_rows,
@@ -392,6 +415,7 @@ cat("A-criterion under AR1xAR1:", round(eff_fam_ar1$A_criterion, 4), "\n")
 ### Step 3 — Optimise (optional)
 
 ``` r
+
 opt_fam <- optimize_famoptg(
   # Construction arguments
   check_treatments        = x$OptiDesign_famoptg_example$check_treatments,
@@ -426,6 +450,7 @@ cat("Valid restarts:", opt_fam$optimization$n_restarts -
 ### Step 1 — Construct
 
 ``` r
+
 design_alpha <- do.call(
   alpha_rc_stream,
   c(x$OptiDesign_alpha_example, x$OptiDesign_alpha_args_family)
@@ -452,6 +477,7 @@ head(design_alpha$field_book)
 ### Step 2 — Evaluate
 
 ``` r
+
 eff_alpha <- evaluate_alpha_efficiency(
   field_book         = design_alpha$field_book,
   n_rows             = x$OptiDesign_alpha_example$n_rows,
@@ -472,6 +498,7 @@ cat("Number of treatments evaluated:", eff_alpha$n_trt, "\n")
 ### Step 3 — Optimise with Random Restart
 
 ``` r
+
 opt_rs <- optimize_alpha_rc(
   check_treatments   = x$OptiDesign_alpha_example$check_treatments,
   check_families     = x$OptiDesign_alpha_example$check_families,
@@ -499,6 +526,7 @@ plot(opt_rs$optimization$score_history, type = "b",
 ### Step 4 — Optimise with Simulated Annealing
 
 ``` r
+
 opt_sa <- optimize_alpha_rc(
   check_treatments   = x$OptiDesign_alpha_example$check_treatments,
   check_families     = x$OptiDesign_alpha_example$check_families,
@@ -534,6 +562,7 @@ labels as the grouping source, and can also drive the optional
 dispersion optimisation:
 
 ``` r
+
 design_grm <- do.call(
   alpha_rc_stream,
   c(x$OptiDesign_alpha_example, x$OptiDesign_alpha_args_grm)
@@ -565,6 +594,7 @@ prediction reliability rather than contrast precision. It requires
 random treatment effects and a genomic prediction model.
 
 ``` r
+
 # CDmean optimisation with GBLUP requires a K matrix.
 # Here we use the example K from the shipped dataset.
 opt_cdmean <- optimize_alpha_rc(
@@ -615,6 +645,7 @@ Both criterion types can be computed on the same design to understand
 the trade-off:
 
 ``` r
+
 # Evaluate the same design under both fixed and random models
 eff_fixed <- evaluate_alpha_efficiency(
   field_book         = design_alpha$field_book,
@@ -664,7 +695,7 @@ knitr::kable(results, caption = "Efficiency criteria for the example alpha desig
 | Mean PEV     | 0.3883 | lower=better  | random |
 | CDmean       | 0.6117 | higher=better | random |
 
-Efficiency criteria for the example alpha design
+Efficiency criteria for the example alpha design {.table}
 
 ------------------------------------------------------------------------
 
@@ -672,28 +703,30 @@ Efficiency criteria for the example alpha design
 
 ### When to use each grouping strategy
 
-| Strategy      | `cluster_source` | Use when                                                                           |
-|---------------|------------------|------------------------------------------------------------------------------------|
-| Family labels | `"Family"`       | Family structure is meaningful and interpretable; no relationship matrix available |
-| Genomic (GRM) | `"GRM"`          | Genomic data is available; relatedness precision matters more than family labels   |
-| Pedigree (A)  | `"A"`            | Only pedigree information is available                                             |
+| Strategy | `cluster_source` | Use when |
+|----|----|----|
+| Family labels | `"Family"` | Family structure is meaningful and interpretable; no relationship matrix available |
+| Genomic (GRM) | `"GRM"` | Genomic data is available; relatedness precision matters more than family labels |
+| Pedigree (A) | `"A"` | Only pedigree information is available |
 
 ### Dispersion optimisation
 
 The dispersion step minimises the total genomic relatedness among
 neighbouring plots:
 
-$$S = \sum\limits_{{(i,j)} \in \mathcal{N}}K_{ij}$$
+``` math
+S = \sum_{(i,j)\in\mathcal{N}} K_{ij}
+```
 
-where $\mathcal{N}$ is the set of plot pairs within Chebyshev distance
+where $`\mathcal{N}`$ is the set of plot pairs within Chebyshev distance
 `dispersion_radius`. The local swap search accepts a swap if and only if
-it reduces $S$. Key parameters:
+it reduces $`S`$. Key parameters:
 
-| Parameter           | Effect                                                               |
-|---------------------|----------------------------------------------------------------------|
-| `dispersion_radius` | Neighbourhood size: 1 = 8-connected, 2 = 24-connected                |
-| `dispersion_iters`  | Number of swap proposals; more iterations = lower $S$ at linear cost |
-| `dispersion_source` | Which matrix to score against: `"K"`, `"GRM"`, or `"A"`              |
+| Parameter | Effect |
+|----|----|
+| `dispersion_radius` | Neighbourhood size: 1 = 8-connected, 2 = 24-connected |
+| `dispersion_iters` | Number of swap proposals; more iterations = lower $`S`$ at linear cost |
+| `dispersion_source` | Which matrix to score against: `"K"`, `"GRM"`, or `"A"` |
 
 ------------------------------------------------------------------------
 
@@ -701,13 +734,13 @@ it reduces $S$. Key parameters:
 
 ### Choosing between design families
 
-| Situation                                                | Recommended function                                                                            |
-|----------------------------------------------------------|-------------------------------------------------------------------------------------------------|
-| Many entries, not all need replication                   | [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md)             |
-| Some entries need priority replication                   | [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md) (p-rep)     |
+| Situation | Recommended function |
+|----|----|
+| Many entries, not all need replication | [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md) |
+| Some entries need priority replication | [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md) (p-rep) |
 | All entries equally replicated, checks needed everywhere | [`prep_famoptg()`](https://FAkohoue.github.io/OptiDesign/reference/prep_famoptg.md) (RCBD-type) |
-| Fixed field dimensions, operational field-book order     | [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md)       |
-| Alpha-lattice structure needed                           | [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md)       |
+| Fixed field dimensions, operational field-book order | [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md) |
+| Alpha-lattice structure needed | [`alpha_rc_stream()`](https://FAkohoue.github.io/OptiDesign/reference/alpha_rc_stream.md) |
 
 ### Choosing an optimality criterion
 
@@ -720,7 +753,7 @@ it reduces $S$. Key parameters:
 
 CDmean requires `treatment_effect = "random"` and
 `prediction_type %in% c("IID", "GBLUP", "PBLUP")`. For genomic selection
-training population optimisation, GBLUP with a real kinship matrix $K$
+training population optimisation, GBLUP with a real kinship matrix $`K`$
 is strongly recommended.
 
 ### Choosing an optimisation method (`optimize_alpha_rc` only)
@@ -744,6 +777,7 @@ absolute criterion values that are meaningful on the scale of real data,
 use heritability-consistent components:
 
 ``` r
+
 # Example: h^2 = 0.5, moderate spatial correlation
 varcomp <- list(
   sigma_g2   = 0.5,
@@ -760,8 +794,9 @@ varcomp <- list(
 ## Session Information
 
 ``` r
+
 sessionInfo()
-#> R version 4.5.3 (2026-03-11)
+#> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -785,14 +820,14 @@ sessionInfo()
 #> [1] OptiDesign_0.1.0
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] Matrix_1.7-4      xfun_0.57         lattice_0.22-9    cachem_1.1.0     
-#>  [9] knitr_1.51        htmltools_0.5.9   rmarkdown_2.31    lifecycle_1.0.5  
-#> [13] cli_3.6.5         grid_4.5.3        sass_0.4.10       pkgdown_2.2.0    
-#> [17] textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2 compiler_4.5.3   
-#> [21] tools_4.5.3       ragg_1.5.2        pracma_2.4.6      evaluate_1.0.5   
-#> [25] bslib_0.10.0      yaml_2.3.12       jsonlite_2.0.0    rlang_1.1.7      
-#> [29] fs_2.0.1
+#>  [1] cli_3.6.6         knitr_1.51        rlang_1.2.0       xfun_0.58        
+#>  [5] otel_0.2.0        textshaping_1.0.5 jsonlite_2.0.0    htmltools_0.5.9  
+#>  [9] pracma_2.4.6      ragg_1.5.2        sass_0.4.10       rmarkdown_2.31   
+#> [13] grid_4.6.0        evaluate_1.0.5    jquerylib_0.1.4   fastmap_1.2.0    
+#> [17] yaml_2.3.12       lifecycle_1.0.5   compiler_4.6.0    fs_2.1.0         
+#> [21] systemfonts_1.3.2 lattice_0.22-9    digest_0.6.39     R6_2.6.1         
+#> [25] bslib_0.11.0      Matrix_1.7-5      tools_4.6.0       pkgdown_2.2.0    
+#> [29] cachem_1.1.0      desc_1.4.3
 ```
 
 ------------------------------------------------------------------------
