@@ -525,7 +525,7 @@ prep_famoptg <- function(
     if (ord == "row") {
       for (r in seq_len(nr)) {
         cols <- seq_len(nc)
-        if (serp && mod(c, 2) == 0) cols <- rev(cols)
+        if (serp && mod(r, 2) == 0) cols <- rev(cols)
         for (c in cols) { out[[kk]] <- c(Row = r, Column = c); kk <- kk + 1L }
       }
     } else {

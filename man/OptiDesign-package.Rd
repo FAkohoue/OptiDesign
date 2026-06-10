@@ -307,5 +307,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Félicien Akohoue \email{akohoue.f@gmail.com} (\href{https://orcid.org/0000-0002-2160-0182}{ORCID})
 
+Authors:
+\itemize{
+  \item Félicien Akohoue \email{akohoue.f@gmail.com} (\href{https://orcid.org/0000-0002-2160-0182}{ORCID})
+}
+
 }
 \keyword{internal}
